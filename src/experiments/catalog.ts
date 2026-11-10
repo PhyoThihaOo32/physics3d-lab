@@ -1,6 +1,7 @@
 import type { ExperimentRegistration, LabDefinition } from '../types/catalog';
 import { freeFallExperiment } from './free-fall/config';
 import { projectileExperiment } from './projectile-motion/config';
+import { dancerExperiment } from './angular-momentum/config';
 
 export const labs: readonly LabDefinition[] = [
   {
@@ -96,21 +97,19 @@ export const experiments: readonly ExperimentRegistration[] = [
   {
     id: 'angular-momentum',
     labId: 'rotation',
-    title: 'Angular momentum robot',
+    title: dancerExperiment.title,
     topic: 'Rotational dynamics',
-    description:
-      'Change a rotating robot’s arm radius and explore conservation of angular momentum.',
-    objectives: [
-      'Relate moment of inertia to arm radius.',
-      'Compare angular momentum with and without bearing friction.',
-    ],
+    description: dancerExperiment.description,
+    objectives: dancerExperiment.learningObjectives,
     measurements: [
       'Radius',
       'Moment of inertia',
       'Angular velocity',
       'Angular momentum',
+      'Spin kinetic energy',
     ],
-    status: 'planned',
+    status: 'available',
+    load: () => import('./angular-momentum/DancerPage'),
   },
 ];
 

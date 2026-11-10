@@ -8,9 +8,11 @@ export function LabCamera({
   frameHeight,
   frameWidth = 0,
   center,
+  minFrameDistance = 12,
 }: {
   view: CameraView;
   frameHeight: number;
+  minFrameDistance?: number;
   frameWidth?: number;
   center?: readonly [number, number, number];
 }) {
@@ -24,7 +26,7 @@ export function LabCamera({
     const z = center?.[2] ?? 0;
     const distance =
       Math.max(
-        12,
+        minFrameDistance,
         frameHeight * 1.8,
         (frameWidth * 1.5) / Math.max(aspect, 0.3),
       ) * (frameWidth ? 1 : Math.max(1, 1.2 / Math.max(aspect, 0.3)));
@@ -48,6 +50,7 @@ export function LabCamera({
     view.preset,
     view.revision,
     frameHeight,
+    minFrameDistance,
     frameWidth,
     center,
     aspect,

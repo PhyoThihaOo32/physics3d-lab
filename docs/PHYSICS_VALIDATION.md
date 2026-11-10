@@ -137,3 +137,43 @@ Airborne energy drift at the frozen last-airborne sample was 0.230% for Free Fal
 - [OpenStax: Projectile Motion](https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion)
 - [OpenStax: Conservation of Energy](https://openstax.org/books/university-physics-volume-1/pages/8-3-conservation-of-energy)
 - [React Three Rapier Physics API](https://pmndrs.github.io/react-three-rapier/interfaces/PhysicsProps.html)
+
+## Spinning ballet dancer: articulation and torque balance
+
+The dancer adds five dynamic bodies and four internal motorized revolute joints. The torso is supported against translation and tilt and remains free about the vertical y axis. This models a dancer on a rotating support; it does not simulate balancing on a deformable foot. Its fixed 44 kg body has Iᵧ = 0.750 kg·m². Each arm consists of a 2 kg, 0.30 m upper segment and 1.5 kg, 0.28 m forearm/hand segment. Uniform rectangular envelopes are 0.07 m square. Total mass is 51 kg. Segment lengths are fixed; mirrored shoulders fold to 75° and elbows to 150°.
+
+The independent reference calculation uses the finite-rod inertia tensor and parallel-axis theorem. Reference Iᵧ is 2.391258 kg·m² extended and 1.209479 kg·m² tucked. Motor compliance under gravity and centrifugal forces can change the measured pose slightly. The rendering follows the engine's articulated body transforms.
+
+Measured momentum is computed independently of Iᵧ times torso angular velocity:
+
+```text
+Iᵧ = Σ [eᵧᵀ I_world eᵧ + m(x² + z²)]
+Lᵧ = Σ [(I_world ω_segment)ᵧ + m(z vₓ − x v_z)]
+Expected Lᵧ = initial Lᵧ + Σ (external τᵧ × fixed timestep)
+Residual = measured Lᵧ − expected Lᵧ
+```
+
+Each I_world comes from the body's principal inertia and its actual orientation. Shoulder/elbow actuation is internal; gravity and the support supply no torque about y. The pinned Rapier angular integrator is supplemented with the Euler term −ω × (I_world ω) for each moving arm. Without that term the tested tuck/extension had systematic momentum error; no rescaling or angular-velocity correction is used to conceal drift. Only initial velocities are assigned, with each segment's initial translation satisfying v = ω × r.
+
+The dancer integrates at **1/480 s**, with **24 solver iterations**. Free Fall and Projectile Motion retain 1/120 s. Readouts and graph samples are published every 48 dancer steps (10 Hz), with the exact last state published on pause. A 60 s trial stops scheduling additional steps at the observation limit. Resistance uses τᵧ = −bω_torso, applied externally at the support; expected momentum includes its signed numerical angular impulse.
+
+Displayed spin energy is ½Iᵧω_torso². It excludes relative arm-folding kinetic energy and gravitational potential. Its change is not total actuator work and is not treated as a conservation error. Initial zero momentum is assessed with an absolute residual rather than a relative percentage.
+
+| Dancer check                                               | Automated acceptance                                                                                        |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Initial inertia vs independent geometric reference         | Agreement to 5 decimal places                                                                               |
+| Ideal tuck/extension, ω₀ = −3, −2, 0, 1, 2, 3 rad/s        | Momentum residual below 0.5% of initial magnitude (absolute handling at zero) throughout 12 s               |
+| Zero initial spin, arms moving                             | Absolute Lᵧ below 10⁻⁵ kg·m²/s; absolute ωᵧ below 0.001 rad/s                                               |
+| Settled tucked speed vs L₀ / measured Iᵧ                   | Absolute difference below 0.2% of speed, with 0.002 rad/s floor                                             |
+| Return to open pose                                        | Speed agrees with initial value to 1 decimal place; Iᵧ to 2 decimal places                                  |
+| Fixed-pose viscous decay, b = 0.05, 0.15, 0.5              | 8 s speed agrees with exponential analytical result to 2 decimal places; torque balance residual below 0.5% |
+| Repeated target changes with resistance, ω₀ = −3, b = 0.15 | 60 s torque-balance residual below 1% of initial momentum magnitude; signs oppose the spin                  |
+| Repeated target changes on ideal support, ω₀ = 3           | 60 s momentum residual below 1.5%                                                                           |
+| Rapid target reversals                                     | Joint anchor separation below 0.003 m throughout tested motion                                              |
+| Geometric reference / initial conditions                   | Monotonic I(e); invalid speed/resistance rejected; zero and negative spin supported                         |
+
+The 60 s repeated-movement bound is looser because accumulated finite-step drift is larger than one settled cycle. These are numerical acceptance bounds for the tested scenarios, not anatomical accuracy. The UI exposes the momentum residual and both measured/reference momentum curves so numerical discrepancies remain visible.
+
+Browser checks cover opening the Rotation lab, live tucking and extension, speed changes and momentum comparison, pause/resume, recording, exported CSV data, reset/re-entry, invalid settings, zero-spin trials, resistive trials, and mobile overflow. See [DANCER_LAB.md](DANCER_LAB.md) for the student procedure and definitions.
+
+Primary reference: [OpenStax: Conservation of Angular Momentum](https://openstax.org/books/university-physics-volume-1/pages/11-3-conservation-of-angular-momentum). Articulation API: [Rapier joints](https://rapier.rs/docs/user_guides/javascript/joints/).

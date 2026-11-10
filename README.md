@@ -1,6 +1,6 @@
 # Physics3D Lab
 
-A lab directory with working **Free Fall** and **Projectile Motion** experiments. Rapier determines motion and contact impulses for both experiments. React Three Fiber displays its physical state; the separate analytical model checks the engine's results.
+A lab directory with working **Free Fall**, **Projectile Motion**, and **Spinning Ballet Dancer** experiments. Rapier determines motion, contacts, and articulation. React Three Fiber displays its physical state; the separate analytical model checks the engine's results.
 
 ## Run locally
 
@@ -23,7 +23,7 @@ Editing a field does not change the active trial until applied. Applying setting
 
 ## Keyboard camera controls
 
-Click the 3D view, or Tab to it, to activate keyboard panning. **↑ / ↓ / ← / →** move the view in screen space; **< / >** also pan left/right. Hold a key for continuous movement. A focus outline identifies the active view; **Esc** releases it and Tab continues to the next control. Keys pressed in number fields retain their normal editing behavior. Camera presets restore framing after panning. These controls work in both experiments, including while paused, and do not apply forces or change physical measurements.
+Click the 3D view, or Tab to it, to activate keyboard panning. **↑ / ↓ / ← / →** move the view in screen space; **< / >** also pan left/right. Hold a key for continuous movement. A focus outline identifies the active view; **Esc** releases it and Tab continues to the next control. Keys pressed in number fields retain their normal editing behavior. Camera presets restore framing after panning. These controls work in all three experiments, including while paused, and do not apply forces or change physical measurements.
 
 ## Organization and navigation
 
@@ -37,7 +37,7 @@ Click the 3D view, or Tab to it, to activate keyboard panning. **↑ / ↓ / ←
 | Motion   | Free fall              | Available |
 | Motion   | Projectile motion      | Available |
 | Vectors  | Vector operations      | Planned   |
-| Rotation | Angular momentum robot | Planned   |
+| Rotation | Spinning ballet dancer | Available |
 
 The app opens to the directory. Bookmarkable hash URLs work on static hosting without server rewrite rules:
 
@@ -48,9 +48,10 @@ The app opens to the directory. Bookmarkable hash URLs work on static hosting wi
 /#/labs/rotation
 /#/experiments/free-fall
 /#/experiments/projectile-motion
+/#/experiments/angular-momentum
 ```
 
-Breadcrumbs, the All labs link, and browser Back/Forward support navigation. Planned experiments have an explanatory preview with no simulation controls. Unknown routes show a recovery link. Leaving either experiment releases the scene and resets its measurement/simulation stores; returning starts a new paused trial with defaults. No results are saved across visits.
+Breadcrumbs, the All labs link, and browser Back/Forward support navigation. Planned experiments have an explanatory preview with no simulation controls. Unknown routes show a recovery link. Leaving an experiment releases the scene and resets its measurement/simulation stores; returning starts a new paused trial with defaults. No results are saved across visits.
 
 To add an experiment, give it a directory under `src/experiments/`, an experiment definition, and an entry in `catalog.ts`. Available entries provide a lazy-loaded page; planned entries cannot provide a renderer. Shared camera, clock, controls, measurements, and physics utilities stay outside individual experiment pages.
 
@@ -71,7 +72,7 @@ The live readouts update at 10 Hz. The exact final step is published when paused
 ## Model and numerical validation
 
 - Right-handed coordinates: +x right, +y up, +z out of the xy plane. Grid spacing: 1 m.
-- Fixed physics timestep: 1/120 s. No wall-clock or render-frame animation determines motion.
+- Fixed physics timestep: 1/120 s for motion labs; 1/480 s for the articulated dancer. No wall-clock or render-frame animation determines motion.
 - Default cube: side 1 m, mass 1 kg, center initially at y = 4.50 m, velocity zero.
 - Default uniform gravity: `(0, -9.81, 0)` m/s², an Earth-surface approximation.
 - Ground upper surface is y = 0; first contact occurs when the cube center is approximately 0.50 m high.
@@ -179,3 +180,13 @@ Source is maintained in the private GitHub repository `PhyoThihaOo32/physics3d-l
 Vercel project `physics3d-lab` builds the Vite application with `npm ci` and `npm run build`, serving `dist/`. The application uses hash routes, so direct experiment links work without server rewrite rules. Local `.vercel/` metadata, environment files, dependencies, and test artifacts are excluded from Git and deployment uploads.
 
 For an authorized manual production deployment from a clean checkout, use `vercel --prod` after linking this directory to the project. Vercel retains deployment history for reverting to a previous successful release. The public production URL is also set as the GitHub repository homepage after the first successful deployment.
+
+## Spinning ballet dancer
+
+Open **Rotation → Spinning ballet dancer**. The initial trial uses 2 rad/s and an ideal support. Start the spin, then use **Arm extension target**, **Arms in**, or **Arms out** while running. Shoulders and elbows bend smoothly; arm segments keep their lengths. A supported vertical axis isolates the mass-distribution effect without simulating human balance.
+
+Read hand radius, total moment of inertia, angular velocity, signed RPM, angular momentum and spin kinetic energy. The graphs use independent SI scales and compare measured momentum with initial momentum plus integrated external torque. Pause to record up to eight comparison samples or export the full trial history as CSV. Initial angular velocity (−3 to +3 rad/s) and resistance (0–0.5 N·m·s/rad) apply to a new paused trial. Zero initial spin does not generate sustained rotation when the arms move symmetrically.
+
+Five dynamic bodies and four internal motorized joints produce the motion. The torso is constrained to yaw about a fixed vertical axis. Rapier's angular integration is supplemented by Euler's gyroscopic term for each moving arm; angular velocity is never overwritten to force conservation. Inertia uses each body's rotated tensor and the parallel-axis theorem; measured angular momentum independently sums spin and orbital contributions. A pure geometric equation supplies an independent reference inertia.
+
+This is a 51 kg illustrative segment model, not measured anatomy. Under ideal support, Lᵧ is approximately conserved; with resistance, τᵧ = −bω and Lᵧ decreases in magnitude. Spin energy increases on pulling inward because actuators do work. Displayed spin energy excludes arm-folding motion and gravitational potential energy, so its change is not total muscle work. See [the detailed lab procedure](docs/DANCER_LAB.md) and [physics validation](docs/PHYSICS_VALIDATION.md) for equations, assumptions, tolerances and test coverage.

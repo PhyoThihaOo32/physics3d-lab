@@ -70,7 +70,7 @@ test('planned experiments have honest previews and support direct links, refresh
   await expect(
     page.getByRole('heading', { name: 'Choose a lab. Start exploring.' }),
   ).toBeVisible();
-  for (const lab of ['vectors', 'rotation']) {
+  for (const lab of ['vectors']) {
     await page.goto(`/#/labs/${lab}`);
     await expect(
       page.getByRole('link', { name: /View .* plan/ }),

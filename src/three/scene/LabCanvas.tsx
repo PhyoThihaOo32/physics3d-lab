@@ -31,12 +31,14 @@ export function LabCanvas({
   frameHeight,
   frameWidth,
   center,
+  minFrameDistance = 12,
   sceneExtent,
   label = 'Interactive 3D view of a cube falling onto a ground plane',
 }: {
   children: ReactNode;
   view: CameraView;
   frameHeight: number;
+  minFrameDistance?: number;
   frameWidth?: number;
   center?: readonly [number, number, number];
   sceneExtent?: number;
@@ -91,6 +93,7 @@ export function LabCanvas({
         <LabCamera
           view={view}
           frameHeight={frameHeight}
+          minFrameDistance={minFrameDistance}
           frameWidth={frameWidth}
           center={center}
         />
