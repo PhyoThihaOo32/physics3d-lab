@@ -18,7 +18,7 @@ import { DancerScene } from './DancerScene';
 import { DancerReadouts, DancerRecords } from './DancerReadouts';
 import { dancerExperiment } from './config';
 import './dancer.css';
-const CENTER = [0, 1.25, 0] as const;
+const CENTER = [0, 1.05, 0] as const;
 export default function DancerPage() {
   const [parameters, setParameters] = useState(DEFAULT_DANCER);
   const [run, setRun] = useState(0);
@@ -107,11 +107,12 @@ export default function DancerPage() {
           >
             <LabCanvas
               view={view}
-              frameHeight={2.8}
-              frameWidth={3.2}
+              frameHeight={2.3}
+              frameWidth={1.9}
               center={CENTER}
               sceneExtent={5}
-              minFrameDistance={4.8}
+              minFrameDistance={4.1}
+              minOrbitDistance={1.8}
               label="Interactive articulated ballet dancer rotating about a fixed vertical axis"
             >
               <DancerScene
@@ -270,7 +271,9 @@ export default function DancerPage() {
             equals total muscle work. Shape, mass distribution and motor
             strength are illustrative, not a calibrated model of a person.
             Displayed decimal places do not imply laboratory measurement
-            precision.
+            precision. The sculpted dress, hair, hands and fixed crossed-leg
+            pose illustrate this segment model; they are not separately
+            calibrated anatomical masses.
           </p>
         </div>
       </details>

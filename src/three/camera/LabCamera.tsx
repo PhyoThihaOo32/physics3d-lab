@@ -9,10 +9,12 @@ export function LabCamera({
   frameWidth = 0,
   center,
   minFrameDistance = 12,
+  minOrbitDistance = 4,
 }: {
   view: CameraView;
   frameHeight: number;
   minFrameDistance?: number;
+  minOrbitDistance?: number;
   frameWidth?: number;
   center?: readonly [number, number, number];
 }) {
@@ -62,7 +64,7 @@ export function LabCamera({
       target={
         center ? [center[0], center[1], center[2]] : [0, frameHeight / 2, 0]
       }
-      minDistance={4}
+      minDistance={minOrbitDistance}
       maxDistance={Math.max(50, frameWidth * 8, frameHeight * 8)}
       minPolarAngle={0.00001}
       maxPolarAngle={Math.PI / 2 - 0.001}

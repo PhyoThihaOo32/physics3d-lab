@@ -93,3 +93,9 @@ The engine uses 1/480 s fixed integration and 24 solver iterations. It includes 
 The UI publishes at 10 Hz and on pause. Time is physical integration time, so rendering speed and slow playback do not alter the timestep. Small drift and transient joint errors remain. Automated acceptance bounds are documented in [PHYSICS_VALIDATION.md](PHYSICS_VALIDATION.md). More decimal places improve comparison readability, not physical accuracy.
 
 References: [OpenStax: Conservation of Angular Momentum](https://openstax.org/books/university-physics-volume-1/pages/11-3-conservation-of-angular-momentum), [Rapier: joints](https://rapier.rs/docs/user_guides/javascript/joints/).
+
+## Sculpted model appearance
+
+The interactive dancer uses an ivory sculpture style: a fitted bodice, three layers of pleated tutu, a swept ballet bun, curved hands with individual fingers, tapered limbs, crossed legs and pointe shoes. Continuous arm skin blends across the shoulders and elbows; its skeleton follows the simulated body transforms. The sculpted surface, dress, hair and fixed leg pose illustrate the documented five-body mechanics model. Their geometry does not constitute a calibrated anatomical mass distribution. The physical masses, moments of inertia, joint lengths and equations above remain the sources of the lab's predictions and measurements.
+
+Orbit the view to inspect the sculpture, use Front/Side/Top for comparisons, or zoom in for detail. Arm controls continue to move both arms symmetrically during a trial.

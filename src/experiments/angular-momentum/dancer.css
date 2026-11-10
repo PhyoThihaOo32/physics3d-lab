@@ -366,3 +366,9 @@
 .dancer-theory .theory-heading {
   margin-bottom: 22px;
 }
+@media (max-width: 700px) {
+  .dancer-viewport .coordinate-note {
+    bottom: 72px;
+    right: 16px;
+  }
+}

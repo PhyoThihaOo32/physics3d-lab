@@ -32,6 +32,7 @@ export function LabCanvas({
   frameWidth,
   center,
   minFrameDistance = 12,
+  minOrbitDistance = 4,
   sceneExtent,
   label = 'Interactive 3D view of a cube falling onto a ground plane',
 }: {
@@ -39,6 +40,7 @@ export function LabCanvas({
   view: CameraView;
   frameHeight: number;
   minFrameDistance?: number;
+  minOrbitDistance?: number;
   frameWidth?: number;
   center?: readonly [number, number, number];
   sceneExtent?: number;
@@ -94,6 +96,7 @@ export function LabCanvas({
           view={view}
           frameHeight={frameHeight}
           minFrameDistance={minFrameDistance}
+          minOrbitDistance={minOrbitDistance}
           frameWidth={frameWidth}
           center={center}
         />
