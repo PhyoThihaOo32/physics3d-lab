@@ -17,6 +17,8 @@ for (const experiment of [
   test(`${experiment.id}: keyboard pans the focused view, preserves physics, and leaves inputs usable`, async ({
     page,
   }) => {
+    // Multiple WebGL screenshots are slower on CI's software graphics renderer.
+    test.setTimeout(90_000);
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`/#/experiments/${experiment.id}`);
