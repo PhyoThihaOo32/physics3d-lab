@@ -26,7 +26,7 @@ export default function DancerPage() {
     preset: 'Perspective',
     revision: 0,
   });
-  const [vectors, setVectors] = useState(false);
+  const [vectors, setVectors] = useState(true);
   const ready = useDancerStore((s) => s.ready);
   const snapshot = useDancerStore((s) => s.snapshot);
   const history = useDancerStore((s) => s.history);
@@ -42,7 +42,7 @@ export default function DancerPage() {
     setCamera('Perspective');
   }
   function reset() {
-    setVectors(false);
+    setVectors(true);
     restart(DEFAULT_DANCER);
   }
   useEffect(
@@ -98,7 +98,7 @@ export default function DancerPage() {
                 checked={vectors}
                 onChange={(e) => setVectors(e.target.checked)}
               />
-              Physics guides
+              ω and L vectors
             </label>
           </div>
           <div
@@ -107,8 +107,6 @@ export default function DancerPage() {
           >
             <LabCanvas
               view={view}
-              appearance="studio"
-              elevation={0.18}
               frameHeight={2.3}
               frameWidth={1.9}
               center={CENTER}
@@ -142,23 +140,15 @@ export default function DancerPage() {
               </div>
             )}
             <ViewportHint />
-            {vectors && (
-              <div className="coordinate-note">
-                +y up · supported vertical axis
-                <span>FLOOR GRID / 0.5 METER</span>
-              </div>
-            )}
+            <div className="coordinate-note">
+              +y up · supported vertical axis<span>FLOOR GRID / 0.5 METER</span>
+            </div>
           </div>
           <div className="dancer-scene-caption">
-            <span className="dancer-radius-key">
-              {vectors
-                ? '◯ Measured hand radius'
-                : 'Porcelain dancer · studio view'}
-            </span>
+            <span className="dancer-radius-key">◯ Measured hand radius</span>
             <span>
-              {vectors
-                ? 'Arrows use separate display scales · positive spin follows the right-hand rule'
-                : 'Turn on Physics guides to show radius, the spin axis, and angular vectors.'}
+              Arrows use separate display scales · positive spin follows the
+              right-hand rule
             </span>
           </div>
           <div className="dancer-observation">
