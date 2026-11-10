@@ -5,7 +5,7 @@ import {
   useBeforePhysicsStep,
   useRapier,
 } from '@react-three/rapier';
-import { Group, Mesh, DoubleSide } from 'three';
+import { Group, Mesh, DoubleSide, Vector2 } from 'three';
 import { SimulationPhysics } from '../../physics/engine/SimulationPhysics';
 import {
   DANCER,
@@ -18,6 +18,16 @@ import { SceneLabel } from '../../three/labels/SceneLabel';
 import { VectorArrow3D } from '../../three/vectors/VectorArrow3D';
 import { DancerArm, DancerHand, DancerTorso } from './DancerSculpture';
 
+const PLINTH = [
+  new Vector2(0, -0.06),
+  new Vector2(0.486, -0.06),
+  new Vector2(0.499, -0.053),
+  new Vector2(0.503, -0.041),
+  new Vector2(0.503, -0.019),
+  new Vector2(0.496, -0.008),
+  new Vector2(0.484, -0.005),
+  new Vector2(0, -0.005),
+];
 function Articulation({
   parameters,
   vectors,
@@ -107,14 +117,17 @@ function Articulation({
       ))}
       <mesh
         ref={radius}
+        visible={vectors}
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, 0.012, 0]}
+        position={[0, -0.054, 0]}
       >
         <ringGeometry args={[0.985, 1, 96]} />
         <meshBasicMaterial
-          color="#c1e29e"
+          color="#7c8c72"
           transparent
           opacity={0.7}
+          depthTest={false}
+          depthWrite={false}
           side={DoubleSide}
         />
       </mesh>
@@ -127,6 +140,7 @@ function Articulation({
             label="ω"
             unit="rad/s"
             category="velocity"
+            color="#5d795c"
             labelSize={0.32}
           />
           <VectorArrow3D
@@ -135,7 +149,7 @@ function Articulation({
             magnitudeScale={0.09}
             label="Lᵧ"
             unit="kg·m²/s"
-            color="#deb9ef"
+            color="#956c82"
             category="component"
             labelSize={0.32}
           />
@@ -153,7 +167,11 @@ export function DancerScene({
 }) {
   return (
     <>
-      <directionalLight position={[2, 2.5, -3]} intensity={1} color="#c7dce9" />
+      <directionalLight
+        position={[2.5, 3, -2]}
+        intensity={0.8}
+        color="#fff7ee"
+      />
       <SimulationPhysics
         gravity={[0, -9.81, 0]}
         timeStep={DANCER.timeStep}
@@ -161,31 +179,40 @@ export function DancerScene({
       >
         <Articulation parameters={parameters} vectors={vectors} />
       </SimulationPhysics>
-      <mesh position={[0, -0.065, 0]} receiveShadow>
-        <cylinderGeometry args={[1.25, 1.3, 0.12, 80]} />
-        <meshStandardMaterial
-          color="#283139"
-          roughness={0.48}
-          metalness={0.35}
+      <mesh receiveShadow>
+        <latheGeometry
+          args={[PLINTH.map((p) => new Vector2(p.x * 0.78, p.y)), 96]}
         />
+        <meshStandardMaterial color="#ceb2a3" roughness={0.62} />
       </mesh>
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.13, 0]}
+        position={[0, -0.062, 0]}
         receiveShadow
       >
         <planeGeometry args={[30, 30]} />
-        <meshStandardMaterial color="#15242d" />
+        <shadowMaterial
+          color="#7c6b60"
+          opacity={0.2}
+          transparent
+          depthWrite={false}
+        />
       </mesh>
-      <gridHelper
-        args={[10, 20, '#344b57', '#233640']}
-        position={[0, -0.125, 0]}
-      />
-      <mesh position={[0, 1.075, 0]}>
-        <cylinderGeometry args={[0.003, 0.003, 2.15, 8]} />
-        <meshBasicMaterial color="#a7b9c4" transparent opacity={0.4} />
-      </mesh>
-      <SceneLabel text="+y" position={[0, 2.2, 0]} size={0.25} />
+      {vectors && (
+        <gridHelper
+          args={[10, 20, '#b7ac9d', '#c8beb1']}
+          position={[0, -0.0605, 0]}
+        />
+      )}
+      {vectors && (
+        <group>
+          <mesh position={[0, 1.075, 0]}>
+            <cylinderGeometry args={[0.003, 0.003, 2.15, 8]} />
+            <meshBasicMaterial color="#968e81" transparent opacity={0.3} />
+          </mesh>
+          <SceneLabel text="+y" position={[0, 2.2, 0]} size={0.25} />
+        </group>
+      )}
     </>
   );
 }

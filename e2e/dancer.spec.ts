@@ -34,8 +34,8 @@ test('articulated dancer conserves momentum, records comparisons, exports and re
     .poll(() => number(page, 'time'), { timeout: 40_000 })
     .toBeGreaterThan(3.6);
   await page.getByRole('button', { name: /^Ⅱ Pause$/ }).click();
-  expect(await number(page, 'omega')).toBeGreaterThan(4.1);
-  expect(await number(page, 'omega')).toBeLessThan(4.6);
+  expect(await number(page, 'omega')).toBeGreaterThan(4.4);
+  expect(await number(page, 'omega')).toBeLessThan(4.9);
   expect(await number(page, 'momentum')).toBeCloseTo(initialL, 1);
   expect(
     parseFloat(
@@ -61,7 +61,7 @@ test('articulated dancer conserves momentum, records comparisons, exports and re
   expect(lines[0]).toContain('expected_momentum_kg_m2_s');
   expect(lines.length).toBeGreaterThan(30);
   expect(Number(lines[1].split(',')[0])).toBe(0);
-  expect(Number(lines.at(-1)!.split(',')[3])).toBeGreaterThan(4.1);
+  expect(Number(lines.at(-1)!.split(',')[3])).toBeGreaterThan(4.4);
   await page.getByRole('button', { name: 'Open arms', exact: true }).click();
   await page.getByRole('button', { name: 'Resume' }).click();
   await expect

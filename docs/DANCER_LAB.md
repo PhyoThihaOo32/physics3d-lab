@@ -29,7 +29,7 @@ Positive rotation follows the right-hand rule about +y. Negative initial velocit
 - Body excluding moving arms: 44 kg, Iᵧ = 0.750 kg·m², constrained position and tilt. Total model mass is 51 kg.
 - Each upper arm: 2.0 kg, 0.30 m. Each forearm/hand segment: 1.5 kg, 0.28 m. Both use a uniform 0.07 m square inertia envelope.
 - Shoulder centers: 0.18 m from the axis, 1.42 m above the platform. Shoulder and elbow axes move with the dancer.
-- Arms extended: shoulder and elbow angles 0°. Arms overhead: shoulders 70° above horizontal, elbows 55° flexed; forearms point inward at 125° above the outward horizontal. Segment lengths do not change.
+- Arms extended: shoulder and elbow angles 0°. Arms overhead: shoulders 80° above horizontal, elbows 25° flexed; forearms point inward at 105° above the outward horizontal. Segment lengths do not change.
 - Extension target moves at at most 45 percentage points per physical second; actual joints follow with finite stiffness. Numerical/physical motor compliance causes small pose differences.
 - Internal joint motors transfer forces and torques between body segments. They represent actuation, not a physiological muscle model. Segment self-contact is disabled for the simplified envelopes.
 - Gravity is 9.81 m/s² downward and contributes no torque about the vertical axis. The support prevents translation and tilt. Its ideal mode supplies no vertical-axis torque.
@@ -38,7 +38,7 @@ Positive rotation follows the right-hand rule about +y. Negative initial velocit
 
 ## Independent reference equations
 
-Let extension e run from 0 (overhead) to 1 (open). The UI's arm raise percentage is 100(1−e). Set p = 1−e and use smoothstep s = 3p²−2p³, giving a shoulder angle α = 70°s, elbow angle β = 55°s, and forearm angle γ = α+β. Both arms mirror the same port de bras. With shoulder radius d = 0.18 m, upper length a = 0.30 m, fore length b = 0.28 m, and square thickness t = 0.07 m:
+Let extension e run from 0 (overhead) to 1 (open). The UI's arm raise percentage is 100(1−e). Set p = 1−e and use smoothstep s = 3p²−2p³, giving a shoulder angle α = 80°s, elbow angle β = 25°s, and forearm angle γ = α+β. Both arms mirror the same port de bras. With shoulder radius d = 0.18 m, upper length a = 0.30 m, fore length b = 0.28 m, and square thickness t = 0.07 m:
 
 ```text
 r_upper = d + ½a cos α
@@ -59,7 +59,7 @@ Kspin = ½Iᵧωᵧ² ≈ Lᵧ²/(2Iᵧ)
 Fixed I, viscous resistance: ωᵧ(t) = ωᵧ(0) exp(−bt/Iᵧ)
 ```
 
-The ideal reference open inertia is 2.391258 kg·m² and overhead inertia is 1.101867 kg·m². Starting at 2 rad/s gives L₀ = 4.782517 kg·m²/s. The exact geometric reference predicts an overhead speed of about 4.340 rad/s. The actual motorized pose can differ slightly under gravity and centrifugal load.
+The ideal reference open inertia is 2.391258 kg·m² and overhead inertia is 1.042708 kg·m². Starting at 2 rad/s gives L₀ = 4.782517 kg·m²/s. The exact geometric reference predicts an overhead speed of about 4.587 rad/s. The actual motorized pose can differ slightly under gravity and centrifugal load.
 
 ## Procedure A: ideal angular momentum
 
@@ -97,6 +97,8 @@ References: [OpenStax: Conservation of Angular Momentum](https://openstax.org/bo
 
 ## Sculpted model appearance
 
-The interactive dancer uses an ivory sculpture style: a fitted bodice, three layers of pleated tutu, a swept ballet bun, curved hands with individual fingers, tapered limbs, a straight supporting pointe leg, a softly lifted trailing foot, ankle ribbons and pointe shoes. Continuous arm skin blends across the shoulders and elbows; its skeleton follows the simulated body transforms. The sculpted surface, dress, hair and fixed leg pose illustrate the documented five-body mechanics model. Their geometry does not constitute a calibrated anatomical mass distribution. The physical masses, moments of inertia, joint lengths and equations above remain the sources of the lab's predictions and measurements.
+The interactive dancer uses an blush porcelain sculpture style: a fitted bodice, a pearl-white tutu with broad curled folds, a swept ballet bun, curved hands with individual fingers, tapered limbs, a straight supporting pointe leg, a softly lifted trailing foot, ankle ribbons and pointe shoes. Continuous arm skin blends across the shoulders and elbows; its skeleton follows the simulated body transforms. The sculpted surface, dress, hair and fixed leg pose illustrate the documented five-body mechanics model. Their geometry does not constitute a calibrated anatomical mass distribution. The physical masses, moments of inertia, joint lengths and equations above remain the sources of the lab's predictions and measurements.
 
 Orbit the view to inspect the sculpture, use Front/Side/Top for comparisons, or zoom in for detail. Arm controls move both arms symmetrically from open second position into a rounded overhead fifth position. The fixed leg pose does not change during a trial. Raising the hands reduces inertia here because their perpendicular distance from the vertical axis decreases. Height by itself is not part of Iᵧ = ∫r_perpendicular² dm; ideal angular momentum Lᵧ remains constant.
+
+The studio view uses a warm backdrop, a beveled blush plinth, a lifted chin and subtle closed-eye facial details. Physics guides start hidden; enable **Physics guides** to display the spin axis, measured radius, grid and angular vectors. These display layers do not affect the simulation.

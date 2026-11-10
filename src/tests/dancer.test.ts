@@ -59,10 +59,10 @@ describe('articulated spinning dancer', () => {
         .add(new Vector3().copy(fore.translation()));
       // Inertia alone cannot distinguish a mirrored downward pose: check actual overhead clearance.
       expect(hand.y).toBeGreaterThan(1.9);
-      expect(hand.y).toBeLessThan(1.97);
+      expect(hand.y).toBeLessThan(2.03);
       expect(t.dancer.arms[0].translation().y).toBeGreaterThan(1.55);
-      expect(raised.radius).toBeGreaterThan(0.1);
-      expect(raised.radius).toBeLessThan(0.15);
+      expect(raised.radius).toBeGreaterThan(0.14);
+      expect(raised.radius).toBeLessThan(0.19);
       expect(raised.inertia).toBeCloseTo(dancerInertia(0), 1);
       expect(
         Math.abs(raised.omega - initial.momentum / raised.inertia),
@@ -153,7 +153,7 @@ describe('articulated spinning dancer', () => {
   });
   it('has monotonic reference inertia and rejects invalid initial settings', () => {
     expect(dancerInertia(1)).toBeCloseTo(2.391258333333333, 10);
-    expect(dancerInertia(0)).toBeCloseTo(1.101866831360493, 10);
+    expect(dancerInertia(0)).toBeCloseTo(1.0427079248462237, 10);
     let last = dancerInertia(0);
     for (let i = 1; i <= 100; i++) {
       const next = dancerInertia(i / 100);

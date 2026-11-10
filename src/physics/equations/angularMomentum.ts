@@ -12,8 +12,8 @@ export const DANCER = {
   duration: 60,
   timeStep: 1 / 480,
   extensionRate: 0.45,
-  shoulderLift: (70 * Math.PI) / 180,
-  elbowBend: (55 * Math.PI) / 180,
+  shoulderLift: (80 * Math.PI) / 180,
+  elbowBend: (25 * Math.PI) / 180,
 } as const;
 export interface DancerParameters {
   initialOmega: number;

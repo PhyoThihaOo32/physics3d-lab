@@ -2,6 +2,7 @@ import {
   Bone,
   BufferGeometry,
   CatmullRomCurve3,
+  Color,
   Float32BufferAttribute,
   Skeleton,
   SkinnedMesh,
@@ -78,17 +79,17 @@ function sampleSections(sections: readonly Section[]) {
 }
 const BODY_SECTIONS: readonly Section[] = [
   [-0.12, 0.095, 0.069],
-  [-0.07, 0.14, 0.084],
-  [0, 0.117, 0.074],
-  [0.08, 0.088, 0.059],
-  [0.15, 0.091, 0.061],
-  [0.23, 0.12, 0.077],
-  [0.3, 0.142, 0.086, 0.006],
-  [0.37, 0.15, 0.075],
-  [0.415, 0.166, 0.063, -0.005],
-  [0.445, 0.123, 0.052, -0.006],
-  [0.476, 0.044, 0.039],
-  [0.52, 0.034, 0.034, 0.001],
+  [-0.07, 0.138, 0.084, -0.008],
+  [0, 0.111, 0.071, -0.003],
+  [0.08, 0.082, 0.057, 0.002],
+  [0.15, 0.088, 0.059, 0.006],
+  [0.23, 0.114, 0.075, 0.012],
+  [0.3, 0.133, 0.08, 0.015],
+  [0.37, 0.141, 0.072, 0.008],
+  [0.415, 0.162, 0.061, 0],
+  [0.445, 0.119, 0.049, 0],
+  [0.476, 0.04, 0.036, 0.002],
+  [0.52, 0.031, 0.032, 0.004],
   [0.552, 0.038, 0.036, 0.005],
 ];
 function bodySurface(
@@ -97,9 +98,14 @@ function bodySurface(
   theta: number,
   padding = 0,
 ): Point {
-  const chest = Math.exp(-(((p.y - 0.3) / 0.055) ** 2)) * 0.008;
+  const x = (p.x + padding) * Math.cos(theta);
+  const chest =
+    Math.exp(-(((p.y - 0.3) / 0.055) ** 2)) *
+    0.008 *
+    (Math.exp(-(((x - 0.048) / 0.045) ** 2)) +
+      Math.exp(-(((x + 0.048) / 0.045) ** 2)));
   return [
-    (p.x + padding) * Math.cos(theta),
+    x,
     p.y,
     (p.z + padding) * Math.sin(theta) +
       offset +
@@ -140,67 +146,143 @@ export function bodiceGeometry() {
     return bodySurface(profile, offset, theta, 0.0025);
   });
 }
+const HEAD_SECTIONS: readonly Section[] = [
+  [0.526, 0.011, 0.018, 0.018],
+  [0.548, 0.03, 0.03, 0.016],
+  [0.58, 0.049, 0.04, 0.011],
+  [0.617, 0.063, 0.051, 0.003],
+  [0.661, 0.069, 0.062, -0.004],
+  [0.704, 0.06, 0.06, -0.008],
+  [0.735, 0.038, 0.041, -0.007],
+  [0.75, 0.001, 0.001, -0.005],
+];
+function facialDepth(x: number, y: number, front: number) {
+  const g = (value: number, center: number, width: number) =>
+    Math.exp(-(((value - center) / width) ** 2));
+  const nose =
+    (0.016 * g(y, 0.609, 0.013) + 0.009 * g(y, 0.633, 0.024)) * g(x, 0, 0.009);
+  const sockets = -0.0035 * g(Math.abs(x), 0.03, 0.014) * g(y, 0.644, 0.01);
+  const cheeks = 0.003 * g(Math.abs(x), 0.04, 0.018) * g(y, 0.613, 0.02);
+  const lips = 0.0025 * g(x, 0, 0.015) * g(y, 0.574, 0.006);
+  return (nose + sockets + cheeks + lips) * front;
+}
+export function facePoint(x: number, y: number, lift = 0): Point {
+  const sample = sampleSections(HEAD_SECTIONS);
+  let lo = 0,
+    hi = 1;
+  for (let i = 0; i < 16; i++) {
+    const mid = (lo + hi) / 2;
+    if (sample(mid).profile.y < y) lo = mid;
+    else hi = mid;
+  }
+  const { profile: p, offset } = sample((lo + hi) / 2);
+  const front = Math.sqrt(Math.max(0, 1 - (x / p.x) ** 2));
+  return [x, y, p.z * front + offset + facialDepth(x, y, front) + lift];
+}
 export function headGeometry() {
-  const sample = sampleSections([
-    [0.525, 0.014, 0.02, 0.023],
-    [0.548, 0.035, 0.034, 0.021],
-    [0.575, 0.058, 0.046, 0.015],
-    [0.62, 0.076, 0.06, 0.005],
-    [0.672, 0.08, 0.073, -0.003],
-    [0.72, 0.067, 0.067, -0.01],
-    [0.753, 0.041, 0.044, -0.009],
-    [0.765, 0.001, 0.001, -0.008],
-  ]);
+  const sample = sampleSections(HEAD_SECTIONS);
   const rows = Array.from({ length: 81 }, (_, i) => sample(i / 80));
-  return surface(80, 64, (u, theta) => {
+  const geometry = surface(80, 64, (u, theta) => {
     const { profile: p, offset } = rows[Math.round(u * 80)];
-    const front = Math.max(0, Math.sin(theta)) ** 34;
-    const nose = 0.02 * Math.exp(-(((p.y - 0.624) / 0.021) ** 2)) * front;
-    const mouth =
-      0.004 *
-      Math.exp(-(((p.y - 0.588) / 0.008) ** 2)) *
-      Math.max(0, Math.sin(theta)) ** 18;
+    const x = p.x * Math.cos(theta),
+      front = Math.max(0, Math.sin(theta));
     return [
-      p.x * Math.cos(theta),
+      x,
       p.y,
-      p.z * Math.sin(theta) + offset + nose + mouth,
+      p.z * Math.sin(theta) + offset + facialDepth(x, p.y, front),
     ];
   });
+  const position = geometry.getAttribute('position'),
+    colors: number[] = [];
+  const skin = new Color('#efcec2'),
+    rose = new Color('#e2a69c');
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i),
+      y = position.getY(i),
+      z = position.getZ(i);
+    const blush =
+      0.16 *
+      Math.exp(
+        -(((Math.abs(x) - 0.041) / 0.02) ** 2) - ((y - 0.611) / 0.021) ** 2,
+      ) *
+      Math.max(0, Math.min(1, z / 0.05));
+    const c = skin.clone().lerp(rose, blush);
+    colors.push(c.r, c.g, c.b);
+  }
+  geometry.setAttribute('color', new Float32BufferAttribute(colors, 3));
+  return geometry;
 }
 export function hairGeometry() {
   return surface(
     35,
     64,
     (u, theta) => {
-      const front = (Math.sin(theta) + 1) / 2;
-      const polar = u * (2.0 - 0.52 * front);
-      const groove = 1 + 0.008 * Math.cos(theta * 22 + polar * 3);
+      const front = (Math.sin(theta) + 1) / 2,
+        polar = u * (2.02 - 0.58 * front);
+      const groove = 1 + 0.005 * Math.cos(theta * 28 + polar * 4);
       return [
-        0.082 * Math.sin(polar) * Math.cos(theta) * groove,
-        0.665 + 0.104 * Math.cos(polar),
-        -0.014 + 0.077 * Math.sin(polar) * Math.sin(theta) * groove,
+        0.071 * Math.sin(polar) * Math.cos(theta) * groove,
+        0.654 + 0.097 * Math.cos(polar),
+        -0.009 + 0.066 * Math.sin(polar) * Math.sin(theta) * groove,
       ];
     },
     true,
   );
 }
+/** Broad, softly curled folds, with offset underlayers instead of a serrated paper hem. */
 export function tutuGeometry(layer: number) {
-  return surface(
-    30,
-    192,
+  const rows = 40,
+    columns = 192;
+  const top = surface(
+    rows,
+    columns,
     (u, theta) => {
-      const radius = 0.112 + u * (0.295 - layer * 0.014);
-      const flare = Math.sin((u * Math.PI) / 2);
-      const ripple = 0.016 * Math.cos(theta * 32 + u * 0.5) * u ** 1.7;
-      const rim = 0.008 * Math.sin(theta * 7) * u ** 4;
+      const phase = theta * 12;
+      const radius =
+        0.108 + u * (0.262 - layer * 0.01) + 0.01 * Math.cos(phase) * u ** 2;
+      const folds = 0.036 * Math.cos(phase + u * 0.35) * u ** 1.7;
+      const curl = 0.022 * u ** 8 * (0.55 + 0.45 * Math.cos(phase));
+      const drift = 0.009 * Math.sin(theta * 3 + 0.5) * u ** 2;
       return [
         radius * Math.cos(theta),
-        -0.049 - 0.165 * flare - layer * 0.009 + ripple + rim,
+        -0.063 -
+          0.123 * Math.sin((u * Math.PI) / 2) +
+          folds +
+          curl +
+          drift -
+          layer * 0.007,
         radius * Math.sin(theta),
       ];
     },
     true,
   );
+  // A closed, softly rounded hem prevents the folds looking like intersecting paper sheets.
+  const attr = top.getAttribute('position'),
+    n = attr.count,
+    positions: number[] = [],
+    indices: number[] = [];
+  for (let side = 0; side < 2; side++)
+    for (let i = 0; i < n; i++)
+      positions.push(attr.getX(i), attr.getY(i) - side * 0.004, attr.getZ(i));
+  const original = top.getIndex()!;
+  for (let i = 0; i < original.count; i += 3) {
+    const a = original.getX(i),
+      b = original.getX(i + 1),
+      c = original.getX(i + 2);
+    indices.push(a, b, c, c + n, b + n, a + n);
+  }
+  for (const row of [0, rows])
+    for (let j = 0; j < columns; j++) {
+      const a = row * (columns + 1) + j,
+        b = a + 1;
+      indices.push(a, a + n, b, b, a + n, b + n);
+    }
+  top.dispose();
+  const result = new BufferGeometry();
+  result.setAttribute('position', new Float32BufferAttribute(positions, 3));
+  result.setIndex(indices);
+  result.computeVertexNormals();
+  return result;
 }
 
 /** An oval, tapered sweep follows a curved anatomical centerline. */
@@ -252,10 +334,10 @@ export function armSculpture(side: number, material: Material) {
   const profile = new CatmullRomCurve3(
     [
       new Vector3(0.027, 0.024, -0.045),
-      new Vector3(0.042, 0.032, 0.04),
-      new Vector3(0.033, 0.026, 0.16),
-      new Vector3(0.026, 0.024, a),
-      new Vector3(0.031, 0.024, a + 0.07),
+      new Vector3(0.035, 0.028, 0.04),
+      new Vector3(0.028, 0.024, 0.16),
+      new Vector3(0.023, 0.021, a),
+      new Vector3(0.026, 0.021, a + 0.07),
       new Vector3(0.02, 0.017, length - 0.13),
       new Vector3(0.014, 0.012, length - 0.08),
     ],
@@ -310,7 +392,7 @@ export function armSculpture(side: number, material: Material) {
   const skeleton = new Skeleton([root, upper, fore]);
   mesh.bind(skeleton);
   mesh.castShadow = true;
-  mesh.receiveShadow = true;
+  mesh.receiveShadow = false;
   mesh.frustumCulled = false;
   return {
     mesh,

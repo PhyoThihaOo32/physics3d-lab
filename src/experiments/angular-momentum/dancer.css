@@ -372,3 +372,37 @@
     right: 16px;
   }
 }
+/* A warm sculpture studio keeps the anatomy and pale fabric readable. */
+.dancer-viewport {
+  background: #d7cfc4;
+}
+.dancer-viewport .scene-title > span {
+  color: #756b60;
+}
+.dancer-viewport .scene-title > strong {
+  color: #51463f;
+}
+.dancer-viewport .scene-status {
+  background: #f0e8dd;
+  border-color: #bdb2a6;
+  color: #5c5148;
+}
+.dancer-viewport .view-hint,
+.dancer-viewport .coordinate-note {
+  color: #695e54;
+}
+.dancer-viewport .view-hint .keyboard-hint {
+  color: #607154;
+}
+.dancer-viewport .coordinate-note span {
+  color: #887a6b;
+}
+.dancer-viewport .camera-controls button {
+  background: #eee7dd;
+  border-color: #c2b6a8;
+  color: #655a50;
+}
+.dancer-viewport .camera-controls button[aria-pressed='true'] {
+  background: #6f7d63;
+  color: #fffaf1;
+}

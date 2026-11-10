@@ -10,14 +10,15 @@ import {
   bodiceGeometry,
   hairGeometry,
   headGeometry,
+  facePoint,
   limbGeometry,
   tutuGeometry,
 } from './dancerGeometry';
 
-const IVORY = '#e9dfca';
+const SKIN = '#efcec2';
 function SculptureMesh({
   geometry,
-  color = IVORY,
+  color = SKIN,
   roughness = 0.43,
 }: {
   geometry: BufferGeometry;
@@ -25,12 +26,13 @@ function SculptureMesh({
   roughness?: number;
 }) {
   return (
-    <mesh geometry={geometry} castShadow receiveShadow>
+    <mesh geometry={geometry} castShadow>
       <meshStandardMaterial
         color={color}
         roughness={roughness}
         metalness={0.025}
         side={DoubleSide}
+        vertexColors={!!geometry.getAttribute('color')}
       />
     </mesh>
   );
@@ -38,7 +40,7 @@ function SculptureMesh({
 function Ellipsoid({
   position,
   scale,
-  color = IVORY,
+  color = SKIN,
 }: {
   position: [number, number, number];
   scale: [number, number, number];
@@ -58,7 +60,43 @@ export function DancerTorso() {
       bodice: bodiceGeometry(),
       head: headGeometry(),
       hair: hairGeometry(),
-      skirts: [tutuGeometry(0), tutuGeometry(1), tutuGeometry(2)],
+      skirts: [tutuGeometry(0)],
+      eyelids: [-1, 1].map((side) =>
+        limbGeometry(
+          [-0.013, -0.007, 0, 0.007, 0.013].map((dx, i) =>
+            facePoint(
+              side * 0.03 + dx,
+              [0.644, 0.641, 0.64, 0.641, 0.644][i],
+              0.0012,
+            ),
+          ),
+          [0.0005, 0.0009, 0.001, 0.0009, 0.0003],
+          [0.0005, 0.0008, 0.0008, 0.0008, 0.0003],
+          24,
+        ),
+      ),
+      brows: [-1, 1].map((side) =>
+        limbGeometry(
+          [-0.013, -0.006, 0.003, 0.013].map((dx, i) =>
+            facePoint(
+              side * 0.03 + dx,
+              [0.661, 0.665, 0.666, 0.663][i],
+              0.0015,
+            ),
+          ),
+          [0.0004, 0.0011, 0.0012, 0.0004],
+          [0.0004, 0.0008, 0.0008, 0.0004],
+          20,
+        ),
+      ),
+      lips: limbGeometry(
+        [-0.014, -0.006, 0, 0.006, 0.014].map((x, i) =>
+          facePoint(x, [0.573, 0.575, 0.573, 0.575, 0.573][i], 0.0014),
+        ),
+        [0.0003, 0.0011, 0.0009, 0.0011, 0.0003],
+        [0.0003, 0.0007, 0.0007, 0.0007, 0.0003],
+        24,
+      ),
       ribbons: [
         limbGeometry(
           [
@@ -147,23 +185,44 @@ export function DancerTorso() {
   return (
     <>
       <SculptureMesh geometry={g.body} />
-      <SculptureMesh geometry={g.bodice} color="#ded0b5" roughness={0.36} />
-      <group rotation={[-0.1, -0.2, -0.045]} position={[0, 0.53, 0]}>
+      <SculptureMesh geometry={g.bodice} color="#f1d8cc" roughness={0.36} />
+      <group
+        rotation={[-0.38, 1.05, -0.035]}
+        scale={0.9}
+        position={[0, 0.53, 0]}
+      >
         <group position={[0, -0.53, 0]}>
-          <SculptureMesh geometry={g.head} />
-          <SculptureMesh geometry={g.hair} color="#d3c5a9" />
+          <SculptureMesh geometry={g.head} color="#ffffff" />
+          {g.eyelids.map((geometry, i) => (
+            <SculptureMesh
+              key={i}
+              geometry={geometry}
+              color="#926b62"
+              roughness={0.65}
+            />
+          ))}
+          {g.brows.map((geometry, i) => (
+            <SculptureMesh
+              key={i}
+              geometry={geometry}
+              color="#b58d7c"
+              roughness={0.7}
+            />
+          ))}
+          <SculptureMesh geometry={g.lips} color="#be8980" roughness={0.55} />
+          <SculptureMesh geometry={g.hair} color="#d6afa1" />
           <Ellipsoid
-            position={[0, 0.719, -0.092]}
-            scale={[0.048, 0.046, 0.039]}
-            color="#d3c5a9"
+            position={[0, 0.704, -0.079]}
+            scale={[0.04, 0.04, 0.033]}
+            color="#d6afa1"
           />
           <Ellipsoid
-            position={[-0.079, 0.641, -0.009]}
-            scale={[0.01, 0.02, 0.012]}
+            position={[-0.066, 0.627, -0.002]}
+            scale={[0.008, 0.016, 0.009]}
           />
           <Ellipsoid
-            position={[0.079, 0.641, -0.009]}
-            scale={[0.01, 0.02, 0.012]}
+            position={[0.066, 0.627, -0.002]}
+            scale={[0.008, 0.016, 0.009]}
           />
         </group>
       </group>
@@ -171,19 +230,19 @@ export function DancerTorso() {
         <SculptureMesh
           key={i}
           geometry={geometry}
-          color={i === 0 ? '#eee2c9' : '#d9caad'}
-          roughness={0.52}
+          color={i === 0 ? '#fff6e9' : '#e8e1d4'}
+          roughness={0.64}
         />
       ))}
       <SculptureMesh geometry={g.support} />
       <SculptureMesh geometry={g.crossing} />
-      <SculptureMesh geometry={g.leftShoe} color="#d4bc9b" roughness={0.36} />
-      <SculptureMesh geometry={g.rightShoe} color="#d4bc9b" roughness={0.36} />
+      <SculptureMesh geometry={g.leftShoe} color="#e5c0b4" roughness={0.36} />
+      <SculptureMesh geometry={g.rightShoe} color="#e5c0b4" roughness={0.36} />
       {g.ribbons.map((geometry, i) => (
         <SculptureMesh
           key={i}
           geometry={geometry}
-          color="#d4bc9b"
+          color="#e5c0b4"
           roughness={0.4}
         />
       ))}
@@ -203,7 +262,7 @@ export function DancerArm({
   const material = useMemo(
     () =>
       new MeshStandardMaterial({
-        color: IVORY,
+        color: SKIN,
         roughness: 0.43,
         metalness: 0.025,
         side: DoubleSide,

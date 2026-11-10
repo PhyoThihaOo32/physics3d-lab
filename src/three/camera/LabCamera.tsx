@@ -10,11 +10,13 @@ export function LabCamera({
   center,
   minFrameDistance = 12,
   minOrbitDistance = 4,
+  elevation = 0.45,
 }: {
   view: CameraView;
   frameHeight: number;
   minFrameDistance?: number;
   minOrbitDistance?: number;
+  elevation?: number;
   frameWidth?: number;
   center?: readonly [number, number, number];
 }) {
@@ -35,7 +37,7 @@ export function LabCamera({
     const positions: Record<CameraView['preset'], [number, number, number]> = {
       Perspective: [
         x + distance * (frameWidth ? 0.25 : 0.7),
-        y + distance * 0.45,
+        y + distance * elevation,
         z + distance * 0.8,
       ],
       Top: [x, y + distance, z + 0.001],
@@ -53,6 +55,7 @@ export function LabCamera({
     view.revision,
     frameHeight,
     minFrameDistance,
+    elevation,
     frameWidth,
     center,
     aspect,

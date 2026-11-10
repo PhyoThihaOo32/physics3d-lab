@@ -140,9 +140,9 @@ Airborne energy drift at the frozen last-airborne sample was 0.230% for Free Fal
 
 ## Spinning ballet dancer: articulation and torque balance
 
-The dancer adds five dynamic bodies and four internal motorized revolute joints. The torso is supported against translation and tilt and remains free about the vertical y axis. This models a dancer on a rotating support; it does not simulate balancing on a deformable foot. Its fixed 44 kg body has Iᵧ = 0.750 kg·m². Each arm consists of a 2 kg, 0.30 m upper segment and 1.5 kg, 0.28 m forearm/hand segment. Uniform rectangular envelopes are 0.07 m square. Total mass is 51 kg. Segment lengths are fixed; mirrored shoulders lift to 70° above horizontal and elbows bend by 55° into an overhead oval.
+The dancer adds five dynamic bodies and four internal motorized revolute joints. The torso is supported against translation and tilt and remains free about the vertical y axis. This models a dancer on a rotating support; it does not simulate balancing on a deformable foot. Its fixed 44 kg body has Iᵧ = 0.750 kg·m². Each arm consists of a 2 kg, 0.30 m upper segment and 1.5 kg, 0.28 m forearm/hand segment. Uniform rectangular envelopes are 0.07 m square. Total mass is 51 kg. Segment lengths are fixed; mirrored shoulders lift to 80° above horizontal and elbows bend by 25° into an overhead oval.
 
-The independent reference calculation uses the finite-rod inertia tensor and parallel-axis theorem. Reference Iᵧ is 2.391258 kg·m² extended and 1.101867 kg·m² overhead. Motor compliance under gravity and centrifugal forces can change the measured pose slightly. The rendering follows the engine's articulated body transforms.
+The independent reference calculation uses the finite-rod inertia tensor and parallel-axis theorem. Reference Iᵧ is 2.391258 kg·m² extended and 1.042708 kg·m² overhead. Motor compliance under gravity and centrifugal forces can change the measured pose slightly. The rendering follows the engine's articulated body transforms.
 
 Measured momentum is computed independently of Iᵧ times torso angular velocity:
 
