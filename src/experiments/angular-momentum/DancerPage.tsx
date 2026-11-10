@@ -154,9 +154,11 @@ export default function DancerPage() {
           <div className="dancer-observation">
             <div className="section-label">WATCH THE RELATIONSHIP</div>
             <p>
-              <strong>Arms in → smaller I → faster spin.</strong> Arms out
-              reverses it. Angular momentum stays nearly constant on the ideal
-              support; spin energy changes because the actuators do work.
+              <strong>Arms overhead → smaller I → faster spin.</strong> Opening
+              the arms reverses it. Angular momentum stays nearly constant on
+              the ideal support; spin energy changes because the actuators do
+              work. Bringing mass closer to the vertical axis reduces I; raising
+              mass without changing its radius would not reduce I.
             </p>
           </div>
         </section>
@@ -203,12 +205,12 @@ export default function DancerPage() {
           <h3>Predict first. Then test.</h3>
           <ol>
             <li>
-              Start at 2 rad/s with ideal support. Record open and tucked poses.
-              Does I₁ω₁ ≈ I₂ω₂? Compare spin energy too.
+              Start at 2 rad/s with ideal support. Record open and overhead
+              poses. Does I₁ω₁ ≈ I₂ω₂? Compare spin energy too.
             </li>
             <li>
-              Apply 0 rad/s, then fold and extend. Symmetric arm movement should
-              not create a sustained spin.
+              Apply 0 rad/s, then raise and open the arms. Symmetric arm
+              movement should not create a sustained spin.
             </li>
             <li>
               Choose resistive support, b = 0.15 N·m·s/rad. Hold one pose. Watch
@@ -246,9 +248,10 @@ export default function DancerPage() {
             Four dynamic arm segments connect to a dynamic torso through
             motorized revolute shoulder and elbow joints. The torso can rotate
             about y; its position and tilt are supported. Joint motors apply
-            internal action and reaction forces. Upper arms fold down to 75° and
-            elbows bend to 150°, keeping segment lengths fixed. Internal
-            collisions are disabled for the simplified segment envelopes.
+            internal action and reaction forces. Upper arms rise to 70° above
+            horizontal and elbows bend by 55° to form a rounded overhead pose,
+            keeping segment lengths fixed. Internal collisions are disabled for
+            the simplified segment envelopes.
           </p>
           <p>
             Inertia uses each segment’s rotated inertia tensor plus m(x² + z²).
@@ -266,14 +269,14 @@ export default function DancerPage() {
             residual, avoiding meaningless percent errors.
           </p>
           <p>
-            Spin kinetic energy is ½Iᵧωᵧ², excluding relative arm-folding
+            Spin kinetic energy is ½Iᵧωᵧ², excluding relative arm-raising
             kinetic energy. Neither its change nor the resistive loss alone
             equals total muscle work. Shape, mass distribution and motor
             strength are illustrative, not a calibrated model of a person.
             Displayed decimal places do not imply laboratory measurement
-            precision. The sculpted dress, hair, hands and fixed crossed-leg
-            pose illustrate this segment model; they are not separately
-            calibrated anatomical masses.
+            precision. The sculpted dress, hair, hands and fixed pointe-leg pose
+            illustrate this segment model; they are not separately calibrated
+            anatomical masses.
           </p>
         </div>
       </details>

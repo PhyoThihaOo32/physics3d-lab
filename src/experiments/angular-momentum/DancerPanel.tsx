@@ -62,7 +62,7 @@ export function DancerPanel({
       </p>
       <div className="arm-control">
         <label htmlFor="arm-extension">
-          Arm extension target <output>{Math.round(target * 100)}%</output>
+          Arm raise target <output>{Math.round((1 - target) * 100)}%</output>
         </label>
         <input
           id="arm-extension"
@@ -70,16 +70,17 @@ export function DancerPanel({
           min="0"
           max="100"
           step="1"
-          value={Math.round(target * 100)}
+          value={Math.round((1 - target) * 100)}
           disabled={!ready || complete}
-          onChange={(e) => setTarget(Number(e.target.value) / 100)}
+          onChange={(e) => setTarget(1 - Number(e.target.value) / 100)}
         />
+        <p className="arm-position-key">0% open · 100% rounded overhead</p>
         <div className="arm-presets">
           <button disabled={!ready || complete} onClick={() => setTarget(0)}>
-            Arms in
+            Raise arms
           </button>
           <button disabled={!ready || complete} onClick={() => setTarget(1)}>
-            Arms out
+            Open arms
           </button>
         </div>
         <p>
@@ -87,7 +88,7 @@ export function DancerPanel({
             ? 'Start a new trial to move the arms again.'
             : !running
               ? 'Choose a target, then start or resume to move.'
-              : 'Arms move gradually toward your target.'}
+              : 'Arms rise smoothly into a rounded overhead pose.'}
         </p>
       </div>
       <form onSubmit={apply} noValidate>

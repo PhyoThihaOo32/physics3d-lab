@@ -285,7 +285,7 @@ export function armSculpture(side: number, material: Material) {
     weights: number[] = [];
   for (let i = 0; i < positions.count; i++) {
     const s = side * (positions.getX(i) - shoulderX);
-    const u = Math.max(0, Math.min(1, (s - a + 0.035) / 0.07));
+    const u = Math.max(0, Math.min(1, (s - a + 0.055) / 0.11));
     const w = u * u * (3 - 2 * u);
     const shoulderBlend = Math.max(0, Math.min(1, (s + 0.035) / 0.09));
     const upperWeight = shoulderBlend * shoulderBlend * (3 - 2 * shoulderBlend);

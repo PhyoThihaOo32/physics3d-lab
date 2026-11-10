@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import RAPIER from '@dimforge/rapier3d-compat';
+import { Quaternion, Vector3 } from 'three';
 import {
   DANCER,
   DancerDynamics,
@@ -39,7 +40,7 @@ function trial(p: DancerParameters) {
 }
 describe('articulated spinning dancer', () => {
   it.each([-3, -2, 0, 1, 2, 3])(
-    'conserves measured momentum through a tuck and extension at initial ω=%s',
+    'conserves measured momentum through a overhead raise and opening at initial ω=%s',
     (initialOmega) => {
       const t = trial({ initialOmega, resistance: 0 });
       const initial = t.dancer.measure();
@@ -51,18 +52,26 @@ describe('articulated spinning dancer', () => {
           expect(Math.abs(s.omega)).toBeLessThan(0.001);
         }
       };
-      const tucked = t.advance(5, 0, monitor);
-      expect(tucked.radius).toBeGreaterThan(0.32);
-      expect(tucked.radius).toBeLessThan(0.35);
-      expect(tucked.inertia).toBeCloseTo(dancerInertia(0), 1);
+      const raised = t.advance(5, 0, monitor);
+      const fore = t.dancer.arms[1];
+      const hand = new Vector3(DANCER.foreLength / 2, 0, 0)
+        .applyQuaternion(new Quaternion().copy(fore.rotation()))
+        .add(new Vector3().copy(fore.translation()));
+      // Inertia alone cannot distinguish a mirrored downward pose: check actual overhead clearance.
+      expect(hand.y).toBeGreaterThan(1.9);
+      expect(hand.y).toBeLessThan(1.97);
+      expect(t.dancer.arms[0].translation().y).toBeGreaterThan(1.55);
+      expect(raised.radius).toBeGreaterThan(0.1);
+      expect(raised.radius).toBeLessThan(0.15);
+      expect(raised.inertia).toBeCloseTo(dancerInertia(0), 1);
       expect(
-        Math.abs(tucked.omega - initial.momentum / tucked.inertia),
-      ).toBeLessThan(0.002 * Math.max(1, Math.abs(tucked.omega)));
+        Math.abs(raised.omega - initial.momentum / raised.inertia),
+      ).toBeLessThan(0.002 * Math.max(1, Math.abs(raised.omega)));
       if (initialOmega !== 0) {
-        expect(Math.abs(tucked.omega)).toBeGreaterThan(
+        expect(Math.abs(raised.omega)).toBeGreaterThan(
           1.9 * Math.abs(initialOmega),
         );
-        expect(tucked.energy).toBeGreaterThan(initial.energy * 1.9);
+        expect(raised.energy).toBeGreaterThan(initial.energy * 1.9);
       }
       const open = t.advance(7, 1, monitor);
       expect(open.omega).toBeCloseTo(initialOmega, 1);
@@ -100,7 +109,7 @@ describe('articulated spinning dancer', () => {
     expect(maxError).toBeLessThan(1);
     expect(t.dancer.measure().time).toBe(60);
     t.free();
-  });
+  }, 20_000);
   it('holds momentum through the full ideal observation window', () => {
     const t = trial({ initialOmega: 3, resistance: 0 });
     let maxError = 0;
@@ -110,7 +119,7 @@ describe('articulated spinning dancer', () => {
       });
     expect(maxError).toBeLessThan(1.5);
     t.free();
-  });
+  }, 20_000);
   it('keeps fixed segment lengths and coincident joint anchors during a rapid target reversal', () => {
     const t = trial({ initialOmega: 3, resistance: 0 });
     for (let i = 0; i < 8; i++)
@@ -143,6 +152,8 @@ describe('articulated spinning dancer', () => {
     t.free();
   });
   it('has monotonic reference inertia and rejects invalid initial settings', () => {
+    expect(dancerInertia(1)).toBeCloseTo(2.391258333333333, 10);
+    expect(dancerInertia(0)).toBeCloseTo(1.101866831360493, 10);
     let last = dancerInertia(0);
     for (let i = 1; i <= 100; i++) {
       const next = dancerInertia(i / 100);

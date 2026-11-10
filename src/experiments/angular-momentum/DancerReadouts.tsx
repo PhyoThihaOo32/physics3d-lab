@@ -103,11 +103,11 @@ export function DancerReadouts({
           discrepancies during movement reflect joint and timestep resolution.
         </p>
         <div className="dancer-energy">
-          <strong>Pulling inward requires work.</strong>
+          <strong>Raising the arms requires work.</strong>
           <p>
             Spin energy is K = ½Iᵧωᵧ². With constant Lᵧ, it also equals
-            Lᵧ²/(2Iᵧ): pulling the arms in raises spin energy. The joint
-            actuators represent muscle action. Arm-folding motion and
+            Lᵧ²/(2Iᵧ): bringing the arms closer to the axis raises spin energy.
+            The joint actuators represent muscle action. Arm-raising motion and
             gravitational potential energy are additional parts of the full
             energy budget.
           </p>
@@ -124,7 +124,7 @@ export function DancerReadouts({
           is 2.0 kg × 0.30 m and each forearm/hand is 1.5 kg × 0.28 m. Shoulder
           radius 0.18 m. Each arm segment uses a uniform rectangular inertia
           envelope, 0.07 m thick. Reference Iᵧ: {f(dancerInertia(1), 3)} kg·m²
-          open, {f(dancerInertia(0), 3)} kg·m² tucked. Motors have finite
+          open, {f(dancerInertia(0), 3)} kg·m² overhead. Motors have finite
           stiffness, so measured poses can differ slightly.
         </p>
       </section>
@@ -190,9 +190,9 @@ export function DancerRecords() {
         </div>
       </div>
       <p className="physics-caption">
-        Pause with arms out, record a sample, then tuck and repeat. The latest
-        eight samples stay here until a new trial. CSV includes the full 10 Hz
-        trial history and exact pause samples.
+        Pause with arms out, record a sample, then raise them overhead and
+        repeat. The latest eight samples stay here until a new trial. CSV
+        includes the full 10 Hz trial history and exact pause samples.
       </p>
       {records.length ? (
         <div className="dancer-table-wrap">

@@ -3,6 +3,7 @@ import { Quaternion, Vector3 } from 'three';
 
 import {
   DANCER,
+  dancerArmPose,
   type DancerParameters,
   type DancerSnapshot,
 } from '../equations/angularMomentum';
@@ -113,10 +114,10 @@ export class DancerDynamics {
   beforeStep(target: number) {
     const move = DANCER.extensionRate * DANCER.timeStep;
     this.extension += Math.max(-move, Math.min(move, target - this.extension));
-    const angle = (1 - this.extension) * DANCER.foldAngle;
+    const pose = dancerArmPose(this.extension);
     this.joints.forEach((joint, i) =>
       joint.configureMotorPosition(
-        i % 2 === 0 ? -angle : 2 * angle,
+        i % 2 === 0 ? pose.shoulder : pose.elbow,
         20000,
         300,
       ),

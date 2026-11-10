@@ -2,7 +2,7 @@
 
 ## Investigation
 
-**Question:** How does pulling the arms toward the rotation axis change a dancer's angular velocity, angular momentum and rotational kinetic energy?
+**Question:** How does raising the arms toward the rotation axis change a dancer's angular velocity, angular momentum and rotational kinetic energy?
 
 **Prediction:** With no external torque about the vertical axis, decreasing moment of inertia increases angular velocity. The product Iᵧωᵧ stays approximately constant. Spin kinetic energy increases because the actuators representing muscles do work.
 
@@ -29,7 +29,7 @@ Positive rotation follows the right-hand rule about +y. Negative initial velocit
 - Body excluding moving arms: 44 kg, Iᵧ = 0.750 kg·m², constrained position and tilt. Total model mass is 51 kg.
 - Each upper arm: 2.0 kg, 0.30 m. Each forearm/hand segment: 1.5 kg, 0.28 m. Both use a uniform 0.07 m square inertia envelope.
 - Shoulder centers: 0.18 m from the axis, 1.42 m above the platform. Shoulder and elbow axes move with the dancer.
-- Arms extended: shoulder and elbow angles 0°. Arms tucked: shoulders 75° downward, elbows 150° flexed. Segment lengths do not change.
+- Arms extended: shoulder and elbow angles 0°. Arms overhead: shoulders 70° above horizontal, elbows 55° flexed; forearms point inward at 125° above the outward horizontal. Segment lengths do not change.
 - Extension target moves at at most 45 percentage points per physical second; actual joints follow with finite stiffness. Numerical/physical motor compliance causes small pose differences.
 - Internal joint motors transfer forces and torques between body segments. They represent actuation, not a physiological muscle model. Segment self-contact is disabled for the simplified envelopes.
 - Gravity is 9.81 m/s² downward and contributes no torque about the vertical axis. The support prevents translation and tilt. Its ideal mode supplies no vertical-axis torque.
@@ -38,13 +38,14 @@ Positive rotation follows the right-hand rule about +y. Negative initial velocit
 
 ## Independent reference equations
 
-Let extension e run from 0 (tucked) to 1 (open), α = (1−e)75°, d = 0.18 m, upper length a = 0.30 m, fore length b = 0.28 m, and thickness t = 0.07 m. The mirrored upper/forearm directions have angles −α and +α relative to horizontal. Their center radii are:
+Let extension e run from 0 (overhead) to 1 (open). The UI's arm raise percentage is 100(1−e). Set p = 1−e and use smoothstep s = 3p²−2p³, giving a shoulder angle α = 70°s, elbow angle β = 55°s, and forearm angle γ = α+β. Both arms mirror the same port de bras. With shoulder radius d = 0.18 m, upper length a = 0.30 m, fore length b = 0.28 m, and square thickness t = 0.07 m:
 
 ```text
 r_upper = d + ½a cos α
-r_fore  = d + (a + ½b) cos α
-r_hand  = d + (a + b) cos α
-I_segment,y = m r_center² + m(length² cos²α + t² sin²α + t²)/12
+r_fore  = d + a cos α + ½b cos γ
+r_hand  = d + a cos α + b cos γ
+I_upper,y = m_upper r_upper² + m_upper(a² cos²α + t² sin²α + t²)/12
+I_fore,y  = m_fore r_fore² + m_fore(b² cos²γ + t² sin²γ + t²)/12
 I_total,y = I_body,y + 2(I_upper,y + I_fore,y)
 ```
 
@@ -58,32 +59,32 @@ Kspin = ½Iᵧωᵧ² ≈ Lᵧ²/(2Iᵧ)
 Fixed I, viscous resistance: ωᵧ(t) = ωᵧ(0) exp(−bt/Iᵧ)
 ```
 
-The ideal reference open inertia is 2.391258 kg·m² and tucked inertia is 1.209479 kg·m². Starting at 2 rad/s gives L₀ = 4.782517 kg·m²/s. The exact geometric reference predicts a tucked speed of about 3.954 rad/s. The actual motorized pose can differ slightly under gravity and centrifugal load.
+The ideal reference open inertia is 2.391258 kg·m² and overhead inertia is 1.101867 kg·m². Starting at 2 rad/s gives L₀ = 4.782517 kg·m²/s. The exact geometric reference predicts an overhead speed of about 4.340 rad/s. The actual motorized pose can differ slightly under gravity and centrifugal load.
 
 ## Procedure A: ideal angular momentum
 
 1. Reset defaults. Keep the ideal support and initial angular velocity 2 rad/s.
-2. Record the initial paused sample. Predict the tucked angular speed using ω₂ = I₁ω₁/I₂ and the reference inertias.
-3. Start spin, choose **Arms in**, and allow at least 4 physical seconds for movement and settling. Slow playback changes observation pace, not the physical result.
+2. Record the initial paused sample. Predict the overhead angular speed using ω₂ = I₁ω₁/I₂ and the reference inertias.
+3. Start spin, choose **Raise arms**, and allow at least 4 physical seconds for movement and settling. Slow playback changes observation pace, not the physical result.
 4. Pause and record a sample. Compare I and ω with the open sample. Compute I₁ω₁ and I₂ω₂. Compare both with independently measured Lᵧ and the dashed torque-balance curve.
-5. Resume, choose **Arms out**, wait for settling, pause and record again. Test whether the initial speed approximately returns.
+5. Resume, choose **Open arms**, wait for settling, pause and record again. Test whether the initial speed approximately returns.
 6. Export CSV for the continuous history. Keep the residual and finite-step accuracy in mind when interpreting small changes.
 
 ## Procedure B: energy and zero initial spin
 
-1. Compare open/tucked spin energies from Procedure A. Explain why constant angular momentum does not imply constant kinetic energy.
+1. Compare open/overhead spin energies from Procedure A. Explain why constant angular momentum does not imply constant kinetic energy.
 2. Set initial angular velocity to 0 rad/s and apply a new trial.
-3. Start, fold and extend symmetrically, then pause. Check that no sustained common-axis spin or angular momentum appears.
+3. Start, raise and open symmetrically, then pause. Check that no sustained common-axis spin or angular momentum appears.
 4. Repeat with −2 rad/s. Predict the signs of ωᵧ and Lᵧ and the sign of energy before running.
 
-The change in displayed spin energy is not total muscle work: arm-folding kinetic energy, gravitational potential changes and motor damping are also relevant. The simulation does not infer metabolic energy.
+The change in displayed spin energy is not total muscle work: arm-raising kinetic energy, gravitational potential changes and motor damping are also relevant. The simulation does not infer metabolic energy.
 
 ## Procedure C: external torque
 
 1. Select the resistive support, set initial angular velocity 2 rad/s and coefficient 0.15 N·m·s/rad, then apply.
 2. Keep the arms extended and start. Predict exponential angular-speed decay with the initial Iᵧ.
 3. Compare measured momentum with L₀ + ∫τᵧ dt. Momentum is no longer conserved, but the torque balance should still hold approximately.
-4. Repeat with tucking. Separate the tendency of smaller I to raise speed from the external torque removing momentum.
+4. Repeat with raising the arms. Separate the tendency of smaller I to raise speed from the external torque removing momentum.
 5. Repeat with negative initial angular velocity. The resistive torque should reverse sign and continue opposing rotation.
 
 ## Numerical accuracy and interpretation
@@ -96,6 +97,6 @@ References: [OpenStax: Conservation of Angular Momentum](https://openstax.org/bo
 
 ## Sculpted model appearance
 
-The interactive dancer uses an ivory sculpture style: a fitted bodice, three layers of pleated tutu, a swept ballet bun, curved hands with individual fingers, tapered limbs, crossed legs and pointe shoes. Continuous arm skin blends across the shoulders and elbows; its skeleton follows the simulated body transforms. The sculpted surface, dress, hair and fixed leg pose illustrate the documented five-body mechanics model. Their geometry does not constitute a calibrated anatomical mass distribution. The physical masses, moments of inertia, joint lengths and equations above remain the sources of the lab's predictions and measurements.
+The interactive dancer uses an ivory sculpture style: a fitted bodice, three layers of pleated tutu, a swept ballet bun, curved hands with individual fingers, tapered limbs, a straight supporting pointe leg, a softly lifted trailing foot, ankle ribbons and pointe shoes. Continuous arm skin blends across the shoulders and elbows; its skeleton follows the simulated body transforms. The sculpted surface, dress, hair and fixed leg pose illustrate the documented five-body mechanics model. Their geometry does not constitute a calibrated anatomical mass distribution. The physical masses, moments of inertia, joint lengths and equations above remain the sources of the lab's predictions and measurements.
 
-Orbit the view to inspect the sculpture, use Front/Side/Top for comparisons, or zoom in for detail. Arm controls continue to move both arms symmetrically during a trial.
+Orbit the view to inspect the sculpture, use Front/Side/Top for comparisons, or zoom in for detail. Arm controls move both arms symmetrically from open second position into a rounded overhead fifth position. The fixed leg pose does not change during a trial. Raising the hands reduces inertia here because their perpendicular distance from the vertical axis decreases. Height by itself is not part of Iᵧ = ∫r_perpendicular² dm; ideal angular momentum Lᵧ remains constant.

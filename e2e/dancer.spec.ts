@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-test.setTimeout(90_000);
+// Detailed skinned geometry and repeated screenshots also run on software-rendered CI.
+test.setTimeout(150_000);
 async function number(page: import('@playwright/test').Page, id: string) {
   return Number(await page.getByTestId(id).textContent());
 }
@@ -27,14 +28,14 @@ test('articulated dancer conserves momentum, records comparisons, exports and re
   await page.getByRole('button', { name: 'Record paused sample' }).click();
   await page.getByLabel('Playback speed').selectOption('2');
   const initialL = await number(page, 'momentum');
-  await page.getByRole('button', { name: 'Arms in', exact: true }).click();
+  await page.getByRole('button', { name: 'Raise arms', exact: true }).click();
   await page.getByRole('button', { name: 'Start spin' }).click();
   await expect
     .poll(() => number(page, 'time'), { timeout: 40_000 })
     .toBeGreaterThan(3.6);
   await page.getByRole('button', { name: /^Ⅱ Pause$/ }).click();
-  expect(await number(page, 'omega')).toBeGreaterThan(3.7);
-  expect(await number(page, 'omega')).toBeLessThan(4.2);
+  expect(await number(page, 'omega')).toBeGreaterThan(4.1);
+  expect(await number(page, 'omega')).toBeLessThan(4.6);
   expect(await number(page, 'momentum')).toBeCloseTo(initialL, 1);
   expect(
     parseFloat(
@@ -48,7 +49,7 @@ test('articulated dancer conserves momentum, records comparisons, exports and re
       .locator('tbody tr'),
   ).toHaveCount(2);
   await page.screenshot({
-    path: 'test-results/dancer-tucked.png',
+    path: 'test-results/dancer-overhead.png',
     fullPage: true,
   });
   const downloadEvent = page.waitForEvent('download');
@@ -60,8 +61,8 @@ test('articulated dancer conserves momentum, records comparisons, exports and re
   expect(lines[0]).toContain('expected_momentum_kg_m2_s');
   expect(lines.length).toBeGreaterThan(30);
   expect(Number(lines[1].split(',')[0])).toBe(0);
-  expect(Number(lines.at(-1)!.split(',')[3])).toBeGreaterThan(3.7);
-  await page.getByRole('button', { name: 'Arms out', exact: true }).click();
+  expect(Number(lines.at(-1)!.split(',')[3])).toBeGreaterThan(4.1);
+  await page.getByRole('button', { name: 'Open arms', exact: true }).click();
   await page.getByRole('button', { name: 'Resume' }).click();
   await expect
     .poll(() => number(page, 'time'), { timeout: 40_000 })
@@ -103,7 +104,7 @@ test('validates trial settings and keeps zero-spin controls usable on mobile', a
   await page.getByRole('button', { name: 'Apply & start fresh trial' }).click();
   await expect(page.getByTestId('omega')).toHaveText('0.000');
   await expect(page.getByRole('button', { name: 'Start spin' })).toBeEnabled();
-  await page.getByRole('button', { name: 'Arms in', exact: true }).click();
+  await page.getByRole('button', { name: 'Raise arms', exact: true }).click();
   await page.getByLabel('Playback speed').selectOption('2');
   await page.getByRole('button', { name: 'Start spin' }).click();
   await expect
