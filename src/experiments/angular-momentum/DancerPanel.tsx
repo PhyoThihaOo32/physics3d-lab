@@ -152,12 +152,12 @@ export function DancerPanel({
         </button>
         <p className="physics-caption">
           {dirty
-            ? 'Settings changed. Apply them to reset time and measurements.'
+            ? 'Pending changes. The current trial keeps its applied settings until you apply.'
             : 'Trial begins with both arms extended. Initial spin is supplied before t = 0.'}
         </p>
       </form>
       <SimulationControls
-        ready={ready && (!dirty || running)}
+        ready={ready}
         complete={complete}
         startLabel="Start spin"
         onReset={onReset}

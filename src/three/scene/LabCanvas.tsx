@@ -49,6 +49,7 @@ export function LabCanvas({
   return (
     <SceneBoundary>
       <Canvas
+        frameloop="demand"
         shadows={{ type: PCFShadowMap }}
         dpr={[1, 1.5]}
         camera={{ position: [9, 7, 10], fov: 42, near: 0.1, far: 20000 }}

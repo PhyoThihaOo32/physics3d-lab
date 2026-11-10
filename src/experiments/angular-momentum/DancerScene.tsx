@@ -11,6 +11,7 @@ import {
   DANCER,
   DancerDynamics,
   type DancerParameters,
+  type DancerSnapshot,
 } from '../../physics/rotation/dancer';
 import { useDancerStore } from '../../store/dancerStore';
 import { useSimulationStore } from '../../store/simulationStore';
@@ -27,6 +28,7 @@ function Articulation({
 }) {
   const { world } = useRapier();
   const model = useRef<DancerDynamics | null>(null);
+  const liveSnapshot = useRef<DancerSnapshot | null>(null);
   const torso = useRef<Group>(null);
   const arms = useRef<(Group | null)[]>([]);
   const radius = useRef<Mesh>(null);
@@ -52,16 +54,14 @@ function Articulation({
     model.current?.beforeStep(useDancerStore.getState().target),
   );
   useAfterPhysicsStep(() => {
-    const s = model.current?.afterStep();
-    if (!s) return;
-    if (
-      Math.round(s.time / DANCER.timeStep) % 48 === 0 ||
-      s.time >= DANCER.duration
-    ) {
-      useDancerStore.getState().report(s, true);
-      useSimulationStore.getState().reportTime(s.time);
+    const d = model.current;
+    if (!d) return;
+    d.advanceStep();
+    if (d.stepCount % 48 === 0 || d.time >= DANCER.duration) {
+      useDancerStore.getState().report(d.measure(), true);
+      useSimulationStore.getState().reportTime(d.time);
     }
-    if (s.time >= DANCER.duration)
+    if (d.time >= DANCER.duration)
       useSimulationStore.getState().setRunning(false);
   });
   useFrame(() => {
@@ -78,8 +78,10 @@ function Articulation({
         group.quaternion.copy(body.rotation());
       }
     });
-    if (radius.current) radius.current.scale.setScalar(d.measure().radius);
-  });
+    liveSnapshot.current = d.measure();
+    if (radius.current)
+      radius.current.scale.setScalar(liveSnapshot.current.radius);
+  }, -0.5);
   return (
     <>
       <group ref={torso}>
@@ -131,7 +133,7 @@ function Articulation({
           />
           <VectorArrow3D
             origin={[-0.55, 1.5, 0]}
-            vector={() => [0, model.current?.measure().momentum ?? 0, 0]}
+            vector={() => [0, liveSnapshot.current?.momentum ?? 0, 0]}
             magnitudeScale={0.09}
             label="Lᵧ"
             unit="kg·m²/s"

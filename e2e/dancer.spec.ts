@@ -62,6 +62,11 @@ test('articulated dancer conserves momentum, records comparisons, exports and re
   expect(lines.length).toBeGreaterThan(30);
   expect(Number(lines[1].split(',')[0])).toBe(0);
   expect(Number(lines.at(-1)!.split(',')[3])).toBeGreaterThan(4.4);
+  // Unapplied settings must not block inspecting/resuming the current trial.
+  await page
+    .getByLabel('Initial angular velocity', { exact: false })
+    .fill('2.5');
+  await expect(page.getByRole('button', { name: 'Resume' })).toBeEnabled();
   await page.getByRole('button', { name: 'Open arms', exact: true }).click();
   await page.getByRole('button', { name: 'Resume' }).click();
   await expect
@@ -69,6 +74,9 @@ test('articulated dancer conserves momentum, records comparisons, exports and re
     .toBeGreaterThan(7);
   await page.getByRole('button', { name: /^Ⅱ Pause$/ }).click();
   expect(await number(page, 'omega')).toBeCloseTo(2, 1);
+  await expect(
+    page.getByLabel('Initial angular velocity', { exact: false }),
+  ).toHaveValue('2.5');
   await page.getByRole('button', { name: 'Reset defaults' }).click();
   await expect(page.getByRole('button', { name: 'Start spin' })).toBeEnabled();
   await expect(page.getByTestId('time')).toHaveText('0.00');

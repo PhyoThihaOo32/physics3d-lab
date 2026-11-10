@@ -5,13 +5,22 @@ for (const experiment of [
     id: 'free-fall',
     start: 'Start trial',
     height: 'height',
-    mass: 'Cube mass',
+    parameter: 'Cube mass',
+    nextValue: '1.1',
   },
   {
     id: 'projectile-motion',
     start: 'Launch',
     height: 'projectile-height',
-    mass: 'Sphere mass',
+    parameter: 'Sphere mass',
+    nextValue: '1.1',
+  },
+  {
+    id: 'angular-momentum',
+    start: 'Start spin',
+    height: 'inertia',
+    parameter: /Initial angular velocity/,
+    nextValue: '2.1',
   },
 ]) {
   test(`${experiment.id}: keyboard pans the focused view, preserves physics, and leaves inputs usable`, async ({
@@ -56,14 +65,14 @@ for (const experiment of [
     await page.keyboard.up('ArrowRight');
     await expect(canvas).not.toBeFocused();
     await expect(page.getByTestId('time')).toHaveText('0.00');
-    const mass = page.getByRole('spinbutton', {
-      name: experiment.mass,
+    const setting = page.getByRole('spinbutton', {
+      name: experiment.parameter,
       exact: true,
     });
-    await mass.focus();
+    await setting.focus();
     const stopped = await canvas.screenshot();
-    await mass.press('ArrowUp');
-    await expect(mass).toHaveValue('1.1');
+    await setting.press('ArrowUp');
+    await expect(setting).toHaveValue(experiment.nextValue);
     await page.waitForTimeout(150);
     expect((await canvas.screenshot()).equals(stopped)).toBe(true);
     await expect(page.getByTestId(experiment.height)).toHaveText(height!);

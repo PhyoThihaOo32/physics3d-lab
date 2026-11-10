@@ -25,6 +25,21 @@ export class DancerDynamics {
   readonly arms: RAPIER.RigidBody[] = [];
   readonly joints: RAPIER.RevoluteImpulseJoint[] = [];
   private steps = 0;
+  private readonly segments: {
+    body: RAPIER.RigidBody;
+    mass: number;
+    principal: Vector3;
+    frame: Quaternion;
+  }[];
+  // Mass properties are fixed within a trial. Reuse scratch objects in the
+  // 480 Hz integration loop instead of allocating vectors on every step.
+  private readonly rotation = new Quaternion();
+  private readonly inverse = new Quaternion();
+  private readonly axis = new Vector3();
+  private readonly omega = new Vector3();
+  private readonly spin = new Vector3();
+  private readonly gyro = new Vector3();
+  private readonly tip = new Vector3();
   private extension = 1;
   private impulse = 0;
   private torque = 0;
@@ -107,6 +122,12 @@ export class DancerDynamics {
         ) as RAPIER.RevoluteImpulseJoint,
       );
     }
+    this.segments = [this.torso, ...this.arms].map((body) => ({
+      body,
+      mass: body.mass(),
+      principal: new Vector3().copy(body.principalInertia()),
+      frame: new Quaternion().copy(body.principalInertiaLocalFrame()),
+    }));
     const initial = this.measure();
     this.initialMomentum = initial.momentum;
     this.initialEnergy = initial.energy;
@@ -125,64 +146,74 @@ export class DancerDynamics {
     // Rapier 0.19.2 does not integrate the Euler gyroscopic term here.
     // Supply -ω × (I_world ω) to its angular-acceleration equation.
     // This is an inertial term, not an external torque or a momentum correction.
-    for (const body of this.arms) {
-      const q = new Quaternion()
-        .copy(body.rotation())
-        .multiply(new Quaternion().copy(body.principalInertiaLocalFrame()));
-      const omega = new Vector3().copy(body.angvel());
-      const spin = omega
-        .clone()
-        .applyQuaternion(q.clone().invert())
-        .multiply(new Vector3().copy(body.principalInertia()))
-        .applyQuaternion(q);
+    for (const { body, principal, frame } of this.segments) {
+      if (body === this.torso) continue;
+      this.rotation.copy(body.rotation()).multiply(frame);
+      this.inverse.copy(this.rotation).invert();
+      this.omega.copy(body.angvel());
+      this.spin
+        .copy(this.omega)
+        .applyQuaternion(this.inverse)
+        .multiply(principal)
+        .applyQuaternion(this.rotation);
       body.resetTorques(false);
-      body.addTorque(omega.clone().cross(spin).negate(), true);
+      body.addTorque(
+        this.gyro.copy(this.omega).cross(this.spin).negate(),
+        true,
+      );
     }
     this.torque = -this.parameters.resistance * this.torso.angvel().y;
     this.torso.resetTorques(false);
     this.torso.addTorque(v(0, this.torque, 0), true);
     this.impulse += this.torque * DANCER.timeStep;
   }
-  afterStep() {
+  get stepCount() {
+    return this.steps;
+  }
+  get time() {
+    return this.steps * DANCER.timeStep;
+  }
+  advanceStep() {
     this.steps++;
+  }
+  afterStep() {
+    this.advanceStep();
     return this.measure();
   }
   measure(): DancerSnapshot {
     let inertia = 0,
       momentum = 0;
-    for (const body of [this.torso, ...this.arms]) {
-      const q = new Quaternion()
-        .copy(body.rotation())
-        .multiply(new Quaternion().copy(body.principalInertiaLocalFrame()));
-      const inverse = q.clone().invert();
-      const axis = new Vector3(0, 1, 0).applyQuaternion(inverse);
-      const principal = body.principalInertia();
+    for (const { body, principal, frame, mass } of this.segments) {
+      this.rotation.copy(body.rotation()).multiply(frame);
+      this.inverse.copy(this.rotation).invert();
+      this.axis.set(0, 1, 0).applyQuaternion(this.inverse);
       const center = body.worldCom();
       const velocity = body.linvel();
       inertia +=
-        axis.x ** 2 * principal.x +
-        axis.y ** 2 * principal.y +
-        axis.z ** 2 * principal.z +
-        body.mass() * (center.x ** 2 + center.z ** 2);
-      const spin = new Vector3()
+        this.axis.x ** 2 * principal.x +
+        this.axis.y ** 2 * principal.y +
+        this.axis.z ** 2 * principal.z +
+        mass * (center.x ** 2 + center.z ** 2);
+      this.spin
         .copy(body.angvel())
-        .applyQuaternion(inverse)
-        .multiply(new Vector3().copy(principal))
-        .applyQuaternion(q);
+        .applyQuaternion(this.inverse)
+        .multiply(principal)
+        .applyQuaternion(this.rotation);
       momentum +=
-        spin.y + body.mass() * (center.z * velocity.x - center.x * velocity.z);
+        this.spin.y + mass * (center.z * velocity.x - center.x * velocity.z);
     }
     const omega = this.torso.angvel().y;
     const expected = (this.initialMomentum ?? momentum) + this.impulse;
     const scale = Math.max(Math.abs(this.initialMomentum ?? momentum), 1);
     const hand = this.arms[1];
-    const tip = new Vector3(DANCER.foreLength / 2, 0, 0)
-      .applyQuaternion(new Quaternion().copy(hand.rotation()))
-      .add(new Vector3().copy(hand.translation()));
+    this.tip
+      .set(DANCER.foreLength / 2, 0, 0)
+      .applyQuaternion(this.rotation.copy(hand.rotation()))
+      .add(this.axis.copy(hand.translation()));
     return {
-      time: this.steps * DANCER.timeStep,
+      time: this.time,
       extension: this.extension,
-      radius: Math.hypot(tip.x, tip.z),
+      radius: Math.hypot(this.tip.x, this.tip.z),
       inertia,
       omega,
       momentum,

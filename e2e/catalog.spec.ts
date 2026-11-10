@@ -102,3 +102,23 @@ test('handles missing routes and keeps directory navigation usable on mobile', a
     ),
   ).toBe(true);
 });
+
+test('keyboard users can skip the header without changing the current route', async ({
+  page,
+}) => {
+  await page.goto('/#/labs/rotation');
+  await page.keyboard.press('Tab');
+  const skip = page.getByRole('link', { name: 'Skip to main content' });
+  await expect(skip).toBeFocused();
+  await expect(skip).toBeInViewport();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('main')).toBeFocused();
+  await expect(page).toHaveURL(/#\/labs\/rotation$/);
+  await expect(
+    page.getByRole('heading', { name: 'Rotation lab', exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press('Tab');
+  await expect(
+    page.getByRole('link', { name: 'Physics3D Lab home' }),
+  ).not.toBeFocused();
+});

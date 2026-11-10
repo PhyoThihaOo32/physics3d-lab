@@ -23,7 +23,7 @@ Editing a field does not change the active trial until applied. Applying setting
 
 ## Keyboard camera controls
 
-Click the 3D view, or Tab to it, to activate keyboard panning. **↑ / ↓ / ← / →** move the view in screen space; **< / >** also pan left/right. Hold a key for continuous movement. A focus outline identifies the active view; **Esc** releases it and Tab continues to the next control. Keys pressed in number fields retain their normal editing behavior. Camera presets restore framing after panning. These controls work in all three experiments, including while paused, and do not apply forces or change physical measurements.
+Click the 3D view, or Tab to it, to activate keyboard panning. **↑ / ↓ / ← / →** move the view in screen space; **< / >** also pan left/right. Hold a key for continuous movement. A focus outline identifies the active view; **Esc** releases it and Tab continues to the next control. Keys pressed in number fields retain their normal editing behavior. Camera presets restore framing after panning. These controls work in all three experiments, including while paused, and do not apply forces or change physical measurements. A keyboard-visible **Skip to main content** link bypasses the header without changing the current experiment.
 
 ## Organization and navigation
 
@@ -67,7 +67,7 @@ To add an experiment, give it a directory under `src/experiments/`, an experimen
 
 Acceleration is net kinematic acceleration. In free fall it is approximately −g; after the cube rests it is approximately zero because the surface balances gravity. At impact the displayed finite difference averages an impulse over the timestep. It is not a material's real peak acceleration, which would require a deformation model.
 
-The live readouts update at 10 Hz. The exact final step is published when paused, and first contact is published immediately. The analytical comparison freezes at the last pre-contact sample. Its equations do not apply through impact or while supported by the ground.
+Paused 3D views render only when the scene or camera changes. Starting or resuming schedules continuous frames again, without adding time spent paused to the simulation. The live readouts update at 10 Hz. The exact final step is published when paused, and first contact is published immediately. The analytical comparison freezes at the last pre-contact sample. Its equations do not apply through impact or while supported by the ground.
 
 ## Model and numerical validation
 
@@ -185,7 +185,7 @@ For an authorized manual production deployment from a clean checkout, use `verce
 
 Open **Rotation → Spinning ballet dancer**. The initial trial uses 2 rad/s and an ideal support. Start the spin, then use **Arm raise target**, **Raise arms**, or **Open arms** while running. Shoulders and elbows bend smoothly; arm segments keep their lengths. A supported vertical axis isolates the mass-distribution effect without simulating human balance.
 
-Read hand radius, total moment of inertia, angular velocity, signed RPM, angular momentum and spin kinetic energy. The graphs use independent SI scales and compare measured momentum with initial momentum plus integrated external torque. Pause to record up to eight comparison samples or export the full trial history as CSV. Initial angular velocity (−3 to +3 rad/s) and resistance (0–0.5 N·m·s/rad) apply to a new paused trial. Zero initial spin does not generate sustained rotation when the arms move symmetrically.
+Read hand radius, total moment of inertia, angular velocity, signed RPM, angular momentum and spin kinetic energy. The graphs use independent SI scales and compare measured momentum with initial momentum plus integrated external torque. Pause to record up to eight comparison samples or export the full trial history as CSV. Initial angular velocity (−3 to +3 rad/s) and resistance (0–0.5 N·m·s/rad) apply to a new paused trial. Pending edits do not prevent resuming the current trial; its applied settings remain in effect. Zero initial spin does not generate sustained rotation when the arms move symmetrically.
 
 Five dynamic bodies and four internal motorized joints produce the motion. The torso is constrained to yaw about a fixed vertical axis. Rapier's angular integration is supplemented by Euler's gyroscopic term for each moving arm; angular velocity is never overwritten to force conservation. Inertia uses each body's rotated tensor and the parallel-axis theorem; measured angular momentum independently sums spin and orbital contributions. A pure geometric equation supplies an independent reference inertia.
 

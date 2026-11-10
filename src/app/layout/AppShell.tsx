@@ -9,6 +9,17 @@ export function AppShell({
 }) {
   return (
     <div className="app-shell">
+      <a
+        className="skip-link"
+        href="#main"
+        onClick={(event) => {
+          // Preserve the hash router's current experiment when skipping ahead.
+          event.preventDefault();
+          document.getElementById('main')?.focus();
+        }}
+      >
+        Skip to main content
+      </a>
       <header className="site-header">
         <a className="brand" href="#/labs" aria-label="Physics3D Lab home">
           <span className="brand-mark" aria-hidden="true">
@@ -34,7 +45,7 @@ export function AppShell({
           Physics3D · v0.4
         </span>
       </header>
-      <main id="main">
+      <main id="main" tabIndex={-1}>
         {children}
         <footer>
           <span>PHYSICS, MADE VISIBLE.</span>

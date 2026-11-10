@@ -30,6 +30,7 @@ function trial(p: DancerParameters) {
   }
   return {
     dancer,
+    world,
     advance,
     free: () => {
       dancer.dispose();
@@ -39,6 +40,27 @@ function trial(p: DancerParameters) {
   };
 }
 describe('articulated spinning dancer', () => {
+  it('keeps the same motion when readouts sample fewer integration steps', () => {
+    const measured = trial({ initialOmega: -2, resistance: 0.15 });
+    const sampled = trial({ initialOmega: -2, resistance: 0.15 });
+    const retained = sampled.dancer.measure();
+    const original = { ...retained };
+    for (let step = 0; step < 3840; step++) {
+      const target = step < 1920 ? 0 : 1;
+      measured.dancer.beforeStep(target);
+      measured.world.step();
+      const expected = measured.dancer.afterStep();
+      sampled.dancer.beforeStep(target);
+      sampled.world.step();
+      sampled.dancer.advanceStep();
+      if (step % 48 === 0 || step === 3839)
+        expect(sampled.dancer.measure()).toEqual(expected);
+    }
+    expect(retained).toEqual(original);
+    expect(sampled.dancer.time).toBe(8);
+    measured.free();
+    sampled.free();
+  });
   it.each([-3, -2, 0, 1, 2, 3])(
     'conserves measured momentum through a overhead raise and opening at initial ω=%s',
     (initialOmega) => {
