@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500&family=DM+Sans:wght@400;450;500;550;600;650;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 :root {
   font-family: 'DM Sans', sans-serif;
@@ -62,24 +62,74 @@ canvas:focus-visible {
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -1px;
+  gap: 13px;
+  color: #f3f5f6;
+  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 .brand-mark {
-  font-size: 40px;
-  color: #c1e29e;
-  line-height: 1;
+  --cube-size: 27px;
+  display: grid;
+  flex: none;
+  width: 42px;
+  height: 44px;
+  place-items: center;
+  perspective: 180px;
 }
-.brand-3d {
-  color: #c1e29e;
+.brand-cube {
+  position: relative;
+  width: var(--cube-size);
+  height: var(--cube-size);
+  transform: rotateZ(13deg) rotateX(-23deg) rotateY(-32deg);
+  transform-style: preserve-3d;
 }
-.brand-lab {
-  margin-left: 7px;
-  font-weight: 400;
-  color: #c1c7cf;
+.brand-cube-front,
+.brand-cube::before,
+.brand-cube::after {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 1px #ffffff24;
+  backface-visibility: hidden;
+}
+.brand-cube-front {
+  background:
+    radial-gradient(ellipse at 20% 15%, #d8e9c6 0%, transparent 55%),
+    linear-gradient(
+      145deg,
+      #749395 10%,
+      #9cb5aa 30%,
+      #bbb29b 48%,
+      #798db0 69%,
+      #535878 91%
+    );
+  transform: translateZ(calc(var(--cube-size) / 2));
+}
+.brand-cube::before {
+  content: '';
+  background: linear-gradient(
+    128deg,
+    #9eb5bb,
+    #648d99 45%,
+    #6f738b 75%,
+    #a499a4
+  );
+  transform: rotateX(90deg) translateZ(calc(var(--cube-size) / 2));
+}
+.brand-cube::after {
+  content: '';
+  background: linear-gradient(
+    151deg,
+    #4c6575,
+    #393e59 49%,
+    #485579 76%,
+    #65677d
+  );
+  transform: rotateY(90deg) translateZ(calc(var(--cube-size) / 2));
 }
 .header-context {
   font-size: 9px;
@@ -632,10 +682,14 @@ footer > span:first-child {
     padding: 0 20px;
   }
   .brand {
-    font-size: 21px;
+    gap: 10px;
+    font-size: 23px;
+    letter-spacing: 0.075em;
   }
   .brand-mark {
-    font-size: 33px;
+    --cube-size: 22px;
+    width: 35px;
+    height: 38px;
   }
   .version {
     font-size: 9px;

@@ -23,12 +23,11 @@ export function AppShell({
       <header className="site-header">
         <a className="brand" href="#/labs" aria-label="Physics3D Lab home">
           <span className="brand-mark" aria-hidden="true">
-            ◈
+            <span className="brand-cube">
+              <span className="brand-cube-front" />
+            </span>
           </span>
-          <span>
-            Physics<span className="brand-3d">3D</span>
-            <span className="brand-lab">Lab</span>
-          </span>
+          <span>Physics3D Lab</span>
         </a>
         <div className="header-context">AN INTERACTIVE PHYSICS LABORATORY</div>
         <nav aria-label="Main navigation">
