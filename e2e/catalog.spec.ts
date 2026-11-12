@@ -38,44 +38,30 @@ test('navigates from directory to a lab and experiment, then starts a fresh tria
   expect(errors).toEqual([]);
 });
 
-test('planned experiments have honest previews and support direct links, refresh, and browser history', async ({
+test('opens the vector lab and supports refresh and browser history', async ({
   page,
 }) => {
   await page.goto('/#/labs/vectors');
-  await page.getByRole('link', { name: 'View vector operations plan' }).click();
+  await page.getByRole('link', { name: 'Open vector mathematics lab' }).click();
   await expect(page).toHaveURL(/#\/experiments\/vector-lab$/);
-  await expect(
-    page.getByRole('heading', { name: 'Vector operations', exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByText('The simulation is not available yet.', { exact: false }),
-  ).toBeVisible();
-  await expect(page.locator('canvas')).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Start trial' })).toHaveCount(
-    0,
-  );
+  const heading = page.getByRole('heading', {
+    name: 'Vector Mathematics Lab',
+    exact: true,
+  });
+  await expect(heading).toBeVisible();
+  await expect(page.locator('canvas')).toBeVisible();
   await page.reload();
-  await expect(
-    page.getByRole('heading', { name: 'Vector operations', exact: true }),
-  ).toBeVisible();
+  await expect(heading).toBeVisible();
   await page.goBack();
   await expect(
     page.getByRole('heading', { name: 'Vectors lab', exact: true }),
   ).toBeVisible();
   await page.goForward();
-  await expect(
-    page.getByRole('heading', { name: 'Vector operations', exact: true }),
-  ).toBeVisible();
+  await expect(heading).toBeVisible();
   await page.getByRole('link', { name: 'Physics3D Lab home' }).click();
   await expect(
-    page.getByRole('heading', { name: 'Choose a lab. Start exploring.' }),
+    page.getByRole('link', { name: 'Open vectors lab' }),
   ).toBeVisible();
-  for (const lab of ['vectors']) {
-    await page.goto(`/#/labs/${lab}`);
-    await expect(
-      page.getByRole('link', { name: /View .* plan/ }),
-    ).toBeVisible();
-  }
 });
 
 test('handles missing routes and keeps directory navigation usable on mobile', async ({

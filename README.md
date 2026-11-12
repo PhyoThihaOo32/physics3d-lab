@@ -23,7 +23,7 @@ Editing a field does not change the active trial until applied. Applying setting
 
 ## Keyboard camera controls
 
-Click the 3D view, or Tab to it, to activate keyboard panning. **↑ / ↓ / ← / →** move the view in screen space; **< / >** also pan left/right. Hold a key for continuous movement. A focus outline identifies the active view; **Esc** releases it and Tab continues to the next control. Keys pressed in number fields retain their normal editing behavior. Camera presets restore framing after panning. These controls work in all three experiments, including while paused, and do not apply forces or change physical measurements. A keyboard-visible **Skip to main content** link bypasses the header without changing the current experiment.
+Click the 3D view, or Tab to it, to activate keyboard panning. **↑ / ↓ / ← / →** move the view in screen space; **< / >** also pan left/right. Hold a key for continuous movement. A focus outline identifies the active view; **Esc** releases it and Tab continues to the next control. Keys pressed in number fields retain their normal editing behavior. Camera presets restore framing after panning. These controls work in all four experiments, including while paused, and do not apply forces or change physical measurements. A keyboard-visible **Skip to main content** link bypasses the header without changing the current experiment.
 
 ## Organization and navigation
 
@@ -36,7 +36,7 @@ Click the 3D view, or Tab to it, to activate keyboard panning. **↑ / ↓ / ←
 | -------- | ---------------------- | --------- |
 | Motion   | Free fall              | Available |
 | Motion   | Projectile motion      | Available |
-| Vectors  | Vector operations      | Planned   |
+| Vectors  | Vector Mathematics Lab | Available |
 | Rotation | Spinning ballet dancer | Available |
 
 The app opens to the directory. Bookmarkable hash URLs work on static hosting without server rewrite rules:
@@ -48,6 +48,7 @@ The app opens to the directory. Bookmarkable hash URLs work on static hosting wi
 /#/labs/rotation
 /#/experiments/free-fall
 /#/experiments/projectile-motion
+/#/experiments/vector-lab
 /#/experiments/angular-momentum
 ```
 
@@ -143,7 +144,7 @@ src/
     units/                     Readable SI-number formatting
     equations/                 Pure analytical free-fall calculations
     measurements/              Time, derivatives, first-contact history
-    vectors/ validation/       Reserved for later experiments
+    vectors/                   Shared vector algebra and geometry
   three/
     scene/                     Shared Canvas, lighting, error handling
     camera/                    Orbit controls and camera presets
@@ -154,8 +155,8 @@ src/
     projectile-motion/         Projectile scene, parameters, results, and teaching view
     catalog.ts                 Typed lab and experiment registry
     free-fall/                 Drop scene, parameters, teaching readouts, page
-    vector-lab/                Reserved
-    angular-momentum/          Reserved
+    vector-lab/                Vector operations and physics applications
+    angular-momentum/          Articulated ballet dancer experiment
   components/
     controls/                  Reusable simulation and camera controls
     measurements/              Numeric readouts and airborne energy checks
@@ -167,7 +168,7 @@ src/
 e2e/                           Browser integration checks
 ```
 
-Empty reserved directories contain `.gitkeep`. Physics transforms remain inside Rapier/R3F. Camera controls and lighting remain independent of pause state. The experiment configuration and page remain separate from the application shell. A typed catalog declares each lab, its experiments, and whether each experiment is available or planned. Experiment code is loaded only when opened; the directory does not initialize Three.js or Rapier. The vector lab and robot are not implemented yet; no backend or authentication is included.
+Empty reserved directories contain `.gitkeep`. Physics transforms remain inside Rapier/R3F. Camera controls and lighting remain independent of pause state. The experiment configuration and page remain separate from the application shell. A typed catalog declares each lab, its experiments, and whether each experiment is available or planned. Experiment code is loaded only when opened; the directory does not initialize Three.js or Rapier. The Angular Momentum Robot is planned. No backend or authentication is included.
 
 References: [OpenStax free fall](https://openstax.org/books/university-physics-volume-1/pages/3-5-free-fall), [React Three Fiber installation](https://r3f.docs.pmnd.rs/getting-started/installation), and [React Three Rapier](https://github.com/pmndrs/react-three-rapier).
 
@@ -190,3 +191,9 @@ Read hand radius, total moment of inertia, angular velocity, signed RPM, angular
 Five dynamic bodies and four internal motorized joints produce the motion. The torso is constrained to yaw about a fixed vertical axis. Rapier's angular integration is supplemented by Euler's gyroscopic term for each moving arm; angular velocity is never overwritten to force conservation. Inertia uses each body's rotated tensor and the parallel-axis theorem; measured angular momentum independently sums spin and orbital contributions. A pure geometric equation supplies an independent reference inertia.
 
 This is a 51 kg illustrative segment model, not measured anatomy. Under ideal support, Lᵧ is approximately conserved; with resistance, τᵧ = −bω and Lᵧ decreases in magnitude. Spin energy increases as the arms rise toward the axis because actuators do work. Displayed spin energy excludes arm-raising motion and gravitational potential energy, so its change is not total muscle work. See [the detailed lab procedure](docs/DANCER_LAB.md) and [physics validation](docs/PHYSICS_VALIDATION.md) for equations, assumptions, tolerances and test coverage.
+
+## Vector Mathematics Lab
+
+Open **Vectors → Vector Mathematics Lab**. Enter signed x, y, and z components. Use the five views to inspect direction, add and subtract vectors, compare dot and cross products, and see how the angle changes the results. The dashed projections show the signed cosine relationship. In the cross-product view, the shaded parallelogram and dashed height show the sine relationship. Swap A and B to reverse the normal without changing the area.
+
+The physics selector applies the same engine to constant-force work, instantaneous power, torque about a pivot, and angular momentum of a particle. The particle example computes momentum from mass and velocity. Numerical values use the input components, while the scene scales the arrows to fit. Angles and unit directions are undefined for zero vectors, and projection onto a zero vector has no target axis.

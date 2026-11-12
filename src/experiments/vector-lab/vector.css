@@ -1,0 +1,268 @@
+.vector-lab {
+  --vector-a: #c1e29e;
+  --vector-b: #8bcaf4;
+  --vector-normal: #eab2fb;
+  --vector-sum: #efbc88;
+  --vector-projection-ab: #e8d092;
+  --vector-projection-ba: #e1a6d2;
+}
+.vector-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+.vector-modes button {
+  min-height: 40px;
+  padding: 7px 13px;
+  border: 1px solid #40515e;
+  border-radius: 5px;
+  background: #18232c;
+  color: #d4dfe8;
+  cursor: pointer;
+}
+.vector-modes button:hover {
+  border-color: #8599a8;
+}
+.vector-modes button[aria-pressed='true'] {
+  background: #2a382c;
+  border-color: #82966f;
+  color: var(--vector-a);
+}
+.vector-settings {
+  min-width: 0;
+  gap: 12px;
+}
+.vector-settings h2,
+.vector-settings p {
+  margin: 0;
+}
+.vector-settings p,
+.vector-result > p,
+.vector-note {
+  color: #b4c4d1;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.vector-fields,
+.vector-presets {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 9px 0 0;
+  border: 0;
+}
+.vector-fields legend,
+.vector-presets legend,
+.vector-application,
+.vector-mass {
+  font-size: 12px;
+  font-weight: 650;
+}
+.vector-input-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.vector-input-grid label {
+  color: #becdd9;
+  font-size: 12px;
+}
+.vector-settings input,
+.vector-settings select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  margin-top: 5px;
+  padding: 6px 7px;
+  border: 1px solid #4b5d6c;
+  border-radius: 5px;
+  background: #111b23;
+  color: #edf4f9;
+  font: inherit;
+  font-size: 14px;
+}
+.vector-settings input[aria-invalid='true'] {
+  border-color: #d89687;
+}
+.vector-settings .vector-error {
+  color: #f4af9e;
+}
+.vector-presets div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.vector-presets button {
+  min-height: 35px;
+  padding: 5px 9px;
+}
+.vector-swap {
+  min-height: 38px;
+  align-self: flex-start;
+}
+.vector-toolbar {
+  gap: 8px;
+  font-size: 13px;
+  letter-spacing: 0;
+}
+.vector-toolbar > span {
+  font-size: 11px;
+  text-align: right;
+}
+.vector-viewport {
+  min-height: clamp(350px, 43vw, 500px);
+}
+.vector-viewport .camera-controls {
+  top: 15px;
+  left: 15px;
+}
+.vector-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 11px 16px;
+  border-top: 1px solid #35414c;
+  font-size: 12px;
+}
+.vector-legend > span::before {
+  display: inline-block;
+  width: 9px;
+  height: 2px;
+  margin: 0 6px 3px 0;
+  background: currentColor;
+  content: '';
+}
+.vector-a {
+  color: var(--vector-a);
+}
+.vector-b {
+  color: var(--vector-b);
+}
+.vector-normal {
+  color: var(--vector-normal);
+}
+.vector-sum {
+  color: var(--vector-sum);
+}
+.vector-projection-ab {
+  color: var(--vector-projection-ab);
+}
+.vector-projection-ba {
+  color: var(--vector-projection-ba);
+}
+.vector-note {
+  margin: 8px 0 0;
+}
+.scene-panel > .vector-note {
+  padding: 0 16px 12px;
+  font-size: 11px;
+}
+.vector-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  margin: 16px 0;
+  border: 1px solid #35414c;
+  border-radius: 8px;
+  background: #35414c;
+}
+.vector-summary > div {
+  padding: 14px;
+  background: #19232c;
+}
+.vector-summary dt,
+.vector-rows dt {
+  color: #b4c4d1;
+  font-size: 12px;
+}
+.vector-summary dd {
+  margin: 4px 0 0;
+  font-size: clamp(15px, 2vw, 23px);
+  overflow-wrap: anywhere;
+}
+.vector-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 14px;
+  margin: 14px 0 0;
+}
+.vector-result {
+  min-width: 0;
+  padding: 18px 20px;
+  border: 1px solid #35414c;
+  border-radius: 8px;
+  background: #171f27;
+  overflow-wrap: anywhere;
+}
+.vector-result h2 {
+  margin: 0 0 10px;
+}
+.vector-result h2 span {
+  margin-left: 6px;
+  color: #9fb8c9;
+  font-size: 12px;
+  font-weight: 400;
+}
+.vector-result h3 {
+  margin: 16px 0 4px;
+  font-size: 14px;
+}
+.vector-result .vector-equation,
+.vector-application-result strong {
+  color: #e1edcd;
+  font-size: 17px;
+}
+.vector-formula,
+.vector-rows dd,
+.vector-equation,
+.vector-application-result {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.vector-result .vector-formula {
+  margin: 7px 0;
+  color: #d6e5ed;
+}
+.vector-cross-terms {
+  margin: 12px 0;
+  padding-left: 11px;
+  border-left: 2px solid #686079;
+}
+.vector-rows > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 3px 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid #35414c;
+}
+.vector-rows dd {
+  margin: 0;
+  color: #e2edf6;
+  text-align: right;
+}
+@media (max-width: 700px) {
+  .vector-viewport {
+    min-height: 340px;
+  }
+  .vector-toolbar {
+    padding-inline: 12px;
+  }
+  .vector-summary > div {
+    padding: 10px;
+  }
+}
+.vector-determinant summary {
+  color: #cbdce9;
+  cursor: pointer;
+}
+.vector-determinant table {
+  margin: 10px 0;
+  border-inline: 1px solid #a49ab4;
+  border-spacing: 8px 3px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

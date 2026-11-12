@@ -34,6 +34,7 @@ export function LabCanvas({
   minFrameDistance = 12,
   minOrbitDistance = 4,
   sceneExtent,
+  fullOrbit,
   label = 'Interactive 3D view of a cube falling onto a ground plane',
 }: {
   children: ReactNode;
@@ -44,6 +45,7 @@ export function LabCanvas({
   frameWidth?: number;
   center?: readonly [number, number, number];
   sceneExtent?: number;
+  fullOrbit?: boolean;
   label?: string;
 }) {
   return (
@@ -100,6 +102,7 @@ export function LabCanvas({
           minOrbitDistance={minOrbitDistance}
           frameWidth={frameWidth}
           center={center}
+          fullOrbit={fullOrbit}
         />
       </Canvas>
     </SceneBoundary>

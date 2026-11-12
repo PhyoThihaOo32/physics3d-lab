@@ -83,16 +83,25 @@ export const experiments: readonly ExperimentRegistration[] = [
   {
     id: 'vector-lab',
     labId: 'vectors',
-    title: 'Vector operations',
+    title: 'Vector Mathematics Lab',
     topic: '3D vectors',
     description:
       'Explore components, vector addition, dot products, and cross products.',
     objectives: [
-      'Inspect vectors and their components in 3D.',
-      'Explain cross-product direction and magnitude.',
+      'Resolve, add, and subtract vectors in 3D.',
+      'Use projections to explain the dot product.',
+      'Use the right-hand rule and area to explain the cross product.',
     ],
-    measurements: ['Magnitude', 'Angle', 'Dot product', 'Cross product'],
-    status: 'planned',
+    measurements: [
+      'Components',
+      'Magnitude',
+      'Angle',
+      'Projections',
+      'Dot product',
+      'Cross product',
+    ],
+    status: 'available',
+    load: () => import('./vector-lab/VectorPage'),
   },
   {
     id: 'angular-momentum',
