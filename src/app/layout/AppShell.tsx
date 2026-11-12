@@ -24,7 +24,12 @@ export function AppShell({
         <a className="brand" href="#/labs" aria-label="Physics3D Lab home">
           <span className="brand-mark" aria-hidden="true">
             <span className="brand-cube">
-              <span className="brand-cube-front" />
+              <span className="brand-cube-face brand-cube-front" />
+              <span className="brand-cube-face brand-cube-right" />
+              <span className="brand-cube-face brand-cube-back" />
+              <span className="brand-cube-face brand-cube-left" />
+              <span className="brand-cube-face brand-cube-top" />
+              <span className="brand-cube-face brand-cube-bottom" />
             </span>
           </span>
           <span>Physics3D Lab</span>

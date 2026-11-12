@@ -88,48 +88,103 @@ canvas:focus-visible {
   transform: rotateZ(13deg) rotateX(-23deg) rotateY(-32deg);
   transform-style: preserve-3d;
 }
-.brand-cube-front,
-.brand-cube::before,
-.brand-cube::after {
+.brand-cube-face {
   position: absolute;
   inset: 0;
-  box-shadow: inset 0 0 0 1px #ffffff24;
+  background:
+    linear-gradient(
+      125deg,
+      transparent 15%,
+      #91a5ff60 33%,
+      #78d8dca6 43%,
+      #d9dfa1b3 49%,
+      #e4ab9470 55%,
+      #b896e66b 63%,
+      transparent 76%
+    ),
+    linear-gradient(150deg, var(--face-light), var(--face-dark));
+  background-size:
+    240% 240%,
+    100% 100%;
+  background-position:
+    30% 60%,
+    center;
+  box-shadow: inset 0 0 0 1px #e3eaff2e;
   backface-visibility: hidden;
+  transform: rotateY(var(--face-y, 0deg)) rotateX(var(--face-x, 0deg))
+    translateZ(calc(var(--cube-size) / 2));
 }
 .brand-cube-front {
-  background:
-    radial-gradient(ellipse at 20% 15%, #d8e9c6 0%, transparent 55%),
-    linear-gradient(
-      145deg,
-      #749395 10%,
-      #9cb5aa 30%,
-      #bbb29b 48%,
-      #798db0 69%,
-      #535878 91%
-    );
-  transform: translateZ(calc(var(--cube-size) / 2));
+  --face-light: #73838c;
+  --face-dark: #2f3548;
 }
-.brand-cube::before {
-  content: '';
-  background: linear-gradient(
-    128deg,
-    #9eb5bb,
-    #648d99 45%,
-    #6f738b 75%,
-    #a499a4
-  );
-  transform: rotateX(90deg) translateZ(calc(var(--cube-size) / 2));
+.brand-cube-right {
+  --face-y: 90deg;
+  --face-light: #4d5a6b;
+  --face-dark: #252a3b;
+  --sheen-delay: -2s;
 }
-.brand-cube::after {
-  content: '';
-  background: linear-gradient(
-    151deg,
-    #4c6575,
-    #393e59 49%,
-    #485579 76%,
-    #65677d
-  );
-  transform: rotateY(90deg) translateZ(calc(var(--cube-size) / 2));
+.brand-cube-back {
+  --face-y: 180deg;
+  --face-light: #657386;
+  --face-dark: #2c3743;
+  --sheen-delay: -4s;
+}
+.brand-cube-left {
+  --face-y: -90deg;
+  --face-light: #627d7e;
+  --face-dark: #28343e;
+  --sheen-delay: -6s;
+}
+.brand-cube-top {
+  --face-x: 90deg;
+  --face-light: #9aaab1;
+  --face-dark: #465565;
+  --sheen-delay: -3s;
+}
+.brand-cube-bottom {
+  --face-x: -90deg;
+  --face-light: #4d596c;
+  --face-dark: #242a36;
+  --sheen-delay: -5s;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .brand-cube {
+    animation: brand-cube-tumble 12s linear infinite;
+  }
+  .brand-cube-face {
+    animation: brand-cube-sheen 6s ease-in-out var(--sheen-delay, 0s) infinite
+      alternate;
+  }
+}
+@keyframes brand-cube-tumble {
+  0% {
+    transform: rotateZ(13deg) rotateX(-23deg) rotateY(-32deg);
+  }
+  25% {
+    transform: rotateZ(4deg) rotateX(-13deg) rotateY(58deg);
+  }
+  50% {
+    transform: rotateZ(-12deg) rotateX(24deg) rotateY(148deg);
+  }
+  75% {
+    transform: rotateZ(3deg) rotateX(9deg) rotateY(238deg);
+  }
+  100% {
+    transform: rotateZ(13deg) rotateX(-23deg) rotateY(328deg);
+  }
+}
+@keyframes brand-cube-sheen {
+  from {
+    background-position:
+      12% 70%,
+      center;
+  }
+  to {
+    background-position:
+      80% 25%,
+      center;
+  }
 }
 .header-context {
   font-size: 9px;
