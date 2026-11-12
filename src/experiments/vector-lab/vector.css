@@ -2,7 +2,7 @@
   --vector-a: #c1e29e;
   --vector-b: #8bcaf4;
   --vector-normal: #eab2fb;
-  --vector-sum: #efbc88;
+  --vector-result-arrow: #efbc88;
   --vector-projection-ab: #e8d092;
   --vector-projection-ba: #e1a6d2;
 }
@@ -53,8 +53,7 @@
 }
 .vector-fields legend,
 .vector-presets legend,
-.vector-application,
-.vector-mass {
+.vector-scalar {
   font-size: 12px;
   font-weight: 650;
 }
@@ -67,8 +66,7 @@
   color: #becdd9;
   font-size: 12px;
 }
-.vector-settings input,
-.vector-settings select {
+.vector-settings input {
   display: block;
   width: 100%;
   min-width: 0;
@@ -142,8 +140,8 @@
 .vector-normal {
   color: var(--vector-normal);
 }
-.vector-sum {
-  color: var(--vector-sum);
+.vector-result-arrow {
+  color: var(--vector-result-arrow);
 }
 .vector-projection-ab {
   color: var(--vector-projection-ab);
@@ -158,77 +156,44 @@
   padding: 0 16px 12px;
   font-size: 11px;
 }
-.vector-summary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
-  overflow: hidden;
-  margin: 16px 0;
-  border: 1px solid #35414c;
-  border-radius: 8px;
-  background: #35414c;
+.vector-answer {
+  padding: 12px;
+  border: 1px solid #54674f;
+  border-radius: 6px;
+  background: #202d27;
+  overflow-wrap: anywhere;
 }
-.vector-summary > div {
-  padding: 14px;
-  background: #19232c;
-}
-.vector-summary dt,
+.vector-answer > span,
 .vector-rows dt {
   color: #b4c4d1;
   font-size: 12px;
 }
-.vector-summary dd {
-  margin: 4px 0 0;
-  font-size: clamp(15px, 2vw, 23px);
-  overflow-wrap: anywhere;
-}
-.vector-results {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-  gap: 14px;
-  margin: 14px 0 0;
+.vector-answer .vector-equation {
+  color: #e2efce;
+  font-size: 17px;
+  margin: 4px 0;
 }
 .vector-result {
-  min-width: 0;
-  padding: 18px 20px;
+  margin-top: 14px;
+  padding: 14px 16px;
   border: 1px solid #35414c;
   border-radius: 8px;
   background: #171f27;
   overflow-wrap: anywhere;
 }
-.vector-result h2 {
-  margin: 0 0 10px;
-}
-.vector-result h2 span {
-  margin-left: 6px;
-  color: #9fb8c9;
-  font-size: 12px;
-  font-weight: 400;
-}
-.vector-result h3 {
-  margin: 16px 0 4px;
-  font-size: 14px;
-}
-.vector-result .vector-equation,
-.vector-application-result strong {
-  color: #e1edcd;
-  font-size: 17px;
+.vector-details summary {
+  color: #cbdce9;
+  cursor: pointer;
 }
 .vector-formula,
 .vector-rows dd,
-.vector-equation,
-.vector-application-result {
+.vector-equation {
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
 .vector-result .vector-formula {
-  margin: 7px 0;
+  margin: 9px 0;
   color: #d6e5ed;
-}
-.vector-cross-terms {
-  margin: 12px 0;
-  padding-left: 11px;
-  border-left: 2px solid #686079;
 }
 .vector-rows > div {
   display: flex;
@@ -245,24 +210,18 @@
   text-align: right;
 }
 @media (max-width: 700px) {
+  .vector-workspace .scene-panel {
+    grid-row: auto;
+  }
   .vector-viewport {
     min-height: 340px;
   }
   .vector-toolbar {
     padding-inline: 12px;
   }
-  .vector-summary > div {
-    padding: 10px;
-  }
 }
-.vector-determinant summary {
-  color: #cbdce9;
-  cursor: pointer;
-}
-.vector-determinant table {
-  margin: 10px 0;
-  border-inline: 1px solid #a49ab4;
-  border-spacing: 8px 3px;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+.vector-modes button span {
+  margin-left: 4px;
+  color: #b4c4d1;
+  font-size: 11px;
 }

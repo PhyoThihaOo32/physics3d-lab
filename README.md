@@ -194,6 +194,6 @@ This is a 51 kg illustrative segment model, not measured anatomy. Under ideal su
 
 ## Vector Mathematics Lab
 
-Open **Vectors → Vector Mathematics Lab**. Enter signed x, y, and z components. Use the five views to inspect direction, add and subtract vectors, compare dot and cross products, and see how the angle changes the results. The dashed projections show the signed cosine relationship. In the cross-product view, the shaded parallelogram and dashed height show the sine relationship. Swap A and B to reverse the normal without changing the area.
+Open **Vectors → Vector Mathematics Lab** and choose **Add**, **Subtract**, **Scale**, **Cross**, or **Dot**. Edit the components to update the result and 3D diagram immediately. Scale uses a number k to multiply each component of A. Dot gives a scalar and the other operations give vectors.
 
-The physics selector applies the same engine to constant-force work, instantaneous power, torque about a pivot, and angular momentum of a particle. The particle example computes momentum from mass and velocity. Numerical values use the input components, while the scene scales the arrows to fit. Angles and unit directions are undefined for zero vectors, and projection onto a zero vector has no target axis.
+Open **Show calculation** to see the arithmetic. In Cross mode, swap A and B to reverse the normal and keep the parallelogram area. Dot mode shows the projections and the angle between A and B.

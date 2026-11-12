@@ -86,9 +86,9 @@ export const experiments: readonly ExperimentRegistration[] = [
     title: 'Vector Mathematics Lab',
     topic: '3D vectors',
     description:
-      'Explore components, vector addition, dot products, and cross products.',
+      'Add, subtract, and scale vectors, or calculate their cross and dot products.',
     objectives: [
-      'Resolve, add, and subtract vectors in 3D.',
+      'Add, subtract, and scale vectors in 3D.',
       'Use projections to explain the dot product.',
       'Use the right-hand rule and area to explain the cross product.',
     ],

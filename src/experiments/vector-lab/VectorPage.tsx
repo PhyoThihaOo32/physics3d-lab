@@ -5,89 +5,69 @@ import {
   type CameraView,
 } from '../../components/controls/CameraControls';
 import { ViewportHint } from '../../components/controls/ViewportHint';
+import { vectorMagnitude } from '../../physics/vectors/vectorMath';
 import { LabCanvas } from '../../three/scene/LabCanvas';
 import {
-  APPLICATIONS,
   AXES,
   COMPONENT_LIMIT,
   MODES,
   PRESETS,
-  analyzeVectors,
+  calculateVectorOperation,
   draftVector,
   numberText,
+  parseComponent,
   parseVector,
-  particleMomentum,
-  tupleText,
-  type ApplicationId,
   type DraftVector,
   type VectorMode,
-  type VectorPair,
 } from './model';
-import { ApplicationResult, VectorReadouts } from './VectorReadouts';
+import { VectorReadouts, VectorDetails } from './VectorReadouts';
 import { VectorScene } from './VectorScene';
 import './vector.css';
 
 const CENTER = [0, 0, 0] as const;
+const SUBSCRIPTS = ['ₓ', 'ᵧ', '𝓏'];
+const ZERO = [0, 0, 0] as const;
+const SCENE_LIMIT = 3.95;
 
 export default function VectorPage() {
   const [a, setA] = useState(() => draftVector(PRESETS[0].vectors[0]));
   const [b, setB] = useState(() => draftVector(PRESETS[0].vectors[1]));
-  const [mode, setMode] = useState<VectorMode>('components');
-  const [application, setApplication] = useState<ApplicationId | ''>('');
-  const [mass, setMass] = useState('2');
+  const [scalar, setScalar] = useState('2');
+  const [mode, setMode] = useState<VectorMode>('add');
   const [view, setView] = useState<CameraView>({
     preset: 'Perspective',
     revision: 0,
   });
-  const lesson = application ? APPLICATIONS[application] : null;
-  const activeMode = lesson?.mode ?? mode;
+  const scaling = mode === 'scale';
+  const product = mode === 'dot' || mode === 'cross';
   const first = parseVector(a);
-  const second = parseVector(b);
-  const massValue = Number(mass);
-  const validMass =
-    mass.trim() !== '' &&
-    Number.isFinite(massValue) &&
-    massValue > 0 &&
-    massValue <= COMPONENT_LIMIT;
-  const effectiveB =
-    application === 'particle'
-      ? second && validMass
-        ? particleMomentum(second, massValue)
-        : null
-      : second;
-  const values = first && effectiveB ? analyzeVectors(first, effectiveB) : null;
-  const inputs = lesson?.symbols ?? ['A', 'B'];
-  const names = [
-    inputs[0],
-    application === 'particle' ? 'p' : inputs[1],
-  ] as const;
-  const sceneLabels = [names[0], names[1], lesson?.output ?? 'A×B'] as const;
-  const cross = activeMode === 'cross' || activeMode === 'compare';
-  const combined = cross || activeMode === 'combine';
-  const operandScale = values
-    ? 3.95 /
-      Math.max(
-        3.95,
-        combined
-          ? values.lengthA + values.lengthB
-          : Math.max(values.lengthA, values.lengthB),
-      )
-    : 1;
-  const normalScale = values
-    ? 3.95 / Math.max(3.95, values.lengthA * values.lengthB)
-    : 1;
+  const second = scaling ? ZERO : parseVector(b);
+  const factor = scaling ? parseComponent(scalar) : 1;
+  const values =
+    first && second && factor !== null
+      ? calculateVectorOperation(mode, first, second, factor)
+      : null;
+  const lengthA = first ? vectorMagnitude(first) : 0;
+  const lengthB = second ? vectorMagnitude(second) : 0;
+  const resultLength =
+    values && typeof values.result !== 'number'
+      ? vectorMagnitude(values.result)
+      : 0;
+  const operandScale =
+    SCENE_LIMIT /
+    Math.max(
+      SCENE_LIMIT,
+      lengthA,
+      lengthB,
+      mode === 'cross' ? lengthA + lengthB : resultLength,
+    );
+  const normalScale = Math.min(
+    operandScale,
+    SCENE_LIMIT / Math.max(SCENE_LIMIT, resultLength),
+  );
+  const separateNormalScale = mode === 'cross' && normalScale !== operandScale;
   function changeView(preset: CameraPreset) {
     setView((previous) => ({ preset, revision: previous.revision + 1 }));
-  }
-  function setVectors(vectors: VectorPair) {
-    setA(draftVector(vectors[0]));
-    setB(draftVector(vectors[1]));
-  }
-  function selectApplication(id: ApplicationId | '') {
-    setApplication(id);
-    if (id) setVectors(APPLICATIONS[id].vectors);
-    else setVectors(PRESETS[0].vectors);
-    setMass('2');
   }
   return (
     <div className="vector-lab">
@@ -95,23 +75,21 @@ export default function VectorPage() {
         <div>
           <h1>Vector Mathematics Lab</h1>
           <p>
-            Build two vectors, rotate the scene, and see how each operation
-            changes the result.
+            Choose an operation and edit the values to see the calculation and
+            its 3D diagram.
           </p>
         </div>
       </header>
       <div className="vector-modes" role="group" aria-label="Vector operation">
-        {MODES.map(({ id, label }) => (
+        {(Object.keys(MODES) as VectorMode[]).map((id) => (
           <button
             type="button"
             key={id}
-            aria-pressed={!lesson && mode === id}
-            onClick={() => {
-              setApplication('');
-              setMode(id);
-            }}
+            aria-pressed={mode === id}
+            onClick={() => setMode(id)}
           >
-            {label}
+            {MODES[id].label}{' '}
+            <span aria-hidden="true">{MODES[id].equation}</span>
           </button>
         ))}
       </div>
@@ -120,111 +98,69 @@ export default function VectorPage() {
           className="setup-panel vector-settings"
           aria-labelledby="vector-settings-heading"
         >
-          <h2 id="vector-settings-heading">Set the vectors</h2>
-          <p>Enter components from −1,000 to 1,000.</p>
-          <VectorFields
-            symbol={inputs[0]}
-            unit={lesson?.units[0]}
-            draft={a}
-            update={setA}
-            color="a"
-          />
-          <VectorFields
-            symbol={inputs[1]}
-            unit={lesson?.units[1]}
-            draft={b}
-            update={setB}
-            color="b"
-          />
-          {application === 'particle' && (
-            <label className="vector-mass">
-              Particle mass (kg)
+          <h2 id="vector-settings-heading">
+            {scaling ? 'Vector and multiplier' : 'Vectors A and B'}
+          </h2>
+          <VectorFields symbol="A" draft={a} update={setA} />
+          {scaling ? (
+            <label className="vector-scalar">
+              Scalar multiplier k
               <input
                 type="number"
-                min="0"
+                min={-COMPONENT_LIMIT}
                 max={COMPONENT_LIMIT}
                 step="any"
-                value={mass}
-                onChange={(event) => setMass(event.target.value)}
-                aria-invalid={!validMass}
+                value={scalar}
+                onChange={(event) => setScalar(event.target.value)}
+                aria-invalid={factor === null}
               />
             </label>
+          ) : (
+            <VectorFields symbol="B" draft={b} update={setB} />
           )}
-          {!values && (
+          {values ? (
+            <VectorReadouts values={values} />
+          ) : (
             <p role="alert" className="vector-error">
-              {!first || !second
-                ? 'Enter a finite value within the component range in each field.'
-                : 'Enter a mass greater than zero and at most 1,000 kg.'}
+              Enter a number between −1,000 and 1,000 in each field.
             </p>
           )}
-          {!lesson && (
-            <>
-              <button
-                type="button"
-                className="secondary-button vector-swap"
-                onClick={() => {
-                  setA(b);
-                  setB(a);
-                }}
-              >
-                Swap A and B
-              </button>
-              <fieldset className="vector-presets">
-                <legend>Examples</legend>
-                <div>
-                  {PRESETS.map(({ label, vectors }) => (
-                    <button
-                      type="button"
-                      className="secondary-button"
-                      key={label}
-                      onClick={() => setVectors(vectors)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
-            </>
-          )}
-          <label className="vector-application">
-            Physics application
-            <select
-              value={application}
-              onChange={(event) =>
-                selectApplication(event.target.value as ApplicationId | '')
-              }
+          {!scaling && (
+            <button
+              type="button"
+              className="secondary-button vector-swap"
+              onClick={() => {
+                setA(b);
+                setB(a);
+              }}
             >
-              <option value="">Vector mathematics</option>
-              {Object.entries(APPLICATIONS).map(([id, item]) => (
-                <option key={id} value={id}>
-                  {item.title}
-                </option>
-              ))}
-            </select>
-          </label>
-          {lesson && (
-            <>
-              <p>{lesson.instruction}</p>
-              {application === 'particle' && effectiveB && (
-                <p className="vector-formula">
-                  p = mv = {tupleText(effectiveB)} kg·m/s
-                </p>
-              )}
-              {values && (
-                <ApplicationResult
-                  equation={lesson.equation}
-                  result={lesson.mode === 'dot' ? values.dot : values.cross}
-                  units={lesson.outputUnit}
-                />
-              )}
-            </>
+              Swap A and B
+            </button>
+          )}
+          {product && (
+            <fieldset className="vector-presets">
+              <legend>Examples</legend>
+              <div>
+                {PRESETS.map(({ label, vectors }) => (
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    key={label}
+                    onClick={() => {
+                      setA(draftVector(vectors[0]));
+                      setB(draftVector(vectors[1]));
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
           )}
         </aside>
         <section className="scene-panel" aria-label="Vector diagram">
           <div className="scene-toolbar vector-toolbar">
-            <strong>
-              {lesson?.title ?? MODES.find((item) => item.id === mode)?.label}
-            </strong>
+            <strong>{MODES[mode].equation}</strong>
             <span>+y up · right-handed axes</span>
           </div>
           <div className="viewport vector-viewport">
@@ -240,78 +176,65 @@ export default function VectorPage() {
               label="3D vector diagram with an orbiting camera"
             >
               <VectorScene
-                analysis={values}
-                mode={activeMode}
+                values={values}
                 operandScale={operandScale}
                 normalScale={normalScale}
-                labels={sceneLabels}
               />
             </LabCanvas>
             <CameraControls view={view} onChange={changeView} />
             <ViewportHint />
           </div>
           <div className="vector-legend">
-            <span className="vector-a">{names[0]}</span>
-            <span className="vector-b">{names[1]}</span>
-            {cross && (
-              <span className="vector-normal">{sceneLabels[2]} normal</span>
-            )}
-            {activeMode === 'combine' && (
+            <span className="vector-a">A</span>
+            {!scaling && <span className="vector-b">B</span>}
+            {mode === 'dot' ? (
               <>
-                <span className="vector-sum">A + B</span>
-                <span className="vector-normal">A − B</span>
+                <span className="vector-projection-ab">A onto B</span>
+                <span className="vector-projection-ba">B onto A</span>
               </>
-            )}
-            {(activeMode === 'dot' || activeMode === 'compare') && (
-              <>
-                <span className="vector-projection-ab">
-                  {names[0]} onto {names[1]}
-                </span>
-                <span className="vector-projection-ba">
-                  {names[1]} onto {names[0]}
-                </span>
-              </>
+            ) : (
+              <span
+                className={
+                  mode === 'cross' ? 'vector-normal' : 'vector-result-arrow'
+                }
+              >
+                {MODES[mode].equation}
+              </span>
             )}
           </div>
-          {values && (operandScale !== 1 || cross) && (
+          {values && (operandScale !== 1 || separateNormalScale) && (
             <p className="vector-note">
               {operandScale !== 1 &&
-                `The scene uses 1 grid step per ${numberText(1 / operandScale)} input units. `}
-              {cross &&
-                'The normal uses its own length scale. The area and product values below use the original components.'}
+                `Each grid step represents ${numberText(1 / operandScale)} input units. `}
+              {separateNormalScale && 'The normal has a separate length scale.'}
             </p>
           )}
         </section>
       </div>
-      <VectorReadouts values={values} mode={activeMode} names={names} />
+      {values && <VectorDetails key={values.mode} values={values} />}
     </div>
   );
 }
 
 function VectorFields({
   symbol,
-  unit,
   draft,
   update,
-  color,
 }: {
-  symbol: string;
-  unit?: string;
+  symbol: 'A' | 'B';
   draft: DraftVector;
   update: (value: DraftVector) => void;
-  color: 'a' | 'b';
 }) {
   return (
     <fieldset className="vector-fields">
-      <legend className={`vector-${color}`}>
+      <legend className={symbol === 'A' ? 'vector-a' : 'vector-b'}>
         Vector {symbol}
-        {unit && ` (${unit})`}
       </legend>
       <div className="vector-input-grid">
         {AXES.map((axis, i) => (
           <label key={axis}>
             {symbol}
-            {['ₓ', 'ᵧ', '𝓏'][i]}
+            {SUBSCRIPTS[i]}
             <input
               aria-label={`${symbol}${axis}`}
               type="number"
@@ -319,10 +242,7 @@ function VectorFields({
               max={COMPONENT_LIMIT}
               step="any"
               value={draft[i]}
-              aria-invalid={
-                draft[i].trim() === '' ||
-                Math.abs(Number(draft[i])) > COMPONENT_LIMIT
-              }
+              aria-invalid={parseComponent(draft[i]) === null}
               onChange={(event) => {
                 const next: DraftVector = [...draft];
                 next[i] = event.target.value;

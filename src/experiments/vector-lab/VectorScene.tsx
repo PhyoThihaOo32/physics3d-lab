@@ -10,7 +10,7 @@ import { SceneLabel } from '../../three/labels/SceneLabel';
 import { VectorArrow3D } from '../../three/vectors/VectorArrow3D';
 import { DoubleSide } from 'three';
 import type { Vector3Tuple } from '../../types/vector';
-import type { VectorAnalysis, VectorMode } from './model';
+import { MODES, type VectorCalculation } from './model';
 
 const ORIGIN: Vector3Tuple = [0, 0, 0];
 const COLORS = {
@@ -107,26 +107,6 @@ function Axes() {
       </mesh>
     </>
   );
-}
-
-function Components({
-  vector,
-  opacity,
-}: {
-  vector: Vector3Tuple;
-  opacity: number;
-}) {
-  const x: Vector3Tuple = [vector[0], 0, 0];
-  const xy: Vector3Tuple = [vector[0], vector[1], 0];
-  const points = [ORIGIN, x, xy, vector];
-  return AXIS_COLORS.map((color, i) => (
-    <Segments
-      key={color}
-      points={[points[i], points[i + 1]]}
-      color={color}
-      opacity={opacity}
-    />
-  ));
 }
 
 function DashedSegment({
@@ -264,95 +244,81 @@ function Parallelogram({
 }
 
 export function VectorScene({
-  analysis,
-  mode,
+  values,
   operandScale,
   normalScale,
-  labels,
 }: {
-  analysis: VectorAnalysis | null;
-  mode: VectorMode;
+  values: VectorCalculation | null;
   operandScale: number;
   normalScale: number;
-  labels: readonly [string, string, string];
 }) {
-  if (!analysis) return <Axes />;
-  const a = scaleVector(analysis.a, operandScale);
-  const b = scaleVector(analysis.b, operandScale);
-  const cross = mode === 'cross' || mode === 'compare';
-  const dot = mode === 'dot' || mode === 'compare';
-  const [nameA, nameB, normalLabel] = labels;
+  if (!values) return <Axes />;
+  const { mode, result } = values;
+  const a = scaleVector(values.a, operandScale);
+  const b = mode === 'scale' ? ORIGIN : scaleVector(values.b, operandScale);
+  const label = MODES[mode].equation;
   return (
     <>
       <Axes />
-      {cross && analysis.area > 0 && analysis.projectionBA && (
+      {mode === 'cross' && values.area > 0 && values.projectionBA && (
         <Parallelogram
           a={a}
           b={b}
-          projectedB={scaleVector(analysis.projectionBA, operandScale)}
+          projectedB={scaleVector(values.projectionBA, operandScale)}
         />
       )}
-      <Arrow vector={a} label={nameA} color={COLORS.a} />
-      <Arrow vector={b} label={nameB} color={COLORS.b} />
-      {mode === 'components' && (
-        <>
-          <Components vector={a} opacity={1} />
-          <Components vector={b} opacity={0.58} />
-        </>
+      <Arrow vector={a} label="A" color={COLORS.a} />
+      {mode !== 'scale' && <Arrow vector={b} label="B" color={COLORS.b} />}
+      {mode === 'add' && (
+        <Segments
+          points={[a, addVectors(a, b), b, addVectors(a, b)]}
+          color={COLORS.result}
+          opacity={0.65}
+        />
       )}
-      {mode === 'combine' && (
-        <>
-          <Segments
-            points={[a, addVectors(a, b), b, addVectors(a, b), b, a]}
-            color={COLORS.result}
-            opacity={0.65}
-          />
-          <Arrow
-            vector={scaleVector(analysis.sum, operandScale)}
-            label="A+B"
-            color={COLORS.result}
-            labelSize={0.7}
-          />
-          <Arrow
-            vector={scaleVector(analysis.difference, operandScale)}
-            label="A−B"
-            color={COLORS.cross}
-            labelSize={0.7}
-          />
-        </>
+      {mode === 'subtract' && (
+        <DashedSegment start={b} end={a} color={COLORS.result} />
       )}
-      {dot && (
+      {mode === 'dot' && (
         <>
           <Projection
             source={a}
             foot={
-              analysis.projectionAB &&
-              scaleVector(analysis.projectionAB, operandScale)
+              values.projectionAB &&
+              scaleVector(values.projectionAB, operandScale)
             }
-            label={`proj ${nameA}`}
+            label="proj A"
             color={COLORS.projectionAB}
           />
           <Projection
             source={b}
             foot={
-              analysis.projectionBA &&
-              scaleVector(analysis.projectionBA, operandScale)
+              values.projectionBA &&
+              scaleVector(values.projectionBA, operandScale)
             }
-            label={`proj ${nameB}`}
+            label="proj B"
             color={COLORS.projectionBA}
           />
         </>
       )}
-      {cross && (
+      {mode !== 'dot' && (
         <Arrow
-          vector={scaleVector(analysis.cross, normalScale)}
-          label={normalLabel}
-          color={COLORS.cross}
+          vector={scaleVector(
+            result,
+            mode === 'cross' ? normalScale : operandScale,
+          )}
+          label={label}
+          color={mode === 'cross' ? COLORS.cross : COLORS.result}
           labelSize={0.74}
         />
       )}
-      {mode !== 'combine' && (
-        <AngleArc a={a} b={b} theta={analysis.theta} showDirection={cross} />
+      {(mode === 'dot' || mode === 'cross') && (
+        <AngleArc
+          a={a}
+          b={b}
+          theta={values.theta}
+          showDirection={mode === 'cross'}
+        />
       )}
     </>
   );
