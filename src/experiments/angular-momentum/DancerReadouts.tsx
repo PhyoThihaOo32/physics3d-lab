@@ -1,10 +1,7 @@
 import { Measurement } from '../../components/measurements/Measurement';
 import { formatNumber as f } from '../../physics/units/format';
 import { useDancerStore } from '../../store/dancerStore';
-import {
-  dancerInertia,
-  type DancerParameters,
-} from '../../physics/equations/angularMomentum';
+import { type DancerParameters } from '../../physics/equations/angularMomentum';
 import { useSimulationStore } from '../../store/simulationStore';
 export function DancerReadouts({
   parameters,
@@ -62,13 +59,12 @@ export function DancerReadouts({
       >
         <div className="theory-heading">
           <div>
-            <div className="section-label">PREDICT · MEASURE · EXPLAIN</div>
             <h2 id="dancer-theory-title">Lᵧ = Iᵧ ωᵧ</h2>
           </div>
           <span>
             {parameters.resistance === 0
-              ? 'IDEAL SUPPORT'
-              : `RESISTANCE b = ${f(parameters.resistance)} N·m·s/rad`}
+              ? 'Ideal support'
+              : `b = ${f(parameters.resistance)} N·m·s/rad`}
           </span>
         </div>
         <div className="dancer-balance">
@@ -79,13 +75,13 @@ export function DancerReadouts({
             </strong>
           </div>
           <div>
-            <span>Predicted ωᵧ = expected Lᵧ / measured Iᵧ</span>
+            <span>Predicted ωᵧ</span>
             <strong data-testid="predicted-omega">
               {f(expected / s.inertia, 3)} <small>rad/s</small>
             </strong>
           </div>
           <div>
-            <span>Momentum balance residual</span>
+            <span>Momentum error</span>
             <strong data-testid="momentum-residual">
               {f(s.residual, 4)} <small>kg·m²/s</small>
             </strong>
@@ -97,36 +93,12 @@ export function DancerReadouts({
             </strong>
           </div>
         </div>
-        <p className="physics-caption">
-          Measured Lᵧ is summed from all five bodies’ spin and orbital angular
-          momentum. It is independent of the Iᵧωᵧ comparison. Small
-          discrepancies during movement reflect joint and timestep resolution.
-        </p>
         <div className="dancer-energy">
-          <strong>Raising the arms requires work.</strong>
-          <p>
-            Spin energy is K = ½Iᵧωᵧ². With constant Lᵧ, it also equals
-            Lᵧ²/(2Iᵧ): bringing the arms closer to the axis raises spin energy.
-            The joint actuators represent muscle action. Arm-raising motion and
-            gravitational potential energy are additional parts of the full
-            energy budget.
-          </p>
-          <p>
-            Change in spin energy since t = 0:{' '}
-            <output data-testid="spin-energy-change">
-              {f(s.energy - s.initialEnergy, 3)} J
-            </output>
-            . This is not a measurement of total muscle work.
-          </p>
+          <strong>Spin energy change</strong>{' '}
+          <output data-testid="spin-energy-change">
+            {f(s.energy - s.initialEnergy, 3)} J
+          </output>
         </div>
-        <p className="physics-caption">
-          Illustrative model: 44 kg body with Iᵧ = 0.750 kg·m²; each upper arm
-          is 2.0 kg × 0.30 m and each forearm/hand is 1.5 kg × 0.28 m. Shoulder
-          radius 0.18 m. Each arm segment uses a uniform rectangular inertia
-          envelope, 0.07 m thick. Reference Iᵧ: {f(dancerInertia(1), 3)} kg·m²
-          open, {f(dancerInertia(0), 3)} kg·m² overhead. Motors have finite
-          stiffness, so measured poses can differ slightly.
-        </p>
       </section>
     </>
   );
@@ -169,31 +141,27 @@ export function DancerRecords() {
     <section className="dancer-records" aria-labelledby="dancer-record-title">
       <div className="dancer-section-heading">
         <div>
-          <div className="section-label">COLLECT EVIDENCE</div>
-          <h2 id="dancer-record-title">Compare arm positions</h2>
+          <h2 id="dancer-record-title">Samples</h2>
         </div>
         <div className="dancer-actions">
           <button
             className="secondary-button"
+            aria-label="Record paused sample"
             disabled={!ready || running}
             onClick={() => useDancerStore.getState().record()}
           >
-            Record paused sample
+            Record
           </button>
           <button
             className="secondary-button"
+            aria-label="Export trial CSV"
             disabled={!history.length}
             onClick={downloadCsv}
           >
-            Export trial CSV
+            CSV
           </button>
         </div>
       </div>
-      <p className="physics-caption">
-        Pause with arms out, record a sample, then raise them overhead and
-        repeat. The latest eight samples stay here until a new trial. CSV
-        includes the full 10 Hz trial history and exact pause samples.
-      </p>
       {records.length ? (
         <div className="dancer-table-wrap">
           <table>
@@ -225,9 +193,7 @@ export function DancerRecords() {
           </table>
         </div>
       ) : (
-        <p className="dancer-empty">
-          No samples recorded yet. Pause the spin to capture a measurement.
-        </p>
+        <p className="dancer-empty">No samples recorded yet.</p>
       )}
     </section>
   );

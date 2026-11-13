@@ -34,7 +34,6 @@ export function AppShell({
           </span>
           <span>Physics3D Lab</span>
         </a>
-        <div className="header-context">AN INTERACTIVE PHYSICS LABORATORY</div>
         <nav aria-label="Main navigation">
           <a
             className="directory-link"
@@ -44,20 +43,9 @@ export function AppShell({
             All labs
           </a>
         </nav>
-        <span className="version">
-          <span />
-          Physics3D · v0.4
-        </span>
       </header>
       <main id="main" tabIndex={-1}>
         {children}
-        <footer>
-          <span>PHYSICS, MADE VISIBLE.</span>
-          <span>
-            Explore<span className="footer-divider">/</span>Experiment
-            <span className="footer-divider">/</span>Understand
-          </span>
-        </footer>
       </main>
     </div>
   );

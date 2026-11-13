@@ -83,7 +83,7 @@ export const experiments: readonly ExperimentRegistration[] = [
   {
     id: 'vector-lab',
     labId: 'vectors',
-    title: 'Vector Mathematics Lab',
+    title: 'Vector Lab',
     topic: '3D vectors',
     description:
       'Add, subtract, and scale vectors, or calculate their cross and dot products.',

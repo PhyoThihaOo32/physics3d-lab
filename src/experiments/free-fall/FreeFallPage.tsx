@@ -71,22 +71,7 @@ export default function FreeFallPage() {
   );
   return (
     <>
-      <div className="page-heading">
-        <div>
-          <div className="eyebrow">
-            <span className="tiny-square" />
-            MOTION LAB / FREE FALL
-          </div>
-          <h1>{freeFallExperiment.title}</h1>
-          <p>{freeFallExperiment.description}</p>
-        </div>
-        <div className="milestone">
-          <span>01</span>
-          <div>
-            FREE FALL<strong>Motion lab · Kinematics</strong>
-          </div>
-        </div>
-      </div>
+      <h1 className="page-title">{freeFallExperiment.title}</h1>
       <div className="workspace">
         <ParameterPanel
           key={run}
@@ -98,9 +83,9 @@ export default function FreeFallPage() {
         />
         <section className="scene-panel" aria-label="Free-fall experiment">
           <div className="scene-toolbar">
-            <div>
-              <span className="live-dot" />
-              {running ? 'SIMULATION RUNNING' : 'SIMULATION PAUSED'}
+            <div className="scene-state" role="status">
+              <span className={settled ? 'status-dot settled' : 'status-dot'} />
+              {status}
             </div>
             <label className="axes-toggle">
               <input
@@ -116,86 +101,28 @@ export default function FreeFallPage() {
               <DropScene key={run} parameters={parameters} />
               {axes && <WorldAxes />}
             </LabCanvas>
-            <div className="scene-title">
-              <span>01 / RIGID-BODY DYNAMICS</span>
-              <strong>Free fall & first contact</strong>
-            </div>
-            <div className="scene-status" role="status">
-              <span className={settled ? 'status-dot settled' : 'status-dot'} />
-              {status}
-            </div>
-            {!ready && (
-              <div className="loading-badge" role="status">
-                Initializing physics engine…
-              </div>
-            )}
             <CameraControls view={view} onChange={setCamera} />
             <ViewportHint />
-            <div className="coordinate-note">
-              +y up<span>GRID / 1 METER</span>
-            </div>
+            <div className="coordinate-note">1 m grid</div>
           </div>
           <LiveMeasurements />
-          <div className="measurement-note">
-            Engine measurements · acceleration is unavailable until the first
-            physics step · contact time has finite timestep resolution. The
-            trial clock continues through rebound; first contact records the end
-            of the initial free fall.
-          </div>
         </section>
       </div>
       <DropReadouts parameters={parameters} />
       <PhysicsDetails>
+        <p>Vacuum, uniform gravity, 1 m cube. Contact occurs at y ≈ 0.50 m.</p>
         <p>
-          The cube side is 1 m; the ground is y = 0, so first contact occurs
-          near center height y = 0.50 m. The cube and ground friction
-          coefficients are 0.70 and 0.50, giving an average contact coefficient
-          of 0.60. Restitution coefficients 0.25 and 0 combine to 0.125; the
-          collision is not perfectly elastic.
+          Acceleration uses Δvᵧ/Δt. Impact readings average one step. At rest,
+          the ground balances gravity.
         </p>
-        <p>
-          Only gravity acts before first contact. During contact, the ground
-          also acts on the cube. At rest its net acceleration is approximately
-          zero even though gravity remains present. The equation and energy
-          comparisons preserve the last sample before the first collision
-          impulse.
-        </p>
+        <a
+          href="https://openstax.org/books/university-physics-volume-1/pages/3-5-free-fall"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Free fall · OpenStax ↗
+        </a>
       </PhysicsDetails>
-      <div className="learning-strip">
-        <section className="observation">
-          <div className="section-label">TRY AN EXPERIMENT</div>
-          <h3>Does a heavier cube fall faster?</h3>
-          <p>
-            Run the trial, note the first-contact time, then change only the
-            mass. Without air resistance, acceleration and fall time should stay
-            the same. Try g = 1.62 m/s² for an approximate Moon environment, or
-            g = 0 for a stationary cube released from rest.
-          </p>
-          <p className="source-link">
-            <a
-              href="https://openstax.org/books/university-physics-volume-1/pages/3-5-free-fall"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Read the free-fall model · OpenStax ↗
-            </a>
-          </p>
-        </section>
-        <section className="assumptions">
-          <div className="section-label">WHAT THIS MODEL ASSUMES</div>
-          <ul>
-            {freeFallExperiment.assumptions.map((assumption) => (
-              <li key={assumption}>{assumption}</li>
-            ))}
-          </ul>
-          <p>
-            Height is the cube center’s y coordinate; its bottom reaches the
-            ground when y ≈ 0.50 m. At rest, the ground balances gravity, so net
-            acceleration is approximately zero. This is an ideal vacuum model,
-            not a simulation of air drag or material deformation.
-          </p>
-        </section>
-      </div>
     </>
   );
 }

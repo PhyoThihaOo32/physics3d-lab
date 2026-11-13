@@ -6,14 +6,13 @@ import {
   PROJECTILE_LIMITS,
   projectileParameterError,
   type ProjectileParameters,
-  PROJECTILE,
 } from './config';
 const FIELDS = [
-  { key: 'speed', label: 'Launch speed', symbol: 'v₀', unit: 'm/s' },
-  { key: 'angle', label: 'Launch angle', symbol: 'θ', unit: '°' },
-  { key: 'height', label: 'Launch height h₀', symbol: 'h₀', unit: 'm' },
-  { key: 'gravity', label: 'Gravity magnitude', symbol: 'g', unit: 'm/s²' },
-  { key: 'mass', label: 'Sphere mass', symbol: 'm', unit: 'kg' },
+  { key: 'speed', label: 'Launch speed', unit: 'm/s' },
+  { key: 'angle', label: 'Launch angle', unit: '°' },
+  { key: 'height', label: 'Launch height h₀', unit: 'm' },
+  { key: 'gravity', label: 'Gravity magnitude', unit: 'm/s²' },
+  { key: 'mass', label: 'Sphere mass', unit: 'kg' },
 ] as const;
 export function ProjectilePanel({
   parameters,
@@ -54,7 +53,7 @@ export function ProjectilePanel({
   function apply(event: FormEvent) {
     event.preventDefault();
     const problem = FIELDS.some(({ key }) => draft[key].trim() === '')
-      ? 'Fill in every initial-condition field.'
+      ? 'Enter all values.'
       : projectileParameterError(parsed);
     if (problem) {
       setError(problem);
@@ -64,28 +63,12 @@ export function ProjectilePanel({
     onApply(parsed);
   }
   return (
-    <aside
-      className="setup-panel projectile-panel"
-      aria-labelledby="projectile-controls-title"
-    >
-      <div className="panel-kicker">EXPERIMENT 002</div>
-      <h2 id="projectile-controls-title">Set your launch</h2>
-      <p className="panel-description">
-        A sphere in an ideal vacuum. Gravity is the only force during flight.
-      </p>
+    <aside className="setup-panel projectile-panel" aria-label="Settings">
       <form onSubmit={apply} noValidate>
-        <div className="section-label">
-          INITIAL CONDITIONS <span>SI UNITS</span>
-        </div>
         <div className="parameter-fields">
-          {FIELDS.map(({ key, label, symbol, unit }) => (
+          {FIELDS.map(({ key, label, unit }) => (
             <div className="parameter-field" key={key}>
-              <label htmlFor={`projectile-${key}`}>
-                <span className="parameter-symbol" aria-hidden="true">
-                  {symbol}
-                </span>
-                {label}
-              </label>
+              <label htmlFor={`projectile-${key}`}>{label}</label>
               <div className="number-field">
                 <input
                   id={`projectile-${key}`}
@@ -116,18 +99,17 @@ export function ProjectilePanel({
         <button
           className="secondary-button apply-button"
           type="submit"
+          aria-label="Apply & reset trial"
           disabled={!dirty}
         >
-          Apply & reset trial
+          Apply
         </button>
-        <p className="button-caption">
-          {dirty
-            ? 'Pending changes; the current trial keeps its settings.'
-            : 'Conditions applied. Launch when you are ready.'}
+        <p className="button-caption" role="status">
+          {dirty ? 'Changes pending' : ''}
         </p>
       </form>
       <div className="launch-components">
-        <span className="section-label">APPLIED LAUNCH COMPONENTS</span>
+        <span className="section-label sr-only">Applied launch components</span>
         <span>v₀ₓ = {f(vx)} m/s</span>
         <span>v₀ᵧ = {f(vy)} m/s</span>
       </div>
@@ -140,17 +122,12 @@ export function ProjectilePanel({
       />
       <button
         className="secondary-button replay-projectile"
+        aria-label="Replay same conditions"
         onClick={onReplay}
         disabled={!ready}
       >
-        ↻ Replay same conditions
+        Replay
       </button>
-      <p className="parameter-caption">
-        h₀ is the center’s height above its ground-contact level. Positive y is
-        up. The center starts at y ={' '}
-        {(parameters.height + PROJECTILE.radius).toFixed(2)} m. Playback speed
-        changes viewing time, not the physics.
-      </p>
     </aside>
   );
 }

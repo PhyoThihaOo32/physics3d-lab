@@ -4,7 +4,6 @@ import {
   type CameraPreset,
   type CameraView,
 } from '../../components/controls/CameraControls';
-import { ViewportHint } from '../../components/controls/ViewportHint';
 import { vectorMagnitude } from '../../physics/vectors/vectorMath';
 import { LabCanvas } from '../../three/scene/LabCanvas';
 import {
@@ -25,7 +24,6 @@ import { VectorScene } from './VectorScene';
 import './vector.css';
 
 const CENTER = [0, 0, 0] as const;
-const SUBSCRIPTS = ['ₓ', 'ᵧ', '𝓏'];
 const ZERO = [0, 0, 0] as const;
 const SCENE_LIMIT = 3.95;
 
@@ -71,15 +69,7 @@ export default function VectorPage() {
   }
   return (
     <div className="vector-lab">
-      <header className="page-heading">
-        <div>
-          <h1>Vector Mathematics Lab</h1>
-          <p>
-            Choose an operation and edit the values to see the calculation and
-            its 3D diagram.
-          </p>
-        </div>
-      </header>
+      <h1 className="page-title">Vector Lab</h1>
       <div className="vector-modes" role="group" aria-label="Vector operation">
         {(Object.keys(MODES) as VectorMode[]).map((id) => (
           <button
@@ -88,24 +78,21 @@ export default function VectorPage() {
             aria-pressed={mode === id}
             onClick={() => setMode(id)}
           >
-            {MODES[id].label}{' '}
-            <span aria-hidden="true">{MODES[id].equation}</span>
+            {MODES[id].label}
           </button>
         ))}
       </div>
       <div className="workspace vector-workspace">
         <aside
           className="setup-panel vector-settings"
-          aria-labelledby="vector-settings-heading"
+          aria-label="Vector inputs"
         >
-          <h2 id="vector-settings-heading">
-            {scaling ? 'Vector and multiplier' : 'Vectors A and B'}
-          </h2>
           <VectorFields symbol="A" draft={a} update={setA} />
           {scaling ? (
             <label className="vector-scalar">
-              Scalar multiplier k
+              Multiplier
               <input
+                aria-label="Scalar multiplier k"
                 type="number"
                 min={-COMPONENT_LIMIT}
                 max={COMPONENT_LIMIT}
@@ -122,24 +109,25 @@ export default function VectorPage() {
             <VectorReadouts values={values} />
           ) : (
             <p role="alert" className="vector-error">
-              Enter a number between −1,000 and 1,000 in each field.
+              Enter values from −1,000 to 1,000.
             </p>
           )}
           {!scaling && (
             <button
               type="button"
               className="secondary-button vector-swap"
+              aria-label="Swap A and B"
               onClick={() => {
                 setA(b);
                 setB(a);
               }}
             >
-              Swap A and B
+              Swap
             </button>
           )}
           {product && (
-            <fieldset className="vector-presets">
-              <legend>Examples</legend>
+            <details className="vector-presets">
+              <summary>Examples</summary>
               <div>
                 {PRESETS.map(({ label, vectors }) => (
                   <button
@@ -155,14 +143,11 @@ export default function VectorPage() {
                   </button>
                 ))}
               </div>
-            </fieldset>
+            </details>
           )}
+          {values && <VectorDetails key={values.mode} values={values} />}
         </aside>
         <section className="scene-panel" aria-label="Vector diagram">
-          <div className="scene-toolbar vector-toolbar">
-            <strong>{MODES[mode].equation}</strong>
-            <span>+y up · right-handed axes</span>
-          </div>
           <div className="viewport vector-viewport">
             <LabCanvas
               view={view}
@@ -182,36 +167,17 @@ export default function VectorPage() {
               />
             </LabCanvas>
             <CameraControls view={view} onChange={changeView} />
-            <ViewportHint />
-          </div>
-          <div className="vector-legend">
-            <span className="vector-a">A</span>
-            {!scaling && <span className="vector-b">B</span>}
-            {mode === 'dot' ? (
-              <>
-                <span className="vector-projection-ab">A onto B</span>
-                <span className="vector-projection-ba">B onto A</span>
-              </>
-            ) : (
-              <span
-                className={
-                  mode === 'cross' ? 'vector-normal' : 'vector-result-arrow'
-                }
-              >
-                {MODES[mode].equation}
-              </span>
-            )}
           </div>
           {values && (operandScale !== 1 || separateNormalScale) && (
             <p className="vector-note">
               {operandScale !== 1 &&
-                `Each grid step represents ${numberText(1 / operandScale)} input units. `}
-              {separateNormalScale && 'The normal has a separate length scale.'}
+                `1 grid step = ${numberText(1 / operandScale)} units`}
+              {operandScale !== 1 && separateNormalScale && ' · '}
+              {separateNormalScale && 'Cross arrow scaled'}
             </p>
           )}
         </section>
       </div>
-      {values && <VectorDetails key={values.mode} values={values} />}
     </div>
   );
 }
@@ -228,13 +194,12 @@ function VectorFields({
   return (
     <fieldset className="vector-fields">
       <legend className={symbol === 'A' ? 'vector-a' : 'vector-b'}>
-        Vector {symbol}
+        {symbol}
       </legend>
       <div className="vector-input-grid">
         {AXES.map((axis, i) => (
           <label key={axis}>
-            {symbol}
-            {SUBSCRIPTS[i]}
+            {axis}
             <input
               aria-label={`${symbol}${axis}`}
               type="number"

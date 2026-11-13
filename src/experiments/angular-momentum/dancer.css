@@ -109,21 +109,6 @@
 .dancer-radius-key {
   color: #c1e29e;
 }
-.dancer-observation {
-  border-top: 1px solid #34424e;
-  padding: 25px;
-}
-.dancer-observation p {
-  font-size: 12px;
-  line-height: 1.9;
-  color: #b9cbd5;
-  max-width: 650px;
-  margin-bottom: 0;
-}
-.dancer-observation strong {
-  color: #dfebce;
-  font-weight: 500;
-}
 .dancer-measurements {
   margin-top: 24px;
   display: grid;
@@ -292,16 +277,6 @@
   color: #b0c0ca;
   padding: 15px 0 0;
   font-size: 11px;
-}
-.dancer-experiment .learning-strip ol {
-  margin: 15px 0 0;
-  padding-left: 18px;
-  font-size: 11px;
-  line-height: 1.9;
-  color: #b8c6d1;
-}
-.dancer-experiment .learning-strip ol li {
-  margin-bottom: 10px;
 }
 .dancer-experiment button:disabled {
   opacity: 0.45;

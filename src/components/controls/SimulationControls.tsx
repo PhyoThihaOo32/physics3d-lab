@@ -30,11 +30,15 @@ export function SimulationControls({
               ? `▶ ${startLabel}`
               : '▶ Resume'}
       </button>
-      <button className="secondary-button" onClick={onReset}>
-        ↻ Reset defaults
+      <button
+        className="secondary-button"
+        onClick={onReset}
+        aria-label="Reset defaults"
+      >
+        Reset
       </button>
       <div className="clock">
-        <span>SIMULATION TIME</span>
+        <span>Time</span>
         <output data-testid="time" aria-live="off">
           {formatNumber(elapsed)}
         </output>

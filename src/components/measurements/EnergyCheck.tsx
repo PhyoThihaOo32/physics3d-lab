@@ -12,7 +12,7 @@ export function EnergyCheck({
   return (
     <div className="energy-check">
       <div>
-        <span className="section-label">AIRBORNE ENERGY CHECK</span>
+        <span className="section-label">Flight energy</span>
         <strong>E = ½m|v|² + mgh</strong>
       </div>
       <dl>
@@ -35,11 +35,6 @@ export function EnergyCheck({
           </dd>
         </div>
       </dl>
-      <p>
-        Computed from engine position and velocity at the comparison sample. The
-        reference is h = 0 at contact. Ideal airborne energy is constant; finite
-        integration steps introduce a small drift. Collision energy is excluded.
-      </p>
     </div>
   );
 }

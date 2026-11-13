@@ -10,7 +10,7 @@ test('navigates from directory to a lab and experiment, then starts a fresh tria
   });
   await page.goto('/');
   await expect(
-    page.getByRole('heading', { name: 'Choose a lab. Start exploring.' }),
+    page.getByRole('heading', { name: 'Labs', exact: true }),
   ).toBeVisible();
   await expect(page.locator('canvas')).toHaveCount(0);
   await page.getByRole('link', { name: 'Open motion lab' }).click();
@@ -42,10 +42,10 @@ test('opens the vector lab and supports refresh and browser history', async ({
   page,
 }) => {
   await page.goto('/#/labs/vectors');
-  await page.getByRole('link', { name: 'Open vector mathematics lab' }).click();
+  await page.getByRole('link', { name: 'Open vector lab' }).click();
   await expect(page).toHaveURL(/#\/experiments\/vector-lab$/);
   const heading = page.getByRole('heading', {
-    name: 'Vector Mathematics Lab',
+    name: 'Vector Lab',
     exact: true,
   });
   await expect(heading).toBeVisible();
@@ -69,7 +69,7 @@ test('handles missing routes and keeps directory navigation usable on mobile', a
 }) => {
   await page.goto('/#/experiments/missing');
   await expect(
-    page.getByRole('heading', { name: 'Let’s get back to the lab.' }),
+    page.getByRole('heading', { name: 'Page not found' }),
   ).toBeVisible();
   await page.getByRole('link', { name: 'Return to all labs' }).click();
   await page.setViewportSize({ width: 390, height: 844 });
