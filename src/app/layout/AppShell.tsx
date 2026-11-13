@@ -53,6 +53,7 @@ export function AppShell({
         {children}
         <footer>
           <span>PHYSICS, MADE VISIBLE.</span>
+          <span className="footer-credit">Created by Phyo Thiha Oo</span>
           <span>
             Explore<span className="footer-divider">/</span>Experiment
             <span className="footer-divider">/</span>Understand
