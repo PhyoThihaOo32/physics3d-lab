@@ -4,6 +4,7 @@ import {
   freeFallContactTime,
 } from '../../physics/equations/freeFall';
 import { formatNumber as f } from '../../physics/units/format';
+import { FIXED_TIME_STEP } from '../../physics/constants/world';
 import { useFreeFallStore } from '../../store/freeFallStore';
 import { DROP, type DropParameters } from './config';
 import { mechanicalEnergy } from '../../physics/equations/energy';
@@ -59,10 +60,11 @@ export function DropReadouts({ parameters }: { parameters: DropParameters }) {
     <section className="theory-panel" aria-labelledby="comparison-title">
       <div className="theory-heading">
         <div>
-          <h2 id="comparison-title">Theory</h2>
+          <div className="section-label">CHECK THE PHYSICS</div>
+          <h2 id="comparison-title">Simulation meets theory.</h2>
         </div>
         <span>
-          {contacted ? 'Last free-fall sample' : 'Live sample'} · t ={' '}
+          {contacted ? 'Last free-fall sample' : 'Live free-fall sample'} · t ={' '}
           {f(sample.time, 3)} s
         </span>
       </div>
@@ -97,7 +99,7 @@ export function DropReadouts({ parameters }: { parameters: DropParameters }) {
             <thead>
               <tr>
                 <th scope="col">Quantity</th>
-                <th scope="col">Measured</th>
+                <th scope="col">Rapier</th>
                 <th scope="col">Theory</th>
                 <th scope="col">Difference</th>
               </tr>
@@ -141,12 +143,31 @@ export function DropReadouts({ parameters }: { parameters: DropParameters }) {
               : `${f(expectedContact, 3)} s`}
           </output>
         </span>
+        <span>
+          <strong>Simulated first contact</strong>{' '}
+          {snapshot.firstContactTime === null
+            ? 'Awaiting contact'
+            : `${f(snapshot.firstContactTime, 3)} s`}
+        </span>
       </div>
+      <p className="physics-caption">
+        {contacted
+          ? 'The table freezes before first contact: free-fall equations no longer describe the motion once the ground acts on the cube. '
+          : 'The table compares values at the same simulated time. '}
+        Live acceleration is Δvᵧ/Δt over one{' '}
+        {(FIXED_TIME_STEP * 1000).toFixed(2)} ms physics step. During impact it
+        is a timestep average, not a material’s true peak acceleration. Small
+        differences come from numerical integration and contact resolution.
+      </p>
       <div className="weight-explanation">
         <strong>
           Weight Fg = mg = ({f(parameters.mass)})({f(parameters.gravity)}) ={' '}
           {f(parameters.mass * parameters.gravity)} N
         </strong>
+        <span>
+          While airborne, aᵧ = −Fg/m = −{f(parameters.gravity)} m/s². Mass
+          changes weight and energy, but cancels from acceleration.
+        </span>
       </div>
       <EnergyCheck
         initial={mechanicalEnergy(

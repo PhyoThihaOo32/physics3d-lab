@@ -36,7 +36,7 @@ Click the 3D view, or Tab to it, to activate keyboard panning. **↑ / ↓ / ←
 | -------- | ---------------------- | --------- |
 | Motion   | Free fall              | Available |
 | Motion   | Projectile motion      | Available |
-| Vectors  | Vector Lab             | Available |
+| Vectors  | Vector Mathematics Lab | Available |
 | Rotation | Spinning ballet dancer | Available |
 
 The app opens to the directory. Bookmarkable hash URLs work on static hosting without server rewrite rules:
@@ -192,8 +192,8 @@ Five dynamic bodies and four internal motorized joints produce the motion. The t
 
 This is a 51 kg illustrative segment model, not measured anatomy. Under ideal support, Lᵧ is approximately conserved; with resistance, τᵧ = −bω and Lᵧ decreases in magnitude. Spin energy increases as the arms rise toward the axis because actuators do work. Displayed spin energy excludes arm-raising motion and gravitational potential energy, so its change is not total muscle work. See [the detailed lab procedure](docs/DANCER_LAB.md) and [physics validation](docs/PHYSICS_VALIDATION.md) for equations, assumptions, tolerances and test coverage.
 
-## Vector Lab
+## Vector Mathematics Lab
 
-Open **Vectors → Vector Lab** and choose **Add**, **Subtract**, **Scale**, **Cross**, or **Dot**. Edit the components to update the result and 3D diagram immediately. Scale uses a number k to multiply each component of A. Dot gives a scalar and the other operations give vectors.
+Open **Vectors → Vector Mathematics Lab** and choose **Add**, **Subtract**, **Scale**, **Cross**, or **Dot**. Edit the components to update the result and 3D diagram immediately. Scale uses a number k to multiply each component of A. Dot gives a scalar and the other operations give vectors.
 
-Open **Steps** to see the arithmetic. In Cross mode, swap A and B to reverse the normal and keep the parallelogram area. Dot mode shows the projections and the angle between A and B.
+Open **Show calculation** to see the arithmetic. In Cross mode, swap A and B to reverse the normal and keep the parallelogram area. Dot mode shows the projections and the angle between A and B.

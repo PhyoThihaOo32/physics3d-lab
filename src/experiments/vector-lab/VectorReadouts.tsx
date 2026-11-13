@@ -11,23 +11,27 @@ const SUBSCRIPTS = ['ₓ', 'ᵧ', '𝓏'];
 
 export function VectorReadouts({ values }: { values: VectorCalculation }) {
   const { mode, result } = values;
+  const dot = mode === 'dot';
   return (
-    <p className="vector-answer">
-      {MODES[mode].equation} ={' '}
-      <output
-        aria-label={mode === 'dot' ? 'Scalar result' : 'Vector result'}
-        data-testid="vector-result"
-      >
-        {typeof result === 'number' ? n(result) : tupleText(result)}
-      </output>
-    </p>
+    <div className="vector-answer">
+      <span>{dot ? 'Scalar result' : 'Vector result'}</span>
+      <p className="vector-equation">
+        {MODES[mode].equation} ={' '}
+        <strong data-testid="vector-result">
+          {typeof result === 'number' ? n(result) : tupleText(result)}
+        </strong>
+      </p>
+      {mode === 'scale' && (
+        <p>Multiply each component of A by {n(values.scalar)}.</p>
+      )}
+    </div>
   );
 }
 
 export function VectorDetails({ values }: { values: VectorCalculation }) {
   return (
-    <details className="vector-details">
-      <summary>Steps</summary>
+    <details className="vector-result vector-details">
+      <summary>Show calculation</summary>
       <Calculation values={values} />
     </details>
   );
@@ -67,15 +71,15 @@ function Calculation({ values }: { values: VectorCalculation }) {
     <>
       <dl className="vector-rows">
         <div>
-          <dt>|A|</dt>
+          <dt>Magnitude |A|</dt>
           <dd>{n(vectorMagnitude(a))}</dd>
         </div>
         <div>
-          <dt>|B|</dt>
+          <dt>Magnitude |B|</dt>
           <dd>{n(vectorMagnitude(b))}</dd>
         </div>
         <div>
-          <dt>θ</dt>
+          <dt>Angle θ</dt>
           <dd>{angle}</dd>
         </div>
       </dl>
@@ -93,7 +97,7 @@ function Calculation({ values }: { values: VectorCalculation }) {
           )}
           <dl className="vector-rows">
             <div>
-              <dt>A onto B</dt>
+              <dt>A projected onto B</dt>
               <dd>
                 {values.projectionAB
                   ? tupleText(values.projectionAB)
@@ -101,7 +105,7 @@ function Calculation({ values }: { values: VectorCalculation }) {
               </dd>
             </div>
             <div>
-              <dt>B onto A</dt>
+              <dt>B projected onto A</dt>
               <dd>
                 {values.projectionBA
                   ? tupleText(values.projectionBA)
@@ -113,7 +117,7 @@ function Calculation({ values }: { values: VectorCalculation }) {
       ) : (
         <>
           <p className="vector-formula">
-            Area = |A × B| = {n(values.area)}
+            Parallelogram area |A × B| = {n(values.area)}
             {values.theta !== null && ' ≈ |A||B| sin θ'}
           </p>
           {AXES.map((axis, i) => {
@@ -126,6 +130,11 @@ function Calculation({ values }: { values: VectorCalculation }) {
               </p>
             );
           })}
+          <p>
+            {values.area === 0
+              ? 'The cross product has zero length, so it has no direction.'
+              : 'Curl your right-hand fingers from A toward B. Your thumb points along A × B.'}
+          </p>
           <p className="vector-formula">A × B = −(B × A)</p>
         </>
       )}

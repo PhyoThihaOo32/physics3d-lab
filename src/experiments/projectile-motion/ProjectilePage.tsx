@@ -90,13 +90,22 @@ export default function ProjectilePage() {
   );
   return (
     <div className="projectile-experiment">
-      <header className="page-intro">
-        <h1>{projectileExperiment.title}</h1>
-        <p>
-          Change the launch angle and compare the measured range with the
-          prediction.
-        </p>
-      </header>
+      <div className="page-heading">
+        <div>
+          <div className="eyebrow">
+            <span className="tiny-square" />
+            MOTION LAB / PROJECTILE MOTION
+          </div>
+          <h1>{projectileExperiment.title}</h1>
+          <p>{projectileExperiment.description}</p>
+        </div>
+        <div className="milestone">
+          <span>02</span>
+          <div>
+            PROJECTILE MOTION<strong>Motion lab · Kinematics</strong>
+          </div>
+        </div>
+      </div>
       <div className="workspace">
         <ProjectilePanel
           key={run}
@@ -112,13 +121,9 @@ export default function ProjectilePage() {
           aria-label="Projectile motion experiment"
         >
           <div className="scene-toolbar">
-            <div
-              className="scene-state"
-              role="status"
-              data-testid="flight-status"
-            >
-              <span className="status-dot" />
-              {status}
+            <div>
+              <span className="live-dot" />
+              {running ? 'SIMULATION RUNNING' : 'SIMULATION PAUSED'}
             </div>
             <label className="axes-toggle">
               <input
@@ -145,33 +150,47 @@ export default function ProjectilePage() {
               />
               {axes && <WorldAxes />}
             </LabCanvas>
+            <div className="scene-title">
+              <span>02 / PROJECTILE DYNAMICS</span>
+              <strong>One launch. Two components.</strong>
+            </div>
+            <div className="scene-status" role="status">
+              <span className="status-dot" />
+              {status}
+            </div>
             <CameraControls view={view} onChange={setCamera} />
+            {!ready && (
+              <div className="loading-badge" role="status">
+                Initializing physics engine…
+              </div>
+            )}
             <ViewportHint />
-            <div className="coordinate-note">{framing.gridSpacing} m grid</div>
+            <div className="coordinate-note">
+              +y up · z = 0
+              <span>
+                GRID / {framing.gridSpacing} METER
+                {framing.gridSpacing === 1 ? '' : 'S'}
+              </span>
+            </div>
           </div>
           <div className="flight-layers" aria-label="Visualization layers">
             {LAYERS.map(({ key, text }) => (
               <label key={key} className={`layer-${key}`}>
                 <input
                   type="checkbox"
-                  aria-label={text}
                   checked={layers[key]}
                   onChange={(event) =>
                     setLayers({ ...layers, [key]: event.target.checked })
                   }
                 />
-                {key === 'trail' || key === 'prediction' ? (
-                  <>
-                    <span aria-hidden="true">
-                      {key === 'trail' ? '━ ' : '┄ '}
-                    </span>
-                    {text}
-                  </>
-                ) : (
-                  text
-                )}
+                {text}
               </label>
             ))}
+          </div>
+          <div className="trajectory-legend">
+            <span className="measured-key">━ Measured trail</span>
+            <span className="predicted-key">┄ Predicted path</span>
+            <span>Vectors scaled for viewing · ring marks sphere center</span>
           </div>
           <ProjectileMeasurementsPanel />
         </section>
@@ -179,20 +198,61 @@ export default function ProjectilePage() {
       <ProjectileReadouts parameters={parameters} />
       <PhysicsDetails>
         <p>
-          Vacuum, uniform gravity, 0.18 m sphere radius. Height h = y − 0.18 m.
+          The sphere radius is 0.18 m. Heights use h = y − 0.18, so its center
+          reaches y ≈ 0.18 m at landing. Both ground and sphere use zero
+          friction and zero restitution. A ground-level upward launch is
+          allowed; initial touching contact is not counted as landing.
         </p>
         <p>
-          Landing ends the trial. Flight comparisons use the last airborne step.
-          Arrows are scaled for display.
+          Flight results stop at the first descending contact impulse. Range
+          uses position at that contact step; pre-impact speed uses the previous
+          airborne step. Apex time is interpolated between measured vertical
+          velocities; maximum height is sampled. These measurements can differ
+          slightly from exact analytic results.
         </p>
-        <a
-          href="https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Projectile motion · OpenStax ↗
-        </a>
+        <p>
+          Zero-gravity trials have a 10 s observation window, which ends by
+          pausing, not by inventing a landing. Supported nonzero gravity is 1–20
+          m/s². Launches shorter than two integration steps are rejected because
+          they cannot be resolved reliably.
+        </p>
       </PhysicsDetails>
+      <div className="learning-strip">
+        <section className="observation">
+          <div className="section-label">TRY AN EXPERIMENT</div>
+          <h3>What changes at the highest point?</h3>
+          <p>
+            Launch at 45° and slow playback to 0.25×. Watch vᵧ shrink to zero,
+            then point downward. The horizontal component vₓ stays constant, and
+            gravity keeps acting downward. Compare 30° and 60° launches at the
+            same speed and h₀ = 0; then change only the mass.
+          </p>
+          <p className="source-link">
+            <a
+              href="https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Read the projectile model · OpenStax ↗
+            </a>
+          </p>
+        </section>
+        <section className="assumptions">
+          <div className="section-label">MODEL ASSUMPTIONS</div>
+          <ul>
+            {projectileExperiment.assumptions.map((assumption) => (
+              <li key={assumption}>{assumption}</li>
+            ))}
+          </ul>
+          <p>
+            Flight pauses automatically at first landing contact. Velocity
+            arrows then hide; the flight readouts hold the last airborne sample.
+            Measured and predicted paths are drawn independently. The
+            sphere-center ring stays visible at large scales; the physical
+            radius remains 0.18 m.
+          </p>
+        </section>
+      </div>
     </div>
   );
 }

@@ -6,7 +6,7 @@ test('adds, subtracts and scales vectors with a live result on a phone', async (
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 844 });
-  await page.goto(route, { waitUntil: 'domcontentloaded' });
+  await page.goto(route);
   const result = page.getByTestId('vector-result');
   await expect(result).toHaveText('⟨4, 2, 1⟩');
   await page.getByRole('button', { name: 'Subtract', exact: true }).click();
@@ -40,9 +40,8 @@ test('shows scalar dot results and reverses the cross product when operands swap
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto(route, { waitUntil: 'domcontentloaded' });
+  await page.goto(route);
   await page.getByRole('button', { name: 'Cross', exact: true }).click();
-  await page.getByText('Examples', { exact: true }).click();
   await page
     .getByRole('button', { name: 'Perpendicular', exact: true })
     .click();
@@ -55,22 +54,22 @@ test('shows scalar dot results and reverses the cross product when operands swap
   await expect
     .poll(async () => (await canvas.screenshot()).equals(before))
     .toBe(false);
-  await page.getByText('Steps', { exact: true }).click();
+  await page.getByText('Show calculation', { exact: true }).click();
   await expect(
-    page.getByText('Area = |A × B| = 4', { exact: false }),
+    page.getByText('Parallelogram area |A × B| = 4', { exact: false }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Dot', exact: true }).click();
   await expect(result).toHaveText('0');
-  await expect(page.getByLabel('Scalar result', { exact: true })).toBeVisible();
+  await expect(page.getByText('Scalar result', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Parallel', exact: true }).click();
   await expect(result).toHaveText('6');
   await page.getByRole('button', { name: 'Opposite', exact: true }).click();
   await expect(result).toHaveText('-4');
   await page.getByRole('button', { name: 'Zero vector', exact: true }).click();
   await expect(result).toHaveText('0');
-  await page.getByText('Steps', { exact: true }).click();
-  await expect(page.getByText('θ', { exact: true }).locator('..')).toHaveText(
-    'θUndefined',
-  );
+  await page.getByText('Show calculation', { exact: true }).click();
+  await expect(
+    page.getByText('Angle θ', { exact: true }).locator('..'),
+  ).toHaveText('Angle θUndefined');
   expect(errors).toEqual([]);
 });

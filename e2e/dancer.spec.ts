@@ -70,8 +70,8 @@ test('articulated dancer conserves momentum, records comparisons, exports and re
   await page.getByRole('button', { name: 'Open arms', exact: true }).click();
   await page.getByRole('button', { name: 'Resume' }).click();
   await expect
-    .poll(() => number(page, 'omega'), { timeout: 40_000 })
-    .toBeCloseTo(2, 1);
+    .poll(() => number(page, 'time'), { timeout: 40_000 })
+    .toBeGreaterThan(7);
   await page.getByRole('button', { name: /^Ⅱ Pause$/ }).click();
   expect(await number(page, 'omega')).toBeCloseTo(2, 1);
   await expect(

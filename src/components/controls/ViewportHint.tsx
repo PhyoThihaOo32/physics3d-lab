@@ -1,10 +1,14 @@
 export function ViewportHint() {
   return (
     <div className="view-hint">
-      <span className="view-hint-pointer">
-        Drag to orbit · Scroll to zoom · Arrow keys to pan
-      </span>
-      <span className="view-hint-touch">Drag to orbit · Pinch to zoom</span>
+      <span aria-hidden="true">⤧</span>
+      <div>
+        Drag to orbit · Scroll to zoom · Right-drag to pan
+        <br />
+        <span className="keyboard-hint">
+          Click view or Tab to it: ↑ ↓ ← → pan · &lt; &gt; sideways · Esc exits
+        </span>
+      </div>
     </div>
   );
 }

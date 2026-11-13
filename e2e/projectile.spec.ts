@@ -16,7 +16,9 @@ test('launches, records correct landing results, and reproduces them at a differ
   await expect(page.getByTestId('time')).toHaveText('0.00');
   await expect(page.getByTestId('projectile-ay')).toHaveText('—');
   await page.getByRole('button', { name: 'Launch', exact: false }).click();
-  await expect(page.getByTestId('flight-status')).toHaveText('Landed');
+  await expect(page.getByTestId('flight-status')).toHaveText(
+    'Landed · trial paused',
+  );
   const flight = Number(await page.getByTestId('flight-time').textContent());
   const range = Number(await page.getByTestId('flight-range').textContent());
   expect(Math.abs(flight - 1.571)).toBeLessThan(0.03);
@@ -36,7 +38,9 @@ test('launches, records correct landing results, and reproduces them at a differ
   await expect(page.getByTestId('flight-time')).toHaveText('—');
   await page.getByLabel('Playback speed').selectOption('2');
   await page.getByRole('button', { name: 'Launch', exact: false }).click();
-  await expect(page.getByTestId('flight-status')).toHaveText('Landed');
+  await expect(page.getByTestId('flight-status')).toHaveText(
+    'Landed · trial paused',
+  );
   expect(Number(await page.getByTestId('flight-time').textContent())).toBe(
     flight,
   );
@@ -101,7 +105,9 @@ test('supports a ground-level vertical launch, exact pause, camera inspection, a
   await expect(page.getByTestId('projectile-height')).toHaveText(height!);
   await page.getByLabel('Playback speed').selectOption('2');
   await page.getByRole('button', { name: 'Resume' }).click();
-  await expect(page.getByTestId('flight-status')).toHaveText('Landed');
+  await expect(page.getByTestId('flight-status')).toHaveText(
+    'Landed · trial paused',
+  );
   expect(
     Number(await page.getByTestId('flight-time').textContent()),
   ).toBeGreaterThan(2);
@@ -127,7 +133,7 @@ test('validates settings and handles zero gravity without inventing a landing', 
   await page.goto(url);
   await page.getByLabel('Gravity magnitude').fill('');
   await page.getByRole('button', { name: 'Apply & reset trial' }).click();
-  await expect(page.getByRole('alert')).toHaveText('Enter all values.');
+  await expect(page.getByRole('alert')).toContainText('Fill in');
   await page.getByLabel('Gravity magnitude').fill('0.5');
   await page.getByRole('button', { name: 'Apply & reset trial' }).click();
   await expect(page.getByRole('alert')).toContainText('1 to 20');
@@ -148,7 +154,7 @@ test('validates settings and handles zero gravity without inventing a landing', 
   await expect(page.getByTestId('projectile-vy')).toHaveText('3.00');
   await expect(page.getByTestId('projectile-speed')).toHaveText('6.00');
   await expect(page.getByTestId('flight-status')).toHaveText(
-    'Observation complete',
+    'Observation window complete',
     { timeout: 15_000 },
   );
   await expect(page.getByTestId('time')).toHaveText('10.00');

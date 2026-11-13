@@ -31,7 +31,7 @@ class ExperimentBoundary extends Component<
       <div className="route-message" role="alert">
         <h1>The experiment could not load.</h1>
         <p>Reload the page to try again, or return to the lab directory.</p>
-        <a href="#/labs">Return to all labs</a>
+        <a href="#/labs">Return to all labs ↗</a>
       </div>
     ) : (
       this.props.children
@@ -49,7 +49,11 @@ export function ExperimentPage({
   return (
     <>
       <Breadcrumbs
-        items={[{ label: `${lab.title} lab`, href: labUrl(lab.id) }]}
+        items={[
+          { label: 'All labs', href: '#/labs' },
+          { label: `${lab.title} lab`, href: labUrl(lab.id) },
+          { label: experiment.title },
+        ]}
       />
       {Page ? (
         <ExperimentBoundary key={experiment.id}>
@@ -64,10 +68,49 @@ export function ExperimentPage({
           </Suspense>
         </ExperimentBoundary>
       ) : (
-        <div className="route-message">
-          <h1>{experiment.title}</h1>
-          <p>Planned · {experiment.description}</p>
-        </div>
+        <>
+          <div className="page-heading">
+            <div>
+              <div className="eyebrow">
+                <span className="tiny-square" />
+                {lab.title.toUpperCase()} LAB / {experiment.topic.toUpperCase()}
+              </div>
+              <h1>{experiment.title}</h1>
+              <p>{experiment.description}</p>
+            </div>
+            <span className="availability planned">Planned</span>
+          </div>
+          <section className="planned-experiment">
+            <div className="panel-kicker">EXPERIMENT PLAN</div>
+            <h2>This experiment is planned.</h2>
+            <p>
+              The simulation is not available yet. Here is what this experiment
+              will explore.
+            </p>
+            <div className="planned-columns">
+              <div>
+                <div className="section-label">LEARNING OBJECTIVES</div>
+                <ul>
+                  {experiment.objectives.map((objective) => (
+                    <li key={objective}>{objective}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <div className="section-label">PLANNED MEASUREMENTS</div>
+                <ul>
+                  {experiment.measurements.map((measurement) => (
+                    <li key={measurement}>{measurement}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <a className="lab-card-link" href={labUrl(lab.id)}>
+              Back to {lab.title.toLowerCase()} lab
+              <span aria-hidden="true">↗</span>
+            </a>
+          </section>
+        </>
       )}
     </>
   );

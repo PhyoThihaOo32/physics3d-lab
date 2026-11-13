@@ -3,17 +3,19 @@ import {
   PARAMETER_LIMITS,
   validDropParameters,
   type DropParameters,
+  DROP,
 } from './config';
 import { SimulationControls } from '../../components/controls/SimulationControls';
 
 const FIELDS = [
-  { key: 'mass', label: 'Cube mass', unit: 'kg' },
+  { key: 'mass', label: 'Cube mass', symbol: 'm', unit: 'kg' },
   {
     key: 'initialHeight',
     label: 'Release height (center)',
+    symbol: 'y₀',
     unit: 'm',
   },
-  { key: 'gravity', label: 'Gravity magnitude', unit: 'm/s²' },
+  { key: 'gravity', label: 'Gravity magnitude', symbol: 'g', unit: 'm/s²' },
 ] as const;
 
 export function ParameterPanel({
@@ -49,19 +51,32 @@ export function ParameterPanel({
       FIELDS.some(({ key }) => draft[key].trim() === '') ||
       !validDropParameters(parameters)
     ) {
-      setError('Enter values within the limits.');
+      setError('Enter values within the limits shown below each field.');
       return;
     }
     setError('');
     onApply(parameters);
   }
   return (
-    <aside className="setup-panel" aria-label="Settings">
+    <aside className="setup-panel" aria-labelledby="setup-title">
+      <div className="panel-kicker">EXPERIMENT 001</div>
+      <h2 id="setup-title">Free fall</h2>
+      <p className="panel-description">
+        A 1 m cube, released from rest in an ideal vacuum.
+      </p>
       <form onSubmit={submit} noValidate>
+        <div className="section-label">
+          INITIAL CONDITIONS <span>SI UNITS</span>
+        </div>
         <div className="parameter-fields">
-          {FIELDS.map(({ key, label, unit }) => (
+          {FIELDS.map(({ key, label, symbol, unit }) => (
             <div className="parameter-field" key={key}>
-              <label htmlFor={key}>{label}</label>
+              <label htmlFor={key}>
+                <span className="parameter-symbol" aria-hidden="true">
+                  {symbol}
+                </span>
+                {label}
+              </label>
               <div className="number-field">
                 <input
                   id={key}
@@ -82,6 +97,11 @@ export function ParameterPanel({
             </div>
           ))}
         </div>
+        <p className="parameter-caption">
+          Released from rest. Drop distance:{' '}
+          {(active.initialHeight - DROP.cubeSize / 2).toFixed(2)} m (center
+          height minus half the cube side). Positive y is upward.
+        </p>
         {error && (
           <p role="alert" className="validation-error">
             {error}
@@ -90,24 +110,37 @@ export function ParameterPanel({
         <button
           className="secondary-button apply-button"
           type="submit"
-          aria-label="Apply & reset trial"
           disabled={!dirty}
         >
-          Apply
+          Apply & reset trial
         </button>
-        <p className="button-caption" role="status">
-          {dirty ? 'Changes pending' : ''}
+        <p className="button-caption">
+          {dirty
+            ? 'Pending changes. Current trial keeps its applied settings.'
+            : 'Settings applied. Start when you are ready.'}
         </p>
       </form>
       <SimulationControls ready={ready} onReset={onReset} allowSpeed />
       <button
         className="secondary-button replay-projectile"
-        aria-label="Replay same conditions"
         onClick={onReplay}
         disabled={!ready}
       >
-        Replay
+        ↻ Replay same conditions
       </button>
+      <div className="note">
+        <span aria-hidden="true">↳</span>
+        <p>
+          Try a heavier cube. In a vacuum, mass changes weight, but not
+          free-fall acceleration.
+        </p>
+      </div>
+      <div className="engine-info">
+        <span className="engine-dot" />
+        <span>
+          POWERED BY RAPIER<span>Fixed physics step · 1/120 s</span>
+        </span>
+      </div>
     </aside>
   );
 }

@@ -7,6 +7,9 @@
 .projectile-panel .parameter-field {
   margin-bottom: 12px;
 }
+.projectile-panel .panel-description {
+  margin-bottom: 20px;
+}
 .projectile-panel .parameter-field label {
   font-size: 10px;
 }
@@ -28,6 +31,9 @@
 .launch-components > .section-label {
   grid-column: 1/-1;
   font-size: 7px;
+}
+.projectile-panel .parameter-caption {
+  margin-bottom: 0;
 }
 .projectile-experiment .viewport {
   min-height: 470px;
@@ -51,10 +57,19 @@
 .flight-layers input {
   accent-color: #c1e29e;
 }
-.layer-trail > span {
+.trajectory-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 22px;
+  padding: 0 20px 14px;
+  background: #1a242d;
+  color: #a8bbc9;
+  font-size: 9px;
+}
+.trajectory-legend .measured-key {
   color: #d0edaa;
 }
-.layer-prediction > span {
+.trajectory-legend .predicted-key {
   color: #91bfd9;
 }
 .projectile-measurements {
@@ -119,10 +134,20 @@
   .flight-layers label {
     font-size: 10px;
   }
+  .trajectory-legend {
+    padding: 0 15px 14px;
+    font-size: 8px;
+  }
   .flight-results td {
     font-size: 17px;
   }
   .flight-results .comparison-table table {
     font-size: 10px;
+  }
+  .projectile-experiment .scene-title strong {
+    font-size: 14px;
+  }
+  .projectile-experiment .scene-status {
+    max-width: 115px;
   }
 }

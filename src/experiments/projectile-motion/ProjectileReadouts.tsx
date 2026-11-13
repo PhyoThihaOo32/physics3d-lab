@@ -69,9 +69,12 @@ export function ProjectileMeasurementsPanel() {
           testId="projectile-ay"
         />
       </div>
-      {snapshot.landing && (
-        <div className="measurement-note">Last airborne sample</div>
-      )}
+      <div className="measurement-note">
+        {snapshot.landing
+          ? 'Last airborne sample, before the collision impulse. Flight time below includes the first contact step.'
+          : 'Live engine measurements. Acceleration appears after the first physics step.'}{' '}
+        Positions use meters; h = 0 at ground contact.
+      </div>
     </>
   );
 }
@@ -116,19 +119,22 @@ export function ProjectileReadouts({
       value: snapshot.landing?.time ?? null,
       predicted: prediction.flightTime,
       testId: 'flight-time',
+      note: snapshot.landing ? '' : 'Awaiting landing',
     },
     {
       name: 'Range (m)',
       value: snapshot.landing?.range ?? null,
       predicted: prediction.range,
       testId: 'flight-range',
+      note: snapshot.landing ? '' : 'Awaiting landing',
     },
     {
       name: 'Maximum height h (m)',
       value: snapshot.maxHeight,
       predicted: prediction.maxHeight,
       testId: 'flight-max-height',
-      note: snapshot.landing || snapshot.apex ? '' : 'So far',
+      note:
+        snapshot.landing || snapshot.apex ? 'Measured peak' : 'Maximum so far',
     },
     {
       name: 'Pre-impact speed (m/s)',
@@ -139,7 +145,7 @@ export function ProjectileReadouts({
       testId: 'impact-speed',
       note: snapshot.landing
         ? `At t = ${f(snapshot.landing.preImpact.time, 3)} s`
-        : '',
+        : 'Awaiting landing',
     },
   ];
   return (
@@ -150,8 +156,18 @@ export function ProjectileReadouts({
       >
         <div className="theory-heading">
           <div>
-            <h2 id="flight-results-title">Flight results</h2>
+            <div className="section-label">THE FLIGHT AT A GLANCE</div>
+            <h2 id="flight-results-title">Your trial, measured.</h2>
           </div>
+          <span role="status" data-testid="flight-status">
+            {snapshot.landing
+              ? 'Landed · trial paused'
+              : snapshot.limitReached
+                ? 'Observation window complete'
+                : snapshot.time === 0
+                  ? 'Ready to launch'
+                  : 'Flight in progress'}
+          </span>
         </div>
         <div className="comparison-table">
           <table>
@@ -170,7 +186,7 @@ export function ProjectileReadouts({
                 <tr key={row.name}>
                   <th scope="row">
                     {row.name}
-                    {row.note && <small>{row.note}</small>}
+                    <small>{row.note}</small>
                   </th>
                   <td>
                     <output data-testid={row.testId}>{f(row.value, 3)}</output>
@@ -181,11 +197,11 @@ export function ProjectileReadouts({
             </tbody>
           </table>
         </div>
-        {parameters.gravity === 0 && (
-          <p className="physics-caption">
-            No landing at g = 0. Trial ends at 10 s.
-          </p>
-        )}
+        <p className="physics-caption">
+          {parameters.gravity === 0
+            ? 'With g = 0, no landing is predicted. An upward launch has no finite peak; a horizontal launch keeps the same height. This trial observes 10 simulated seconds, then pauses without recording a landing.'
+            : 'Flight time and range use the first descending ground-contact step. Maximum height is sampled from the engine. Pre-impact speed uses the last airborne step, not the velocity changed by the collision.'}
+        </p>
       </section>
       <section
         className="theory-panel"
@@ -193,7 +209,12 @@ export function ProjectileReadouts({
       >
         <div className="theory-heading">
           <div>
-            <h2 id="projectile-equations-title">Theory</h2>
+            <div className="section-label">
+              INDEPENDENT COMPONENTS · ONE SHARED TIME
+            </div>
+            <h2 id="projectile-equations-title">
+              The equations behind the arc.
+            </h2>
           </div>
           <span>
             {snapshot.landing ? 'Last airborne sample' : 'Live sample'} · t ={' '}
@@ -244,7 +265,7 @@ export function ProjectileReadouts({
               <thead>
                 <tr>
                   <th scope="col">Quantity</th>
-                  <th scope="col">Measured</th>
+                  <th scope="col">Rapier</th>
                   <th scope="col">Theory</th>
                   <th scope="col">Difference</th>
                 </tr>
@@ -269,6 +290,12 @@ export function ProjectileReadouts({
             </table>
           </div>
         </div>
+        <p className="physics-caption">
+          The comparison freezes before landing. Acceleration is Δv/Δt over a
+          1/120 s step. The engine has finite timestep and contact resolution;
+          the two paths may differ slightly. Gravity remains downward at the
+          apex, even when vᵧ = 0.
+        </p>
       </section>
       <EnergyCheck
         initial={mechanicalEnergy(

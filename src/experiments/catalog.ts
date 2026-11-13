@@ -9,7 +9,8 @@ export const labs: readonly LabDefinition[] = [
     title: 'Motion',
     category: 'MECHANICS',
     symbol: '↗',
-    description: 'Explore gravity, falling objects, and flight.',
+    description:
+      'Explore how position, velocity, and acceleration change as objects move.',
     objectives: [
       'Connect motion to position, velocity, and acceleration.',
       'Change initial conditions and compare measured motion with theory.',
@@ -20,7 +21,8 @@ export const labs: readonly LabDefinition[] = [
     title: 'Vectors',
     category: 'MATHEMATICAL FOUNDATIONS',
     symbol: '⟨ ⟩',
-    description: 'Work with vector components and directions in 3D.',
+    description:
+      'Understand magnitude, direction, components, and how vectors combine.',
     objectives: [
       'Resolve vectors into components.',
       'Interpret addition, dot products, and cross products geometrically.',
@@ -31,7 +33,8 @@ export const labs: readonly LabDefinition[] = [
     title: 'Rotation',
     category: 'MECHANICS',
     symbol: '↻',
-    description: 'See how mass distribution changes a spin.',
+    description:
+      'Investigate rotating systems, moment of inertia, and angular momentum.',
     objectives: [
       'Relate mass distribution to moment of inertia.',
       'Explore when angular momentum is conserved.',
@@ -80,7 +83,7 @@ export const experiments: readonly ExperimentRegistration[] = [
   {
     id: 'vector-lab',
     labId: 'vectors',
-    title: 'Vector Lab',
+    title: 'Vector Mathematics Lab',
     topic: '3D vectors',
     description:
       'Add, subtract, and scale vectors, or calculate their cross and dot products.',

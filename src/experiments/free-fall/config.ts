@@ -40,7 +40,7 @@ export function validDropParameters(parameters: DropParameters): boolean {
 
 export const freeFallExperiment: PhysicsExperiment<typeof DROP> = {
   id: 'free-fall',
-  title: 'Free fall',
+  title: 'Free fall. Measured in motion.',
   description:
     'Change the conditions, run a trial, and compare simulated motion with the equations of free fall.',
   learningObjectives: [

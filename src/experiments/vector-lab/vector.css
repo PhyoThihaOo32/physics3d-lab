@@ -1,3 +1,11 @@
+.vector-lab {
+  --vector-a: #c1e29e;
+  --vector-b: #8bcaf4;
+  --vector-normal: #eab2fb;
+  --vector-result-arrow: #efbc88;
+  --vector-projection-ab: #e8d092;
+  --vector-projection-ba: #e1a6d2;
+}
 .vector-modes {
   display: flex;
   flex-wrap: wrap;
@@ -19,28 +27,32 @@
 .vector-modes button[aria-pressed='true'] {
   background: #2a382c;
   border-color: #82966f;
-  color: #c1e29e;
+  color: var(--vector-a);
 }
 .vector-settings {
   min-width: 0;
   gap: 12px;
 }
+.vector-settings h2,
 .vector-settings p {
   margin: 0;
 }
 .vector-settings p,
+.vector-result > p,
 .vector-note {
   color: #b4c4d1;
   font-size: 13px;
   line-height: 1.55;
 }
-.vector-fields {
+.vector-fields,
+.vector-presets {
   min-inline-size: 0;
   margin: 0;
   padding: 9px 0 0;
   border: 0;
 }
 .vector-fields legend,
+.vector-presets legend,
 .vector-scalar {
   font-size: 12px;
   font-weight: 650;
@@ -87,14 +99,55 @@
   min-height: 38px;
   align-self: flex-start;
 }
+.vector-toolbar {
+  gap: 8px;
+  font-size: 13px;
+  letter-spacing: 0;
+}
+.vector-toolbar > span {
+  font-size: 11px;
+  text-align: right;
+}
 .vector-viewport {
   min-height: clamp(350px, 43vw, 500px);
 }
+.vector-viewport .camera-controls {
+  top: 15px;
+  left: 15px;
+}
+.vector-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding: 11px 16px;
+  border-top: 1px solid #35414c;
+  font-size: 12px;
+}
+.vector-legend > span::before {
+  display: inline-block;
+  width: 9px;
+  height: 2px;
+  margin: 0 6px 3px 0;
+  background: currentColor;
+  content: '';
+}
 .vector-a {
-  color: #c1e29e;
+  color: var(--vector-a);
 }
 .vector-b {
-  color: #8bcaf4;
+  color: var(--vector-b);
+}
+.vector-normal {
+  color: var(--vector-normal);
+}
+.vector-result-arrow {
+  color: var(--vector-result-arrow);
+}
+.vector-projection-ab {
+  color: var(--vector-projection-ab);
+}
+.vector-projection-ba {
+  color: var(--vector-projection-ba);
 }
 .vector-note {
   margin: 8px 0 0;
@@ -110,42 +163,35 @@
   background: #202d27;
   overflow-wrap: anywhere;
 }
+.vector-answer > span,
 .vector-rows dt {
   color: #b4c4d1;
   font-size: 12px;
 }
-.vector-settings .vector-answer {
+.vector-answer .vector-equation {
   color: #e2efce;
   font-size: 17px;
-  font-variant-numeric: tabular-nums;
+  margin: 4px 0;
 }
-.vector-details,
-.vector-presets {
-  min-width: 0;
-  color: #b4c4d1;
-  font-size: 12px;
+.vector-result {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid #35414c;
+  border-radius: 8px;
+  background: #171f27;
   overflow-wrap: anywhere;
 }
-.vector-details summary,
-.vector-presets summary {
-  width: fit-content;
-  padding: 4px 0;
+.vector-details summary {
+  color: #cbdce9;
   cursor: pointer;
 }
-.vector-details summary:focus-visible,
-.vector-presets summary:focus-visible {
-  outline: 2px solid #c1e29e;
-  outline-offset: 3px;
-}
-.vector-presets > div {
-  margin-top: 5px;
-}
 .vector-formula,
-.vector-rows dd {
+.vector-rows dd,
+.vector-equation {
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
-.vector-details .vector-formula {
+.vector-result .vector-formula {
   margin: 9px 0;
   color: #d6e5ed;
 }
@@ -170,4 +216,12 @@
   .vector-viewport {
     min-height: 340px;
   }
+  .vector-toolbar {
+    padding-inline: 12px;
+  }
+}
+.vector-modes button span {
+  margin-left: 4px;
+  color: #b4c4d1;
+  font-size: 11px;
 }
