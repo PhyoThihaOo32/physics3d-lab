@@ -131,7 +131,7 @@ export function DancerPanel({
           Apply
         </button>
         <p className="button-caption" role="status">
-          {dirty ? 'Changes pending' : ''}
+          {dirty ? 'Apply to start a new trial' : ''}
         </p>
       </form>
       <SimulationControls

@@ -4,7 +4,10 @@ import { experimentUrl, getLabExperiments } from '../../experiments/catalog';
 export function LabPage({ lab }: { lab: LabDefinition }) {
   return (
     <>
-      <h1 className="page-title">{lab.title} lab</h1>
+      <header className="page-intro">
+        <h1>{lab.title} lab</h1>
+        <p>{lab.description}</p>
+      </header>
       <div className="experiment-grid">
         {getLabExperiments(lab.id).map((experiment) => (
           <article className="experiment-card" key={experiment.id}>

@@ -71,7 +71,12 @@ export default function FreeFallPage() {
   );
   return (
     <>
-      <h1 className="page-title">{freeFallExperiment.title}</h1>
+      <header className="page-intro">
+        <h1>{freeFallExperiment.title}</h1>
+        <p>
+          Change gravity and measure how long the cube takes to hit the floor.
+        </p>
+      </header>
       <div className="workspace">
         <ParameterPanel
           key={run}

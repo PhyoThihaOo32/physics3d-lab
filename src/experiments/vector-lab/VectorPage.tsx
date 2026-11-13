@@ -5,6 +5,7 @@ import {
   type CameraView,
 } from '../../components/controls/CameraControls';
 import { vectorMagnitude } from '../../physics/vectors/vectorMath';
+import { ViewportHint } from '../../components/controls/ViewportHint';
 import { LabCanvas } from '../../three/scene/LabCanvas';
 import {
   AXES,
@@ -69,7 +70,12 @@ export default function VectorPage() {
   }
   return (
     <div className="vector-lab">
-      <h1 className="page-title">Vector Lab</h1>
+      <header className="page-intro">
+        <h1>Vector Lab</h1>
+        <p>
+          Pick an operation and edit the components to see the result in 3D.
+        </p>
+      </header>
       <div className="vector-modes" role="group" aria-label="Vector operation">
         {(Object.keys(MODES) as VectorMode[]).map((id) => (
           <button
@@ -167,6 +173,7 @@ export default function VectorPage() {
               />
             </LabCanvas>
             <CameraControls view={view} onChange={changeView} />
+            <ViewportHint />
           </div>
           {values && (operandScale !== 1 || separateNormalScale) && (
             <p className="vector-note">

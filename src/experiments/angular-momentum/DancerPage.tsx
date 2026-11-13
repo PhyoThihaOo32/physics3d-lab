@@ -63,7 +63,13 @@ export default function DancerPage() {
           : 'Ready to spin';
   return (
     <div className="dancer-experiment">
-      <h1 className="page-title">{dancerExperiment.title}</h1>
+      <header className="page-intro">
+        <h1>{dancerExperiment.title}</h1>
+        <p>
+          Start the spin, then raise and open the arms to see how the speed
+          changes.
+        </p>
+      </header>
       <div className="workspace">
         <DancerPanel
           key={run}

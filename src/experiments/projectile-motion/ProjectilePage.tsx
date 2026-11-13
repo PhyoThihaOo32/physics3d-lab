@@ -90,7 +90,13 @@ export default function ProjectilePage() {
   );
   return (
     <div className="projectile-experiment">
-      <h1 className="page-title">{projectileExperiment.title}</h1>
+      <header className="page-intro">
+        <h1>{projectileExperiment.title}</h1>
+        <p>
+          Change the launch angle and compare the measured range with the
+          prediction.
+        </p>
+      </header>
       <div className="workspace">
         <ProjectilePanel
           key={run}

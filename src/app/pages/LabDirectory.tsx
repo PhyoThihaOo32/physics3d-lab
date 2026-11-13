@@ -1,9 +1,17 @@
-import { getLabExperiments, labs, labUrl } from '../../experiments/catalog';
+import {
+  experimentUrl,
+  getLabExperiments,
+  labs,
+  labUrl,
+} from '../../experiments/catalog';
 
 export function LabDirectory() {
   return (
     <>
-      <h1 className="page-title">Labs</h1>
+      <header className="page-intro">
+        <h1>Labs</h1>
+        <p>Choose an experiment to explore physics in 3D.</p>
+      </header>
       <div className="lab-grid">
         {labs.map((lab) => (
           <article className="lab-card" key={lab.id}>
@@ -15,9 +23,12 @@ export function LabDirectory() {
                 {lab.title} <span aria-hidden="true">↗</span>
               </a>
             </h2>
+            <p>{lab.description}</p>
             <ul className="lab-experiment-list">
               {getLabExperiments(lab.id).map((entry) => (
-                <li key={entry.id}>{entry.title}</li>
+                <li key={entry.id}>
+                  <a href={experimentUrl(entry.id)}>{entry.title}</a>
+                </li>
               ))}
             </ul>
           </article>

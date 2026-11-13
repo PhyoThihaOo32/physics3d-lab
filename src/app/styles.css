@@ -342,20 +342,11 @@ h2 {
   position: absolute;
   left: 24px;
   bottom: 21px;
-  font-size: 9px;
-  color: #9eadba;
-  display: flex;
-  align-items: center;
-  gap: 9px;
+  max-width: calc(100% - 48px);
+  font-size: 11px;
+  line-height: 1.5;
+  color: #b2c0cc;
   pointer-events: none;
-}
-.view-hint > span:first-child {
-  font-size: 19px;
-  color: #c2cfda;
-  margin-right: 2px;
-}
-.view-hint > span {
-  color: #536572;
 }
 .coordinate-note {
   position: absolute;
@@ -1015,18 +1006,13 @@ input:focus-visible {
   outline: 2px solid #c1e29e;
   outline-offset: -3px;
 }
-.view-hint {
-  max-width: calc(100% - 48px);
-  line-height: 1.8;
-  align-items: center;
-}
 .coordinate-note {
   bottom: 29px;
 }
 @media (max-width: 700px) {
   .view-hint {
     max-width: calc(100% - 34px);
-    font-size: 8px;
+    font-size: 10px;
   }
 }
 
@@ -1036,4 +1022,15 @@ input:focus-visible {
   gap: 7px;
   font-size: 11px;
   letter-spacing: 0;
+}
+.view-hint-touch {
+  display: none;
+}
+@media (pointer: coarse) {
+  .view-hint .view-hint-pointer {
+    display: none;
+  }
+  .view-hint .view-hint-touch {
+    display: inline;
+  }
 }

@@ -28,18 +28,30 @@
   font-size: 12px;
 }
 .breadcrumbs a,
+.lab-experiment-list a,
 .route-message a,
 .physics-details a {
   color: #bed69f;
 }
 .breadcrumbs a:hover,
+.lab-experiment-list a:hover,
 .route-message a:hover,
 .physics-details a:hover {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
-.page-title {
+.page-intro {
   margin: 0 0 18px;
+}
+.page-intro h1 {
+  margin: 0;
+}
+.page-intro p {
+  max-width: 60ch;
+  margin: 7px 0 0;
+  color: #b2c0cc;
+  font-size: 14px;
+  line-height: 1.5;
 }
 .lab-grid,
 .experiment-grid {
@@ -86,6 +98,7 @@
   padding: 0;
 }
 .lab-experiment-list li,
+.lab-card p,
 .experiment-card p,
 .route-message p {
   color: #b2c0cc;
@@ -95,6 +108,7 @@
 .lab-experiment-list li + li {
   margin-top: 3px;
 }
+.lab-card p,
 .experiment-card p {
   margin: 8px 0 0;
 }
