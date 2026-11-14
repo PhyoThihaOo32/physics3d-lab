@@ -109,20 +109,36 @@
 .dancer-radius-key {
   color: #c1e29e;
 }
+.dancer-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+.dancer-viewport .camera-controls {
+  top: 15px;
+}
 .dancer-observation {
   border-top: 1px solid #34424e;
-  padding: 25px;
+  padding: 14px 24px;
 }
 .dancer-observation p {
+  color: #d3dfd1;
   font-size: 12px;
-  line-height: 1.9;
-  color: #b9cbd5;
-  max-width: 650px;
-  margin-bottom: 0;
+  line-height: 1.6;
+  margin: 0;
 }
-.dancer-observation strong {
-  color: #dfebce;
-  font-weight: 500;
+.arm-control .arm-status {
+  min-height: 1.8em;
+}
+.dancer-pending {
+  min-height: 1.9em;
+}
+.dancer-source {
+  color: #bed69f;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .dancer-measurements {
   margin-top: 24px;
@@ -209,10 +225,6 @@
   font-weight: 400;
   margin: 8px 0 0;
 }
-.dancer-section-heading > span {
-  color: #aebfcc;
-  font-size: 10px;
-}
 .dancer-chart-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -293,16 +305,6 @@
   padding: 15px 0 0;
   font-size: 11px;
 }
-.dancer-experiment .learning-strip ol {
-  margin: 15px 0 0;
-  padding-left: 18px;
-  font-size: 11px;
-  line-height: 1.9;
-  color: #b8c6d1;
-}
-.dancer-experiment .learning-strip ol li {
-  margin-bottom: 10px;
-}
 .dancer-experiment button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -344,7 +346,8 @@
   .dancer-balance strong {
     font-size: 18px;
   }
-  .dancer-scene-caption {
+  .dancer-scene-caption,
+  .dancer-observation {
     padding: 15px;
   }
   .dancer-energy {

@@ -54,12 +54,7 @@ export function DancerPanel({
       className="setup-panel dancer-panel"
       aria-labelledby="dancer-controls-title"
     >
-      <div className="panel-kicker">EXPERIMENT 003</div>
-      <h2 id="dancer-controls-title">Shape the spin</h2>
-      <p className="panel-description">
-        Move both arms while spinning. Their lengths stay fixed; their distance
-        from the axis changes.
-      </p>
+      <h2 id="dancer-controls-title">Spin controls</h2>
       <div className="arm-control">
         <label htmlFor="arm-extension">
           Arm raise target <output>{Math.round((1 - target) * 100)}%</output>
@@ -74,7 +69,7 @@ export function DancerPanel({
           disabled={!ready || complete}
           onChange={(e) => setTarget(1 - Number(e.target.value) / 100)}
         />
-        <p className="arm-position-key">0% open · 100% rounded overhead</p>
+        <p className="arm-position-key">0% open · 100% overhead</p>
         <div className="arm-presets">
           <button disabled={!ready || complete} onClick={() => setTarget(0)}>
             Raise arms
@@ -83,16 +78,12 @@ export function DancerPanel({
             Open arms
           </button>
         </div>
-        <p>
-          {complete
-            ? 'Start a new trial to move the arms again.'
-            : !running
-              ? 'Choose a target, then start or resume to move.'
-              : 'Arms rise smoothly into a rounded overhead pose.'}
+        <p className="arm-status">
+          {!running && !complete ? 'Arms move while the trial runs.' : ''}
         </p>
       </div>
       <form onSubmit={apply} noValidate>
-        <div className="section-label">NEW TRIAL SETTINGS</div>
+        <div className="section-label">Trial settings</div>
         <div className="parameter-field">
           <label htmlFor="initial-omega">
             Initial angular velocity <span>rad/s</span>
@@ -135,7 +126,7 @@ export function DancerPanel({
               value={resistance}
               onChange={(e) => setResistance(e.target.value)}
             />
-            <small>0–0.5 · larger values slow the spin faster</small>
+            <small>0–0.5</small>
           </div>
         )}
         {error && (
@@ -150,10 +141,8 @@ export function DancerPanel({
         >
           Apply & start fresh trial
         </button>
-        <p className="physics-caption">
-          {dirty
-            ? 'Pending changes. The current trial keeps its applied settings until you apply.'
-            : 'Trial begins with both arms extended. Initial spin is supplied before t = 0.'}
+        <p className="physics-caption dancer-pending" role="status">
+          {dirty ? 'Apply to use the new settings.' : ''}
         </p>
       </form>
       <SimulationControls
@@ -163,10 +152,7 @@ export function DancerPanel({
         onReset={onReset}
         allowSpeed
       />
-      <p className="physics-caption">
-        60 s observation window. Pause to inspect or record a sample. Camera
-        arrow keys pan the view; the arm slider uses its own arrow-key controls.
-      </p>
+      <p className="physics-caption">60 s trial</p>
     </aside>
   );
 }

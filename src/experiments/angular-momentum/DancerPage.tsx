@@ -57,7 +57,7 @@ export default function DancerPage() {
     : snapshot.time >= 60
       ? 'Observation complete'
       : running
-        ? 'Spinning · move the arms'
+        ? 'Spinning'
         : snapshot.time
           ? 'Paused'
           : 'Ready to spin';
@@ -65,18 +65,10 @@ export default function DancerPage() {
     <div className="dancer-experiment">
       <div className="page-heading">
         <div>
-          <div className="eyebrow">
-            <span className="tiny-square" />
-            ROTATION LAB / ANGULAR MOMENTUM
-          </div>
           <h1>{dancerExperiment.title}</h1>
-          <p>{dancerExperiment.description}</p>
-        </div>
-        <div className="milestone">
-          <span>03</span>
-          <div>
-            ANGULAR MOMENTUM<strong>Rotation lab · L = Iω</strong>
-          </div>
+          <p>
+            Start the spin, then raise and open the arms. Watch the spin speed.
+          </p>
         </div>
       </div>
       <div className="workspace">
@@ -88,9 +80,9 @@ export default function DancerPage() {
         />
         <section className="scene-panel" aria-label="Ballet dancer experiment">
           <div className="scene-toolbar">
-            <div>
-              <span className="live-dot" />
-              {running ? 'SIMULATION RUNNING' : 'SIMULATION PAUSED'}
+            <div className="dancer-status" role="status">
+              <span className="status-dot" />
+              {status}
             </div>
             <label className="axes-toggle">
               <input
@@ -121,44 +113,19 @@ export default function DancerPage() {
                 vectors={vectors}
               />
             </LabCanvas>
-            <div className="scene-title">
-              <span>03 / MASS DISTRIBUTION</span>
-              <strong>
-                {parameters.resistance === 0
-                  ? 'Same momentum. A different spin.'
-                  : 'External torque changes the spin.'}
-              </strong>
-            </div>
-            <div className="scene-status" role="status">
-              <span className="status-dot" />
-              {status}
-            </div>
             <CameraControls view={view} onChange={setCamera} />
-            {!ready && (
-              <div className="loading-badge" role="status">
-                Initializing articulated physics…
-              </div>
-            )}
             <ViewportHint />
-            <div className="coordinate-note">
-              +y up · supported vertical axis<span>FLOOR GRID / 0.5 METER</span>
-            </div>
+            <div className="coordinate-note">0.5 m grid</div>
           </div>
           <div className="dancer-scene-caption">
-            <span className="dancer-radius-key">◯ Measured hand radius</span>
-            <span>
-              Arrows use separate display scales · positive spin follows the
-              right-hand rule
-            </span>
+            <span className="dancer-radius-key">◯ Hand radius</span>
+            {vectors && <span>Arrows scaled separately</span>}
           </div>
           <div className="dancer-observation">
-            <div className="section-label">WATCH THE RELATIONSHIP</div>
             <p>
-              <strong>Arms overhead → smaller I → faster spin.</strong> Opening
-              the arms reverses it. Angular momentum stays nearly constant on
-              the ideal support; spin energy changes because the actuators do
-              work. Bringing mass closer to the vertical axis reduces I; raising
-              mass without changing its radius would not reduce I.
+              With ideal support, bringing the arms closer to the axis lowers
+              inertia and speeds up the spin. Angular momentum stays nearly
+              constant.
             </p>
           </div>
         </section>
@@ -166,11 +133,7 @@ export default function DancerPage() {
       <DancerReadouts parameters={parameters} />
       <section className="dancer-graphs" aria-labelledby="dancer-graphs-title">
         <div className="dancer-section-heading">
-          <div>
-            <div className="section-label">LIVE MEASUREMENTS · 10 HZ</div>
-            <h2 id="dancer-graphs-title">Three views of one spin</h2>
-          </div>
-          <span>Time advances with the physics, including slow playback.</span>
+          <h2 id="dancer-graphs-title">Spin over time</h2>
         </div>
         <div className="dancer-chart-grid">
           <TimeSeriesChart
@@ -199,85 +162,36 @@ export default function DancerPage() {
         </div>
       </section>
       <DancerRecords />
-      <div className="learning-strip">
-        <section className="observation">
-          <div className="section-label">TRY THESE THREE EXPERIMENTS</div>
-          <h3>Predict first. Then test.</h3>
-          <ol>
-            <li>
-              Start at 2 rad/s with ideal support. Record open and overhead
-              poses. Does I₁ω₁ ≈ I₂ω₂? Compare spin energy too.
-            </li>
-            <li>
-              Apply 0 rad/s, then raise and open the arms. Symmetric arm
-              movement should not create a sustained spin.
-            </li>
-            <li>
-              Choose resistive support, b = 0.15 N·m·s/rad. Hold one pose. Watch
-              Lᵧ decrease; compare it with the dashed torque-balance curve.
-            </li>
-          </ol>
-          <p className="source-link">
-            <a
-              href="https://openstax.org/books/university-physics-volume-1/pages/11-3-conservation-of-angular-momentum"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Angular momentum and muscle work · OpenStax ↗
-            </a>
-          </p>
-        </section>
-        <section className="assumptions">
-          <div className="section-label">MODEL ASSUMPTIONS</div>
-          <ul>
-            {dancerExperiment.assumptions.map((a) => (
-              <li key={a}>{a}</li>
-            ))}
-          </ul>
-          <p>
-            A real ballet dancer pushes against the floor and actively maintains
-            balance. This supported model isolates the effect of moving mass
-            toward and away from a rotation axis.
-          </p>
-        </section>
-      </div>
       <details className="physics-details">
-        <summary>Articulation model & measurement accuracy</summary>
+        <summary>Model details</summary>
         <div>
           <p>
-            Four dynamic arm segments connect to a dynamic torso through
-            motorized revolute shoulder and elbow joints. The torso can rotate
-            about y; its position and tilt are supported. Joint motors apply
-            internal action and reaction forces. Upper arms rise to 80° above
-            horizontal and elbows bend by 25° to form a rounded overhead pose,
-            keeping segment lengths fixed. Internal collisions are disabled for
-            the simplified segment envelopes.
+            A 51 kg model spins about a fixed vertical axis. Mirrored shoulder
+            and elbow joints raise the arms without changing their lengths.
+            Segment masses and inertia are illustrative.
           </p>
           <p>
-            Inertia uses each segment’s rotated inertia tensor plus m(x² + z²).
-            Measured Lᵧ sums (Iω)ᵧ + m(zvₓ − xv_z) for every body. The pinned
-            Rapier integrator is supplemented with Euler’s gyroscopic term −ω ×
-            (Iω) for the moving arms; angular velocity is never overwritten to
-            enforce conservation. In the symmetric model, Lᵧ ≈ Iᵧωᵧ.
+            Ideal support applies no torque about the spin axis. Resistive
+            support applies τᵧ = −bω. Measured Lᵧ sums the spin and orbital
+            momentum of all five bodies. The residual compares it with L₀ + ∫τᵧ
+            dt.
           </p>
           <p>
-            Integration uses 1/480 s with 24 solver iterations; playback changes
-            scheduling only. Readouts and graphs update at 10 Hz; pausing
-            publishes the last integrated step. The momentum residual compares
-            measured Lᵧ with initial momentum plus the numerically integrated
-            external resistive torque. Values near zero use an absolute
-            residual, avoiding meaningless percent errors.
+            Spin energy K = ½Iᵧωᵧ² covers rotation about the axis. The full
+            energy budget also includes arm motion and gravitational potential
+            energy.
           </p>
           <p>
-            Spin kinetic energy is ½Iᵧωᵧ², excluding relative arm-raising
-            kinetic energy. Neither its change nor the resistive loss alone
-            equals total muscle work. Shape, mass distribution and motor
-            strength are illustrative, not a calibrated model of a person.
-            Displayed decimal places do not imply laboratory measurement
-            precision. The sculpted dress, hair, hands and fixed pointe-leg pose
-            illustrate this segment model; they are not separately calibrated
-            anatomical masses.
+            Physics step: 1/480 s. Readouts: 10 Hz and the final paused step.
           </p>
+          <a
+            className="dancer-source"
+            href="https://openstax.org/books/university-physics-volume-1/pages/11-3-conservation-of-angular-momentum"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Angular momentum · OpenStax ↗
+          </a>
         </div>
       </details>
     </div>
