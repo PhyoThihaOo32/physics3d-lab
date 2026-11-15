@@ -18,15 +18,20 @@
 .spin-demo-viewport .camera-controls {
   top: 15px;
 }
-.walk-speed {
+.spin-range-label {
   display: flex;
   justify-content: space-between;
   gap: 6px;
   font-size: 12px;
 }
-#walk-speed {
+.spin-range {
+  width: 100%;
   margin-top: 12px;
   accent-color: #c1e29e;
+}
+.wheel-flip-action {
+  width: 100%;
+  margin-top: 14px;
 }
 .turntable-readouts {
   display: grid;
@@ -49,12 +54,12 @@
   font-size: 12px;
   color: #b6c7d1;
 }
-.turntable-readouts .turntable-person .measurement output,
-.turntable-readouts .turntable-person > p:first-of-type {
+.turntable-readouts .turntable-primary .measurement output,
+.turntable-readouts .turntable-primary > p:first-of-type {
   color: #83d5c1;
 }
-.turntable-readouts .turntable-platform .measurement output,
-.turntable-readouts .turntable-platform > p:first-of-type {
+.turntable-readouts .turntable-secondary .measurement output,
+.turntable-readouts .turntable-secondary > p:first-of-type {
   color: #f1b57b;
 }
 .turntable-rule {

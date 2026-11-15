@@ -200,6 +200,10 @@ Open the spinning dancer page and select **Robot**. Start the spin and drop a lo
 
 Both models are on the spinning dancer page. **Mass on a string** starts with a 1 kg puck orbiting at 0.80 m and 2.4 m/s. Pull to 0.48 m to reach 4.0 m/s tangential speed. The model prescribes a smooth pull and advances the angle from conserved axial angular momentum. **Person on a turntable** models a 60 kg point mass walking along a 1 m track. Set the walking direction and speed relative to the turntable. The person and platform rotate in opposite directions, with equal and opposite axial angular momentum on the ideal bearing.
 
+## Spinning bicycle wheel
+
+On the spinning page, select **Bicycle wheel**. Spin the wheel, then flip it 180°. The teacher and platform turn in the wheel's original direction to conserve vertical angular momentum. Flip it back and the platform comes to rest. The model holds the spin speed relative to the axle fixed and accounts for the wheel's inertia as the platform carries it around.
+
 ## Vector Mathematics Lab
 
 Open **Vectors → Vector Mathematics Lab** and choose **Add**, **Subtract**, **Scale**, **Cross**, or **Dot**. Edit the components to update the result and 3D diagram immediately. Scale uses a number k to multiply each component of A. Dot gives a scalar and the other operations give vectors.

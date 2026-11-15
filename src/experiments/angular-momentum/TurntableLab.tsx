@@ -251,11 +251,12 @@ export function TurntableLab() {
               Clockwise
             </button>
           </div>
-          <label className="walk-speed" htmlFor="walk-speed">
+          <label className="spin-range-label" htmlFor="walk-speed">
             Walking speed <output>{f(speed, 1)} m/s</output>
           </label>
           <input
             id="walk-speed"
+            className="spin-range"
             type="range"
             min="0"
             max="2.4"
@@ -303,7 +304,7 @@ export function TurntableLab() {
         className="turntable-readouts"
         aria-label="Turntable angular momentum"
       >
-        <div className="turntable-person">
+        <div className="turntable-primary">
           <Measurement
             label="Person Lᵧ"
             value={f(values.personMomentum)}
@@ -319,7 +320,7 @@ export function TurntableLab() {
             rad/s
           </p>
         </div>
-        <div className="turntable-platform">
+        <div className="turntable-secondary">
           <Measurement
             label="Platform Lᵧ"
             value={f(values.platformMomentum)}

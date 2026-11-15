@@ -22,6 +22,7 @@ import './dancer.css';
 import './robot.css';
 import { StringLab } from './StringLab';
 import { TurntableLab } from './TurntableLab';
+import { WheelFlipLab } from './WheelFlipLab';
 import './spin-demos.css';
 const CENTER = [0, 1.05, 0] as const;
 const MODELS = [
@@ -29,6 +30,7 @@ const MODELS = [
   { name: 'Robot', Lab: RobotLab },
   { name: 'Mass on a string', Lab: StringLab },
   { name: 'Person on a turntable', Lab: TurntableLab },
+  { name: 'Bicycle wheel', Lab: WheelFlipLab },
 ] as const;
 
 export default function DancerPage() {

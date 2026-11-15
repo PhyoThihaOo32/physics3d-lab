@@ -74,3 +74,44 @@ test('turntable reverses both angular momentum arrows and preserves their sum', 
   ).toBeVisible();
   await expect(page.getByTestId('time')).toHaveText('0.00');
 });
+
+test('flips the bicycle wheel, measures the platform response, and flips it back', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(route, { waitUntil: 'domcontentloaded' });
+  await page
+    .getByRole('button', { name: 'Bicycle wheel', exact: true })
+    .click();
+  await expect(page.locator('canvas')).toBeVisible();
+  const spin = page.getByRole('slider', { name: 'Initial wheel spin' });
+  const flip = page.getByRole('button', { name: 'Flip wheel', exact: true });
+  await expect(flip).toBeDisabled();
+  await spin.fill('25');
+  await expect(page.getByTestId('wheel-total')).toHaveText('4.00');
+  await expect(page.getByTestId('wheel-momentum')).toHaveText('4.00');
+  await expect(page.getByTestId('wheel-support-omega')).toHaveText('0.00');
+  await page.getByRole('button', { name: 'Start wheel' }).click();
+  await expect(spin).toBeDisabled();
+  await flip.click();
+  await expect(page.getByText('Flipping', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('Wheel spin points down', { exact: true }),
+  ).toBeVisible({ timeout: 15000 });
+  await expect(page.getByTestId('wheel-tilt')).toHaveText('180°');
+  await expect(page.getByTestId('wheel-momentum')).toHaveText('-3.79');
+  await expect(page.getByTestId('wheel-support-momentum')).toHaveText('7.79');
+  await expect(page.getByTestId('wheel-support-omega')).toHaveText('1.30');
+  await expect(page.getByTestId('wheel-total')).toHaveText('4.00');
+  await page.getByRole('button', { name: 'Flip back', exact: true }).click();
+  await expect(
+    page.getByText('Wheel spin points up', { exact: true }),
+  ).toBeVisible({ timeout: 15000 });
+  await expect(page.getByTestId('wheel-support-omega')).toHaveText('0.00');
+  await page.getByRole('button', { name: 'Reset defaults' }).click();
+  await expect(spin).toHaveValue('20');
+  await expect(page.getByTestId('wheel-total')).toHaveText('3.20');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
+    390,
+  );
+});
