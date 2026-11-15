@@ -7,7 +7,7 @@ export const dancerExperiment: PhysicsExperiment<DancerParameters> = {
   id: 'angular-momentum',
   title: 'Spinning ballet dancer',
   description:
-    'Raise the dancer’s arms or load the robot’s backpack to see how inertia changes a spin.',
+    'Raise the dancer’s arms or add wrist weights to explore how inertia changes spin.',
   defaultParameters: DEFAULT_DANCER,
   learningObjectives: [
     'Explain how arm position changes moment of inertia.',
@@ -16,7 +16,7 @@ export const dancerExperiment: PhysicsExperiment<DancerParameters> = {
     'Measure the effect of a resistive external torque.',
   ],
   assumptions: [
-    'A simplified 51 kg dancer rotates about a supported, fixed vertical axis.',
+    'A simplified 51 kg dancer and optional wrist weights rotate about a fixed vertical axis.',
     'Both arms move symmetrically; shoulders and elbows bend without changing bone lengths.',
     'The ideal support supplies no torque about the spin axis. Gravity is 9.81 m/s² downward.',
     'Resistance, when selected, follows τᵧ = −bω. This is a bearing model, not detailed foot friction.',
@@ -32,5 +32,8 @@ export function dancerParameterError(p: DancerParameters) {
     return 'Initial angular velocity must be between −3 and 3 rad/s.';
   if (!Number.isFinite(p.resistance) || p.resistance < 0 || p.resistance > 0.5)
     return 'Resistance must be between 0 and 0.5 N·m·s/rad.';
+  const wristMass = p.wristMass ?? 0;
+  if (!Number.isFinite(wristMass) || wristMass < 0 || wristMass > 0.8)
+    return 'Each wrist weight must be between 0 and 0.8 kg.';
   return null;
 }

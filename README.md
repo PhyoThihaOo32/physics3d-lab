@@ -186,7 +186,7 @@ For an authorized manual production deployment from a clean checkout, use `verce
 
 Open **Rotation → Spinning ballet dancer**. The initial trial uses 2 rad/s and an ideal support. Start the spin, then use **Arm raise target**, **Raise arms**, or **Open arms** while running. Shoulders and elbows bend smoothly; arm segments keep their lengths. A supported vertical axis isolates the mass-distribution effect without simulating human balance.
 
-Read hand radius, total moment of inertia, angular velocity, signed RPM, angular momentum and spin kinetic energy. The graphs use independent SI scales and compare measured momentum with initial momentum plus integrated external torque. Pause to record up to eight comparison samples or export the full trial history as CSV. Initial angular velocity (−3 to +3 rad/s) and resistance (0–0.5 N·m·s/rad) apply to a new paused trial. Pending edits do not prevent resuming the current trial; its applied settings remain in effect. Zero initial spin does not generate sustained rotation when the arms move symmetrically.
+Read hand radius, total moment of inertia, angular velocity, signed RPM, angular momentum and spin kinetic energy. The graphs use independent SI scales and compare measured momentum with initial momentum plus integrated external torque. Pause to record up to eight comparison samples or export the full trial history as CSV. Initial angular velocity (−3 to +3 rad/s), wrist weights (0–0.8 kg each), and resistance (0–0.5 N·m·s/rad) apply to a new paused trial. Pending edits do not prevent resuming the current trial; its applied settings remain in effect. Zero initial spin does not generate sustained rotation when the arms move symmetrically.
 
 Five dynamic bodies and four internal motorized joints produce the motion. The torso is constrained to yaw about a fixed vertical axis. Rapier's angular integration is supplemented by Euler's gyroscopic term for each moving arm; angular velocity is never overwritten to force conservation. Inertia uses each body's rotated tensor and the parallel-axis theorem; measured angular momentum independently sums spin and orbital contributions. A pure geometric equation supplies an independent reference inertia.
 
@@ -194,19 +194,18 @@ This is a 51 kg illustrative segment model, not measured anatomy. Under ideal su
 
 ## Spinning robot
 
-Open the spinning dancer page and select **Robot**. Start the spin and drop a load into the backpack. Each load falls vertically, then sticks at a fixed radius of 0.48 m. The ideal bearing supplies no torque about the spin axis, so the model preserves axial angular momentum during capture and computes the new speed from Lᵧ / Iᵧ. The graph marks each catch as a step in angular velocity.
+Open **Rotation → Spinning robot**. Each weight falls vertically, sticks, and remains visible in the stack. Change drop height or slide the backpack along its rail. Axial angular momentum stays constant on the ideal bearing. The graph records both the discrete changes on capture and the gradual change as the backpack moves.
 
-## Mass on a string and person on a turntable
+## Other rotation experiments
 
-Both models are on the spinning dancer page. **Mass on a string** starts with a 1 kg puck orbiting at 0.80 m and 2.4 m/s. Pull to 0.48 m to reach 4.0 m/s tangential speed. The model prescribes a smooth pull and advances the angle from conserved axial angular momentum. **Person on a turntable** models a 60 kg point mass walking along a 1 m track. Set the walking direction and speed relative to the turntable. The person and platform rotate in opposite directions, with equal and opposite axial angular momentum on the ideal bearing.
+- **Mass on a string** lets you set puck mass, launch speed, and target radius. With the default trial, pulling from 0.80 m to 0.48 m increases tangential speed from 2.40 to 4.00 m/s.
+- **Mass on a spring** models a puck on an ideal central spring. Adjust rest length or stiffness while it orbits to see the coils and radius respond. The blue ring marks the rest length.
+- **Person on a turntable** lets you set walker mass, walking radius, and platform inertia before the trial. Control speed and direction while it runs. The person and platform carry opposite angular momenta.
+- **Spinning bicycle wheel** lets you adjust rim inertia, support inertia, and signed wheel spin. Flip the wheel to transfer vertical angular momentum, then flip it back.
 
-## Spinning bicycle wheel
+## Gyroscope
 
-On the spinning page, select **Bicycle wheel**. Spin the wheel, then flip it 180°. The teacher and platform turn in the wheel's original direction to conserve vertical angular momentum. Flip it back and the platform comes to rest. The model holds the spin speed relative to the axle fixed and accounts for the wheel's inertia as the platform carries it around.
-
-## Bicycle wheel gyroscope
-
-Select **Gyroscope** on the spinning page. **Free gyroscope** uses two Rapier gimbal bearings and an independent rotor joint. **Applied torque** uses a pivoted rotor and a calibrated force couple for a one-second lift. **Gravity precession** offsets the rotor from a fixed pivot so its weight supplies torque. **Compare slow and fast** runs matched 5 and 50 rad/s trials.
+Open **Rotation → Gyroscope**. **Free gyroscope** uses two Rapier gimbal bearings and an independent rotor joint. **Applied torque** uses a pivoted rotor and a calibrated force couple for a one-second lift. **Gravity precession** offsets the rotor from a fixed pivot so its weight supplies torque. **Compare slow and fast** runs matched 5 and 50 rad/s trials.
 
 The displayed spin angular momentum uses the disk’s axial inertia. Angular momentum about the pivot also includes transverse rotation and the motion of the rotor’s center of mass. The fast-spin precession estimate is shown separately from the measured motion. Settings apply to a fresh trial. The camera, equation views, and vector layers remain available while paused.
 

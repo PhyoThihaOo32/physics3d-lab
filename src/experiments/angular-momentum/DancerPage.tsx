@@ -17,47 +17,12 @@ import { DancerPanel } from './DancerPanel';
 import { DancerScene } from './DancerScene';
 import { DancerReadouts, DancerRecords } from './DancerReadouts';
 import { dancerExperiment } from './config';
-import { RobotLab } from './RobotLab';
 import './dancer.css';
-import './robot.css';
-import { StringLab } from './StringLab';
-import { TurntableLab } from './TurntableLab';
-import { WheelFlipLab } from './WheelFlipLab';
-import { GyroscopeLab } from './GyroscopeLab';
 import './spin-demos.css';
+
 const CENTER = [0, 1.05, 0] as const;
-const MODELS = [
-  { name: 'Dancer', Lab: DancerLab },
-  { name: 'Robot', Lab: RobotLab },
-  { name: 'Mass on a string', Lab: StringLab },
-  { name: 'Person on a turntable', Lab: TurntableLab },
-  { name: 'Bicycle wheel', Lab: WheelFlipLab },
-  { name: 'Gyroscope', Lab: GyroscopeLab },
-] as const;
 
 export default function DancerPage() {
-  const [selected, setSelected] = useState(0);
-  const { Lab } = MODELS[selected];
-  return (
-    <>
-      <div className="rotation-models" role="group" aria-label="Spinning model">
-        {MODELS.map(({ name }, index) => (
-          <button
-            key={name}
-            className="secondary-button"
-            aria-pressed={selected === index}
-            onClick={() => setSelected(index)}
-          >
-            {name}
-          </button>
-        ))}
-      </div>
-      <Lab />
-    </>
-  );
-}
-
-function DancerLab() {
   const [parameters, setParameters] = useState(DEFAULT_DANCER);
   const [run, setRun] = useState(0);
   const [view, setView] = useState<CameraView>({

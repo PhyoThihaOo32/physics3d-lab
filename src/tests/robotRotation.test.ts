@@ -6,8 +6,10 @@ import {
   createRobotTrial,
   releaseRobotLoad,
   robotDropHeight,
+  robotCargoHeight,
   robotInertia,
   robotOmega,
+  setRobotRadius,
 } from '../physics/equations/robotRotation';
 
 describe('robot backpack capture', () => {
@@ -16,10 +18,10 @@ describe('robot backpack capture', () => {
     const released = releaseRobotLoad(spinning, 2);
     const drop = released.drop!;
     expect(robotDropHeight(drop, spinning.time)).toBeCloseTo(
-      ROBOT.catchHeight + ROBOT.dropHeight,
+      robotCargoHeight(1) + ROBOT.dropHeight,
     );
     expect(robotDropHeight(drop, drop.catchTime)).toBeCloseTo(
-      ROBOT.catchHeight,
+      robotCargoHeight(1),
     );
     const midair = advanceRobotTrial(released, ROBOT_DROP_TIME / 2);
     expect(midair.load).toBe(0);
@@ -72,5 +74,28 @@ describe('robot backpack capture', () => {
     expect(trial.load).toBe(15);
     expect(trial.captures).toHaveLength(3);
     expect(releaseRobotLoad(trial, ROBOT.minLoad)).toBe(trial);
+  });
+  it('brings successive weights to the top of the stack and carries them out on the rail', () => {
+    const first = advanceRobotTrial(
+      releaseRobotLoad(createRobotTrial(-2), 2),
+      1,
+    );
+    const secondDrop = releaseRobotLoad(first, 4, 0.5);
+    expect(secondDrop.drop?.catchHeight).toBeCloseTo(robotCargoHeight(4));
+    expect(secondDrop.drop?.catchTime).toBeCloseTo(
+      1 + Math.sqrt(1 / ROBOT.gravity),
+    );
+    expect(setRobotRadius(secondDrop, 0.8)).toBe(secondDrop);
+    const loaded = advanceRobotTrial(secondDrop, 0.5);
+    const sliding = setRobotRadius(loaded, 0.8);
+    expect(releaseRobotLoad(sliding, 1)).toBe(sliding);
+    const far = advanceRobotTrial(sliding, 1);
+    expect(far.radius).toBe(0.8);
+    expect(far.momentum).toBe(-1.8);
+    expect(robotOmega(far)).toBeCloseTo(-1.8 / (0.9 + 6 * 0.8 ** 2));
+    expect(Math.abs(robotOmega(far))).toBeLessThan(
+      Math.abs(robotOmega(loaded)),
+    );
+    expect(far.captures.map(({ mass }) => mass)).toEqual([2, 4]);
   });
 });

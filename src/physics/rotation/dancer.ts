@@ -76,10 +76,10 @@ export class DancerDynamics {
         armHalfThickness: h,
       } = DANCER;
       const pair: RAPIER.RigidBody[] = [];
-      for (const [length, mass, x] of [
-        [a, DANCER.upperMass, side * (d + a / 2)],
-        [b, DANCER.foreMass, side * (d + a + b / 2)],
-      ]) {
+      for (const [length, mass, x, forearm] of [
+        [a, DANCER.upperMass, side * (d + a / 2), false],
+        [b, DANCER.foreMass, side * (d + a + b / 2), true],
+      ] as const) {
         const body = world.createRigidBody(
           RAPIER.RigidBodyDesc.dynamic()
             .setTranslation(x, y, 0)
@@ -93,7 +93,21 @@ export class DancerDynamics {
             .setCollisionGroups(0),
           body,
         );
+        const wristMass = parameters.wristMass ?? 0;
+        if (forearm && wristMass > 0) {
+          world.createCollider(
+            RAPIER.ColliderDesc.ball(DANCER.wristWeightRadius)
+              .setTranslation((side * length) / 2, 0, 0)
+              .setMass(wristMass)
+              .setCollisionGroups(0),
+            body,
+          );
+        }
         body.recomputeMassPropertiesFromColliders();
+        body.setLinvel(
+          v(0, 0, -parameters.initialOmega * body.worldCom().x),
+          false,
+        );
         pair.push(body);
         this.arms.push(body);
       }

@@ -1,10 +1,10 @@
 const RADIUS = 0.35;
 
-export function BicycleWheel() {
+export function BicycleWheel({ rimScale = 1 }: { rimScale?: number }) {
   return (
     <>
       <mesh rotation={[-Math.PI / 2, 0, 0]} castShadow>
-        <torusGeometry args={[RADIUS, 0.032, 12, 64]} />
+        <torusGeometry args={[RADIUS, 0.032 * rimScale, 12, 64]} />
         <meshStandardMaterial color="#222930" roughness={0.86} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
@@ -12,7 +12,7 @@ export function BicycleWheel() {
         <meshStandardMaterial color="#a9b6bf" metalness={0.42} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[RADIUS, 0.034, 12, 16, 0.62]} />
+        <torusGeometry args={[RADIUS, 0.034 * rimScale, 12, 16, 0.62]} />
         <meshStandardMaterial color="#83d5c1" />
       </mesh>
       <mesh>

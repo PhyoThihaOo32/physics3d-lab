@@ -120,6 +120,114 @@ export const experiments: readonly ExperimentRegistration[] = [
     status: 'available',
     load: () => import('./angular-momentum/DancerPage'),
   },
+  {
+    id: 'spinning-robot',
+    labId: 'rotation',
+    title: 'Spinning robot',
+    topic: 'Inelastic capture',
+    description:
+      'Stack weights in a spinning robot’s backpack, then slide them toward or away from the axis.',
+    objectives: [
+      'Compare the effects of adding mass and changing its radius.',
+      'Check conservation of axial angular momentum during a catch.',
+    ],
+    measurements: [
+      'Cargo mass',
+      'Load radius',
+      'Moment of inertia',
+      'Angular velocity',
+    ],
+    status: 'available',
+    load: () => import('./angular-momentum/RobotLab'),
+  },
+  {
+    id: 'mass-on-a-string',
+    labId: 'rotation',
+    title: 'Mass on a string',
+    topic: 'Central force',
+    description:
+      'Pull a string through a tabletop and watch an orbiting puck move inward and speed up.',
+    objectives: [
+      'Relate a changing radius to tangential speed.',
+      'Explain why radial tension produces zero torque about the hole.',
+    ],
+    measurements: ['Radius', 'Tangential speed', 'Tension', 'Angular momentum'],
+    status: 'available',
+    load: () => import('./angular-momentum/StringLab'),
+  },
+  {
+    id: 'spring-orbit',
+    labId: 'rotation',
+    title: 'Mass on a spring',
+    topic: 'Elastic central force',
+    description: 'Stretch or compress a spring as a puck orbits its anchor.',
+    objectives: [
+      'Explore how rest length and stiffness change the orbit.',
+      'Track energy and angular momentum under a central force.',
+    ],
+    measurements: [
+      'Spring length',
+      'Spring force',
+      'Angular momentum',
+      'Mechanical energy',
+    ],
+    status: 'available',
+    load: () => import('./angular-momentum/SpringOrbitLab'),
+  },
+  {
+    id: 'person-on-a-turntable',
+    labId: 'rotation',
+    title: 'Person on a turntable',
+    topic: 'Angular momentum transfer',
+    description:
+      'Walk around a platform that can turn freely and compare the two directions of rotation.',
+    objectives: [
+      'Trace how traction transfers angular momentum between the person and platform.',
+      'Compare opposite signed angular momenta.',
+    ],
+    measurements: [
+      'Walking speed',
+      'Angular velocities',
+      'System angular momentum',
+    ],
+    status: 'available',
+    load: () => import('./angular-momentum/TurntableLab'),
+  },
+  {
+    id: 'bicycle-wheel',
+    labId: 'rotation',
+    title: 'Spinning bicycle wheel',
+    topic: 'Angular momentum reversal',
+    description:
+      'Flip a spinning bicycle wheel and see how the teacher and platform respond.',
+    objectives: [
+      'Track vertical angular momentum as a wheel flips.',
+      'Compare the response of different turntables.',
+    ],
+    measurements: ['Axle tilt', 'Platform spin', 'Vertical angular momentum'],
+    status: 'available',
+    load: () => import('./angular-momentum/WheelFlipLab'),
+  },
+  {
+    id: 'gyroscope',
+    labId: 'rotation',
+    title: 'Gyroscope',
+    topic: 'Torque and precession',
+    description:
+      'Spin a rotor in gimbals, apply a calibrated lift, or watch gravity drive precession.',
+    objectives: [
+      'Distinguish spin from precession.',
+      'Compare rotors under the same angular impulse.',
+    ],
+    measurements: [
+      'Spin and inertia',
+      'Torque',
+      'Axle deflection',
+      'Precession',
+    ],
+    status: 'available',
+    load: () => import('./angular-momentum/GyroscopeLab'),
+  },
 ];
 
 export const getLab = (id: string) => labs.find((lab) => lab.id === id);

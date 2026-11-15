@@ -21,6 +21,20 @@ describe('spinning bicycle wheel', () => {
     });
   });
 
+  it('uses the selected rim and support inertia with reverse spin', () => {
+    const setup = { rimInertia: 0.24, supportInertia: 10 };
+    const trial = advanceWheelFlip(
+      startWheelFlip(createWheelFlipTrial()),
+      2,
+      -20,
+      setup,
+    );
+    const values = measureWheelFlip(trial, -20, setup);
+    expect(values.totalMomentum).toBeCloseTo(-4.8);
+    expect(values.supportOmega).toBeCloseTo(-9.6 / 10.24);
+    expect(measureWheelFlip(trial, 0, setup).supportOmega).toBe(0);
+  });
+
   it('conserves vertical momentum throughout the flip at any available spin speed', () => {
     for (const spinSpeed of [8, 20, 28]) {
       const initialMomentum = WHEEL_FLIP.spinInertia * spinSpeed;

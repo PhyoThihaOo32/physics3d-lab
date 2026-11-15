@@ -8,6 +8,16 @@ export const WHEEL_FLIP = {
   duration: 1.6,
 } as const;
 
+export interface WheelFlipSetup {
+  rimInertia: number;
+  supportInertia: number;
+}
+
+export const DEFAULT_WHEEL_SETUP: WheelFlipSetup = {
+  rimInertia: WHEEL_FLIP.spinInertia,
+  supportInertia: WHEEL_FLIP.supportInertia,
+};
+
 interface FlipMotion {
   startTime: number;
   from: number;
@@ -37,20 +47,17 @@ export function startWheelFlip(trial: WheelFlipTrial): WheelFlipTrial {
   };
 }
 
-function wheelVerticalInertia(vertical: number) {
+function wheelVerticalInertia(vertical: number, rimInertia: number) {
   // The wheel is carried around +y as the support turns. Its inertia about
   // that axis includes both its axial and diametric moments of inertia.
-  return (
-    WHEEL_FLIP.diameterInertia * (1 - vertical ** 2) +
-    WHEEL_FLIP.spinInertia * vertical ** 2
-  );
+  return 0.5 * rimInertia * (1 - vertical ** 2) + rimInertia * vertical ** 2;
 }
 
-function supportSpeed(tilt: number, spinSpeed: number) {
+function supportSpeed(tilt: number, spinSpeed: number, setup: WheelFlipSetup) {
   const vertical = Math.cos(tilt);
   return (
-    (WHEEL_FLIP.spinInertia * spinSpeed * (1 - vertical)) /
-    (WHEEL_FLIP.supportInertia + wheelVerticalInertia(vertical))
+    (setup.rimInertia * spinSpeed * (1 - vertical)) /
+    (setup.supportInertia + wheelVerticalInertia(vertical, setup.rimInertia))
   );
 }
 
@@ -66,6 +73,7 @@ export function advanceWheelFlip(
   trial: WheelFlipTrial,
   elapsed: number,
   spinSpeed: number,
+  setup: WheelFlipSetup = DEFAULT_WHEEL_SETUP,
 ): WheelFlipTrial {
   const time = trial.time + elapsed;
   const { motion } = trial;
@@ -74,7 +82,8 @@ export function advanceWheelFlip(
       ...trial,
       time,
       supportAngle:
-        trial.supportAngle + elapsed * supportSpeed(trial.tilt, spinSpeed),
+        trial.supportAngle +
+        elapsed * supportSpeed(trial.tilt, spinSpeed, setup),
     };
   }
 
@@ -85,10 +94,10 @@ export function advanceWheelFlip(
   const supportAngle =
     trial.supportAngle +
     ((flipUntil - trial.time) / 6) *
-      (supportSpeed(trial.tilt, spinSpeed) +
-        4 * supportSpeed(middle, spinSpeed) +
-        supportSpeed(tilt, spinSpeed)) +
-    Math.max(0, time - end) * supportSpeed(motion.to, spinSpeed);
+      (supportSpeed(trial.tilt, spinSpeed, setup) +
+        4 * supportSpeed(middle, spinSpeed, setup) +
+        supportSpeed(tilt, spinSpeed, setup)) +
+    Math.max(0, time - end) * supportSpeed(motion.to, spinSpeed, setup);
   return { time, tilt, supportAngle, motion: time >= end ? null : motion };
 }
 
@@ -101,13 +110,17 @@ export function wheelAxleDirection(trial: WheelFlipTrial): Vector3Tuple {
   ];
 }
 
-export function measureWheelFlip(trial: WheelFlipTrial, spinSpeed: number) {
+export function measureWheelFlip(
+  trial: WheelFlipTrial,
+  spinSpeed: number,
+  setup: WheelFlipSetup = DEFAULT_WHEEL_SETUP,
+) {
   const vertical = Math.cos(trial.tilt);
-  const supportOmega = supportSpeed(trial.tilt, spinSpeed);
-  const supportMomentum = WHEEL_FLIP.supportInertia * supportOmega;
+  const supportOmega = supportSpeed(trial.tilt, spinSpeed, setup);
+  const supportMomentum = setup.supportInertia * supportOmega;
   const wheelMomentum =
-    WHEEL_FLIP.spinInertia * spinSpeed * vertical +
-    wheelVerticalInertia(vertical) * supportOmega;
+    setup.rimInertia * spinSpeed * vertical +
+    wheelVerticalInertia(vertical, setup.rimInertia) * supportOmega;
   return {
     supportOmega,
     supportMomentum,

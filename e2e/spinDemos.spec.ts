@@ -1,15 +1,12 @@
 import { expect, test } from '@playwright/test';
 
-const route = '/#/experiments/angular-momentum';
+const route = (id: string) => `/#/experiments/${id}`;
 
 test('pulls the puck to the slide radius and reaches the predicted speed', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(route, { waitUntil: 'domcontentloaded' });
-  await page
-    .getByRole('button', { name: 'Mass on a string', exact: true })
-    .click();
+  await page.goto(route('mass-on-a-string'), { waitUntil: 'domcontentloaded' });
   await expect(
     page.getByRole('heading', { name: 'Mass on a string' }),
   ).toBeVisible();
@@ -52,10 +49,9 @@ test('pulls the puck to the slide radius and reaches the predicted speed', async
 test('turntable reverses both angular momentum arrows and preserves their sum', async ({
   page,
 }) => {
-  await page.goto(route, { waitUntil: 'domcontentloaded' });
-  await page
-    .getByRole('button', { name: 'Person on a turntable', exact: true })
-    .click();
+  await page.goto(route('person-on-a-turntable'), {
+    waitUntil: 'domcontentloaded',
+  });
   await expect(page.getByTestId('person-direction')).toHaveText('No direction');
   await page.getByRole('button', { name: 'Start walking' }).click();
   await expect(page.getByTestId('person-momentum')).toHaveText('60.00', {
@@ -80,7 +76,8 @@ test('turntable reverses both angular momentum arrows and preserves their sum', 
   });
   await expect(page.getByTestId('person-omega')).toHaveText('1.20');
   await expect(page.getByTestId('turntable-total')).toHaveText('0.00');
-  await page.getByRole('button', { name: 'Robot', exact: true }).click();
+  await page.getByRole('link', { name: 'Rotation lab' }).click();
+  await page.getByRole('link', { name: 'Open spinning robot' }).click();
   await expect(
     page.getByRole('heading', { name: 'Spinning robot' }),
   ).toBeVisible();
@@ -91,10 +88,7 @@ test('flips the bicycle wheel, measures the platform response, and flips it back
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(route, { waitUntil: 'domcontentloaded' });
-  await page
-    .getByRole('button', { name: 'Bicycle wheel', exact: true })
-    .click();
+  await page.goto(route('bicycle-wheel'), { waitUntil: 'domcontentloaded' });
   await expect(page.locator('canvas')).toBeVisible();
   const spin = page.getByRole('slider', { name: 'Initial wheel spin' });
   const flip = page.getByRole('button', { name: 'Flip wheel', exact: true });
@@ -132,10 +126,9 @@ test('uses the Rapier gyroscope setup, gimbals, and camera on a phone', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(route, { waitUntil: 'domcontentloaded' });
+  await page.goto(route('gyroscope'), { waitUntil: 'domcontentloaded' });
   const button = (name: string) =>
     page.getByRole('button', { name, exact: true });
-  await button('Gyroscope').click();
   await expect(page.locator('canvas')).toBeVisible();
   await expect(page.getByTestId('gimbal-inertia')).toHaveText('0.090');
   await expect(page.getByTestId('gimbal-momentum')).toHaveText('3.60');
@@ -166,10 +159,9 @@ test('uses the Rapier gyroscope setup, gimbals, and camera on a phone', async ({
 test('runs a matched torque comparison and a zero-gravity trial', async ({
   page,
 }) => {
-  await page.goto(route, { waitUntil: 'domcontentloaded' });
+  await page.goto(route('gyroscope'), { waitUntil: 'domcontentloaded' });
   const button = (name: string) =>
     page.getByRole('button', { name, exact: true });
-  await button('Gyroscope').click();
   await button('Compare slow and fast').click();
   await expect(page.locator('canvas')).toHaveCount(2);
   await expect(page.getByTestId('gimbal-spin')).toHaveText('5.00');
@@ -200,4 +192,26 @@ test('runs a matched torque comparison and a zero-gravity trial', async ({
   await expect(page.getByTestId('gimbal-precession')).toHaveText('0.00', {
     timeout: 15000,
   });
+});
+
+test('moves the spring orbit under a live rest-length adjustment while conserving angular momentum', async ({
+  page,
+}) => {
+  await page.goto(route('spring-orbit'), { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('canvas')).toBeVisible();
+  await page.getByRole('slider', { name: 'Puck mass' }).fill('2');
+  const momentum = page.getByTestId('spring-momentum');
+  const initialMomentum = await momentum.innerText();
+  await expect(page.getByTestId('spring-length')).toHaveText('0.95');
+  await page.getByRole('button', { name: 'Start orbit' }).click();
+  await page.getByRole('slider', { name: 'Spring rest length' }).fill('0.35');
+  await expect
+    .poll(
+      async () => Number(await page.getByTestId('spring-length').innerText()),
+      { timeout: 15000 },
+    )
+    .toBeLessThan(0.9);
+  await expect(momentum).toHaveText(initialMomentum);
+  await page.getByRole('button', { name: 'Pause' }).click();
+  await expect(page.getByRole('slider', { name: 'Puck mass' })).toBeDisabled();
 });

@@ -7,6 +7,8 @@ import { ViewportHint } from '../../components/controls/ViewportHint';
 import { LabCanvas } from '../../three/scene/LabCanvas';
 import type { SpinAxisView } from '../../three/camera/LabCamera';
 import type { Vector3Tuple } from '../../types/vector';
+import './dancer.css';
+import './spin-demos.css';
 
 export function SpinDemoViewport({
   title,
@@ -17,6 +19,7 @@ export function SpinDemoViewport({
   initialView,
   actions,
   spinAxisView,
+  spinAxisLabel,
   children,
 }: {
   title: string;
@@ -27,6 +30,7 @@ export function SpinDemoViewport({
   initialView: CameraView['preset'];
   actions: ReactNode;
   spinAxisView?: SpinAxisView;
+  spinAxisLabel?: string;
   children: (vectorsVisible: boolean) => ReactNode;
 }) {
   const [view, setView] = useState<CameraView>({
@@ -71,6 +75,7 @@ export function SpinDemoViewport({
         <CameraControls
           view={view}
           spinAxis={Boolean(spinAxisView)}
+          spinAxisLabel={spinAxisLabel}
           onChange={(preset) => {
             if (preset === 'Spin axis') setAxisSnapshot(spinAxisView);
             setView((previous) => ({

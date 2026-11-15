@@ -40,6 +40,19 @@ function trial(p: DancerParameters) {
   };
 }
 describe('articulated spinning dancer', () => {
+  it('includes visible wrist weights in both the initial inertia and measured momentum balance', () => {
+    const t = trial({ initialOmega: 2, resistance: 0, wristMass: 0.6 });
+    try {
+      const initial = t.dancer.measure();
+      expect(initial.inertia).toBeCloseTo(dancerInertia(1, 0.6), 5);
+      expect(initial.momentum).toBeCloseTo(2 * initial.inertia, 5);
+      const raised = t.advance(5, 0);
+      expect(raised.inertia).toBeCloseTo(dancerInertia(0, 0.6), 1);
+      expect(raised.balanceError).toBeLessThan(0.8);
+    } finally {
+      t.free();
+    }
+  });
   it('keeps the same motion when readouts sample fewer integration steps', () => {
     const measured = trial({ initialOmega: -2, resistance: 0.15 });
     const sampled = trial({ initialOmega: -2, resistance: 0.15 });

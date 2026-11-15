@@ -225,11 +225,19 @@ export function GyroEquations({
           </p>
         )}
         {mode === 'torque' && (
-          <p>
-            The fixed-direction force couple applies the same torque in both
-            trials. The diagram adds the torque impulse to initial total angular
-            momentum about the pivot, including any bearing drag.
-          </p>
+          <>
+            <p>
+              The fixed-direction force couple applies the same torque in both
+              trials. The diagram adds the torque impulse to initial total
+              angular momentum about the pivot, including any bearing drag.
+            </p>
+            {reading?.pulseCount ? (
+              <p>
+                Measured angular momentum balance residual{' '}
+                {f(reading.momentumError, 4)} kg·m²/s.
+              </p>
+            ) : null}
+          </>
         )}
         {mode === 'gravity' && (
           <p>

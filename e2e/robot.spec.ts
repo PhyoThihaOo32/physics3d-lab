@@ -1,13 +1,26 @@
 import { expect, test } from '@playwright/test';
 
-test('switches models and observes the backpack capture at slow playback', async ({
+test('opens the robot separately, catches two weights, and slides the backpack', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/#/experiments/angular-momentum', {
-    waitUntil: 'domcontentloaded',
-  });
-  await page.getByRole('button', { name: 'Robot', exact: true }).click();
+  test.setTimeout(60_000);
+  await page.goto('/#/labs/rotation', { waitUntil: 'domcontentloaded' });
+  for (const lab of [
+    'spinning ballet dancer',
+    'spinning robot',
+    'mass on a string',
+    'mass on a spring',
+    'person on a turntable',
+    'spinning bicycle wheel',
+    'gyroscope',
+  ]) {
+    await expect(
+      page.getByRole('link', { name: `Open ${lab}`, exact: false }),
+    ).toBeVisible();
+  }
+  await page.getByRole('link', { name: 'Open spinning robot' }).click();
+  await expect(page).toHaveURL(/#\/experiments\/spinning-robot$/);
   await expect(
     page.getByRole('heading', { name: 'Spinning robot' }),
   ).toBeVisible();
@@ -35,7 +48,28 @@ test('switches models and observes the backpack capture at slow playback', async
   await expect(page.getByTestId('robot-inertia')).toHaveText('1.361');
   await expect(page.getByTestId('robot-momentum')).toHaveText('1.800');
   await expect(omega).toHaveText('1.323');
+  await page.getByLabel('Playback speed').selectOption('2');
+  await mass.fill('3');
+  await drop.click();
+  await expect(page.getByTestId('robot-load')).toHaveText('5.00', {
+    timeout: 15000,
+  });
+  await page.getByText('Cargo · 2 weights', { exact: true }).click();
+  await expect(page.getByTestId('robot-cargo-weight')).toHaveText([
+    '2.00 kg',
+    '3.00 kg',
+  ]);
+  await page.getByRole('slider', { name: 'Backpack radius' }).fill('0.75');
+  await expect(page.getByTestId('robot-radius')).toHaveText('0.75', {
+    timeout: 15000,
+  });
+  await expect(page.getByTestId('robot-omega')).toHaveText('0.485');
+  await expect(page.getByTestId('robot-momentum')).toHaveText('1.800');
   await page.getByRole('button', { name: 'Pause' }).click();
+  await page.getByRole('button', { name: 'Backpack', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Backpack', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
   await expect(drop).toBeDisabled();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
     390,
@@ -47,7 +81,8 @@ test('switches models and observes the backpack capture at slow playback', async
   await expect
     .poll(async () => Number(await page.getByTestId('time').textContent()))
     .toBeGreaterThan(0.1);
-  await page.getByRole('button', { name: 'Dancer', exact: true }).click();
+  await page.getByRole('link', { name: 'Rotation lab' }).click();
+  await page.getByRole('link', { name: 'Open spinning ballet dancer' }).click();
   await expect(
     page.getByRole('heading', { name: 'Spinning ballet dancer' }),
   ).toBeVisible();

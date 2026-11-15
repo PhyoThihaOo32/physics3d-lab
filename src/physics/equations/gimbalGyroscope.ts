@@ -31,7 +31,8 @@ export function liftVectors({ force, lever, angle }: LiftSettings) {
   return { r, F, torque: torqueVector(r, F) };
 }
 
-export const rotorThickness = (radius: number) => radius * 0.22;
+export const rotorThickness = (radius: number, mass: number) =>
+  radius * 0.22 * Math.sqrt(mass / DEFAULT_GYRO.mass);
 
 export const momentOfInertiaSolidDisk = (mass: number, radius: number) =>
   0.5 * mass * radius ** 2;
@@ -64,7 +65,7 @@ export function rotorMoments({ mass, radius }: GyroParameters, mode: GyroMode) {
   return {
     axial: momentOfInertiaSolidDisk(mass, radius),
     transverse:
-      (mass / 12) * (3 * radius ** 2 + rotorThickness(radius) ** 2) +
+      (mass / 12) * (3 * radius ** 2 + rotorThickness(radius, mass) ** 2) +
       (mode === 'free' ? 0 : mass * gimbalDimensions(radius, mode).lever ** 2),
   };
 }

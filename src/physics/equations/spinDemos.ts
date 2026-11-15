@@ -18,9 +18,6 @@ export const STRING = {
   exampleTarget: 0.48,
   pullDuration: 2,
 } as const;
-const STRING_MOMENTUM =
-  STRING.mass * STRING.initialRadius * STRING.initialSpeed;
-
 interface StringPull {
   startTime: number;
   startRadius: number;
@@ -32,15 +29,24 @@ export interface StringTrial {
   angle: number;
   radius: number;
   radialSpeed: number;
+  radialAcceleration: number;
+  mass: number;
+  initialSpeed: number;
   pull: StringPull | null;
 }
 
-export function createStringTrial(): StringTrial {
+export function createStringTrial(
+  mass: number = STRING.mass,
+  initialSpeed: number = STRING.initialSpeed,
+): StringTrial {
   return {
     time: 0,
     angle: 0,
     radius: STRING.initialRadius,
     radialSpeed: 0,
+    radialAcceleration: 0,
+    mass,
+    initialSpeed,
     pull: null,
   };
 }
@@ -56,26 +62,26 @@ export function startStringPull(
     target >= trial.radius
   )
     return trial;
-  return {
-    ...trial,
-    pull: { startTime: trial.time, startRadius: trial.radius, target },
-  };
+  const pull = { startTime: trial.time, startRadius: trial.radius, target };
+  return { ...trial, ...pullPosition(pull, trial.time), pull };
 }
 
 function pullPosition(pull: StringPull, time: number) {
   if (time >= pull.startTime + STRING.pullDuration)
-    return { radius: pull.target, radialSpeed: 0 };
+    return { radius: pull.target, radialSpeed: 0, radialAcceleration: 0 };
   const phase = (Math.PI * (time - pull.startTime)) / STRING.pullDuration;
   const change = pull.target - pull.startRadius;
   return {
     radius: pull.startRadius + (change * (1 - Math.cos(phase))) / 2,
     radialSpeed:
       (change * Math.PI * Math.sin(phase)) / (2 * STRING.pullDuration),
+    radialAcceleration:
+      (change * (Math.PI / STRING.pullDuration) ** 2 * Math.cos(phase)) / 2,
   };
 }
 
-function stringOmega(radius: number) {
-  return STRING_MOMENTUM / (STRING.mass * radius ** 2);
+function stringOmega(radius: number, initialSpeed: number) {
+  return (STRING.initialRadius * initialSpeed) / radius ** 2;
 }
 
 export function advanceStringTrial(
@@ -83,11 +89,12 @@ export function advanceStringTrial(
   elapsed: number,
 ): StringTrial {
   const time = trial.time + elapsed;
+  const omega = (radius: number) => stringOmega(radius, trial.initialSpeed);
   if (!trial.pull)
     return {
       ...trial,
       time,
-      angle: trial.angle + stringOmega(trial.radius) * elapsed,
+      angle: trial.angle + omega(trial.radius) * elapsed,
     };
   const { pull } = trial;
   const end = pull.startTime + STRING.pullDuration;
@@ -98,24 +105,34 @@ export function advanceStringTrial(
   const angle =
     trial.angle +
     ((pullUntil - trial.time) / 6) *
-      (stringOmega(trial.radius) +
-        4 * stringOmega(middle.radius) +
-        stringOmega(finish.radius)) +
-    Math.max(0, time - end) * stringOmega(pull.target);
+      (omega(trial.radius) + 4 * omega(middle.radius) + omega(finish.radius)) +
+    Math.max(0, time - end) * omega(pull.target);
   return { ...trial, ...finish, time, angle, pull: time >= end ? null : pull };
 }
 
 export function measureString(trial: StringTrial) {
-  const inertia = STRING.mass * trial.radius ** 2;
-  const omega = stringOmega(trial.radius);
-  const tangentialSpeed = predictStringSpeed(trial.radius);
+  const inertia = trial.mass * trial.radius ** 2;
+  const omega = stringOmega(trial.radius, trial.initialSpeed);
+  const tangentialSpeed = predictStringSpeed(trial.radius, trial.initialSpeed);
   const energy =
-    0.5 * STRING.mass * (tangentialSpeed ** 2 + trial.radialSpeed ** 2);
-  return { inertia, omega, tangentialSpeed, momentum: STRING_MOMENTUM, energy };
+    0.5 * trial.mass * (tangentialSpeed ** 2 + trial.radialSpeed ** 2);
+  const tension =
+    trial.mass * (trial.radius * omega ** 2 - trial.radialAcceleration);
+  return {
+    inertia,
+    omega,
+    tangentialSpeed,
+    momentum: trial.mass * STRING.initialRadius * trial.initialSpeed,
+    energy,
+    tension,
+  };
 }
 
-export function predictStringSpeed(radius: number) {
-  return STRING_MOMENTUM / (STRING.mass * radius);
+export function predictStringSpeed(
+  radius: number,
+  initialSpeed: number = STRING.initialSpeed,
+) {
+  return (STRING.initialRadius * initialSpeed) / radius;
 }
 
 export const TURNTABLE = {
@@ -137,8 +154,8 @@ export function createTurntableTrial(): TurntableTrial {
   return { time: 0, personAngle: 0, platformAngle: 0, relativeOmega: 0 };
 }
 
-function speedShares(platformInertia: number) {
-  const personInertia = TURNTABLE.personMass * TURNTABLE.radius ** 2;
+function speedShares(platformInertia: number, mass: number, radius: number) {
+  const personInertia = mass * radius ** 2;
   const total = platformInertia + personInertia;
   return { person: platformInertia / total, platform: -personInertia / total };
 }
@@ -148,8 +165,10 @@ export function advanceTurntableTrial(
   elapsed: number,
   targetRelativeSpeed: number,
   platformInertia: number,
+  mass: number = TURNTABLE.personMass,
+  radius: number = TURNTABLE.radius,
 ): TurntableTrial {
-  const target = targetRelativeSpeed / TURNTABLE.radius;
+  const target = targetRelativeSpeed / radius;
   const difference = target - trial.relativeOmega;
   const rampTime = Math.min(
     elapsed,
@@ -161,7 +180,7 @@ export function advanceTurntableTrial(
   const relativeAngle =
     (rampTime * (trial.relativeOmega + relativeOmega)) / 2 +
     (elapsed - rampTime) * relativeOmega;
-  const share = speedShares(platformInertia);
+  const share = speedShares(platformInertia, mass, radius);
   return {
     time: trial.time + elapsed,
     personAngle: trial.personAngle + relativeAngle * share.person,
@@ -173,19 +192,15 @@ export function advanceTurntableTrial(
 export function measureTurntable(
   trial: TurntableTrial,
   platformInertia: number,
+  mass: number = TURNTABLE.personMass,
+  trackRadius: number = TURNTABLE.radius,
 ) {
-  const share = speedShares(platformInertia);
+  const share = speedShares(platformInertia, mass, trackRadius);
   const personOmega = share.person * trial.relativeOmega;
   const platformOmega = share.platform * trial.relativeOmega;
-  const radius = radialVector(trial.personAngle, TURNTABLE.radius);
-  const velocity = tangentVector(
-    trial.personAngle,
-    personOmega * TURNTABLE.radius,
-  );
-  const personMomentum = crossProduct(
-    radius,
-    scaleVector(velocity, TURNTABLE.personMass),
-  )[1];
+  const radius = radialVector(trial.personAngle, trackRadius);
+  const velocity = tangentVector(trial.personAngle, personOmega * trackRadius);
+  const personMomentum = crossProduct(radius, scaleVector(velocity, mass))[1];
   const platformMomentum = platformInertia * platformOmega;
   return {
     personOmega,

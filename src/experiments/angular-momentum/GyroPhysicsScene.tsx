@@ -29,6 +29,7 @@ import { VectorArrow3D } from '../../three/vectors/VectorArrow3D';
 import type { GyroVectorSettings } from './gyroViews';
 import {
   GyroAxle,
+  GyroBearingLinks,
   GyroBase,
   GyroPivotStand,
   GyroRing,
@@ -150,6 +151,11 @@ function RotorSimulation({
               plane="xy"
               bearings="y"
             />
+            <GyroBearingLinks
+              from={dimensions.outer}
+              to={dimensions.middle}
+              axis="y"
+            />
           </group>
           <group ref={middle} position={[0, dimensions.height, 0]}>
             <GyroRing
@@ -158,6 +164,11 @@ function RotorSimulation({
               color="#c29969"
               plane="yz"
               bearings="z"
+            />
+            <GyroBearingLinks
+              from={dimensions.middle}
+              to={dimensions.inner}
+              axis="z"
             />
           </group>
           <group ref={inner} position={[0, dimensions.height, 0]}>
@@ -178,7 +189,7 @@ function RotorSimulation({
         />
       )}
       <group ref={rotor}>
-        <GyroRotor radius={parameters.radius} />
+        <GyroRotor radius={parameters.radius} mass={parameters.mass} />
         {mode !== 'free' && (
           <group position={[-dimensions.lever / 2, 0, 0]}>
             <GyroAxle length={dimensions.lever + 0.07} radius={0.019} />

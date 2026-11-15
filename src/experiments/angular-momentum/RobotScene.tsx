@@ -1,8 +1,10 @@
 import { useRef } from 'react';
 import type { Group } from 'three';
+import { RoundedBox } from '@react-three/drei';
 import {
   ROBOT,
   robotDropHeight,
+  type RobotCapture,
   robotOmega,
   type RobotTrial,
 } from '../../physics/equations/robotRotation';
@@ -15,17 +17,32 @@ const ALLOY = '#a1b2be';
 const JOINT = '#3b4b57';
 const TRIM = '#75c9b9';
 const PACK = '#a67b40';
-const LOAD = '#f6d78d';
+const LOAD_COLORS = ['#f0ba73', '#7ed0c0', '#e6a59c', '#a3b5ea', '#d6dba0'];
+const RAIL_START = 0.19;
 
 function Plate({
   position,
   size,
   color,
+  rounded = 0,
 }: {
   position: Vector3Tuple;
   size: Vector3Tuple;
   color: string;
+  rounded?: number;
 }) {
+  if (rounded > 0)
+    return (
+      <RoundedBox
+        args={[...size]}
+        position={position}
+        radius={rounded}
+        smoothness={3}
+        castShadow
+      >
+        <meshStandardMaterial color={color} roughness={0.5} metalness={0.33} />
+      </RoundedBox>
+    );
   return (
     <mesh position={position} castShadow>
       <boxGeometry args={[...size]} />
@@ -35,16 +52,26 @@ function Plate({
 }
 
 function RobotBody() {
-  const r = ROBOT.backpackRadius;
   return (
     <>
-      <Plate position={[0, 1.16, 0]} size={[0.62, 0.56, 0.37]} color={ALLOY} />
+      <Plate
+        position={[0, 1.16, 0]}
+        size={[0.62, 0.56, 0.37]}
+        color={ALLOY}
+        rounded={0.055}
+      />
       <Plate position={[0, 0.81, 0]} size={[0.46, 0.19, 0.32]} color={JOINT} />
       <Plate position={[0, 1.49, 0]} size={[0.19, 0.16, 0.2]} color={JOINT} />
-      <Plate position={[0, 1.68, 0]} size={[0.49, 0.3, 0.35]} color={ALLOY} />
+      <Plate
+        position={[0, 1.68, 0]}
+        size={[0.49, 0.3, 0.35]}
+        color={ALLOY}
+        rounded={0.05}
+      />
       <Plate
         position={[0, 1.69, -0.183]}
         size={[0.4, 0.13, 0.025]}
+        rounded={0.012}
         color={JOINT}
       />
       <Plate
@@ -111,33 +138,81 @@ function RobotBody() {
           />
         </group>
       ))}
-      <group position={[0, 0, r]}>
-        <Plate position={[0, 1.11, 0]} size={[0.51, 0.12, 0.39]} color={PACK} />
-        <Plate
-          position={[0, 1.3, -0.184]}
-          size={[0.51, 0.38, 0.053]}
-          color={PACK}
-        />
-        {[-1, 1].map((side) => (
-          <Plate
-            key={side}
-            position={[side * 0.229, 1.3, 0]}
-            size={[0.053, 0.38, 0.39]}
-            color={PACK}
-          />
-        ))}
-        <Plate
-          position={[0, 1.22, 0.18]}
-          size={[0.51, 0.14, 0.05]}
-          color={PACK}
-        />
-        <Plate
-          position={[0, 1.22, 0.209]}
-          size={[0.25, 0.034, 0.015]}
-          color={TRIM}
-        />
-      </group>
+      <Plate
+        position={[0, 1.16, -0.194]}
+        size={[0.31, 0.17, 0.035]}
+        color={JOINT}
+        rounded={0.016}
+      />
+      <Plate
+        position={[0, 1.16, -0.215]}
+        size={[0.18, 0.025, 0.012]}
+        color={TRIM}
+      />
     </>
+  );
+}
+
+function Backpack() {
+  return (
+    <group>
+      <Plate
+        position={[0, ROBOT.cargoFloor - 0.06, 0]}
+        size={[0.51, 0.12, 0.39]}
+        color={PACK}
+      />
+      <Plate
+        position={[0, 1.3, -0.184]}
+        size={[0.51, 0.46, 0.053]}
+        color={PACK}
+      />
+      {[-1, 1].map((side) => (
+        <Plate
+          key={side}
+          position={[side * 0.229, 1.3, 0]}
+          size={[0.053, 0.46, 0.39]}
+          color={PACK}
+        />
+      ))}
+      <Plate
+        position={[0, 1.12, 0.18]}
+        size={[0.51, 0.075, 0.05]}
+        color={PACK}
+      />
+      <Plate
+        position={[0, 1.12, 0.209]}
+        size={[0.25, 0.034, 0.015]}
+        color={TRIM}
+      />
+    </group>
+  );
+}
+
+function Weight({
+  mass,
+  index,
+  height = 0,
+}: {
+  mass: number;
+  index: number;
+  height?: number;
+}) {
+  const thickness = mass * ROBOT.cargoThickness;
+  const color = LOAD_COLORS[index % LOAD_COLORS.length];
+  return (
+    <group position={[0, height, 0]}>
+      <Plate
+        position={[0, 0, 0]}
+        size={[0.355, thickness, 0.275]}
+        color={color}
+        rounded={Math.min(0.014, thickness * 0.25)}
+      />
+      <Plate
+        position={[0.092, 0, 0.139]}
+        size={[0.069, thickness * 0.35, 0.007]}
+        color="#334654"
+      />
+    </group>
   );
 }
 
@@ -146,17 +221,30 @@ export function RobotScene({
   advance,
   publish,
   vectors,
+  captures,
+  fallingMass,
 }: {
   getTrial: () => RobotTrial;
   advance: (elapsed: number) => void;
   publish: () => void;
   vectors: boolean;
+  captures: readonly RobotCapture[];
+  fallingMass: number | null;
 }) {
   const pivot = useRef<Group>(null);
   const falling = useRef<Group>(null);
-  const cargo = useRef<Group>(null);
+  const backpack = useRef<Group>(null);
+  const rail = useRef<Group>(null);
+  const weights = captures.map((capture, index) => (
+    <Weight
+      key={capture.time}
+      index={index}
+      mass={capture.mass}
+      height={capture.height}
+    />
+  ));
   useRotationFrame(advance, publish, () => {
-    const { angle, drop, load, time } = getTrial();
+    const { angle, drop, radius, time } = getTrial();
     if (pivot.current) pivot.current.rotation.y = angle;
     if (falling.current) {
       falling.current.visible = !!drop;
@@ -167,10 +255,8 @@ export function RobotScene({
           drop.z,
         );
     }
-    if (cargo.current) {
-      cargo.current.visible = load > 0;
-      cargo.current.scale.y = load / ROBOT.capacity;
-    }
+    if (backpack.current) backpack.current.position.z = radius;
+    if (rail.current) rail.current.scale.z = radius - RAIL_START;
   });
 
   return (
@@ -178,20 +264,27 @@ export function RobotScene({
       <RotationStage />
       <group ref={pivot}>
         <RobotBody />
-        <group
-          ref={cargo}
-          position={[0, 1.17, ROBOT.backpackRadius]}
-          visible={false}
-        >
+        <group ref={rail} position={[0, 0, RAIL_START]}>
           <Plate
-            position={[0, 0.145, 0]}
-            size={[0.35, 0.29, 0.28]}
-            color={LOAD}
+            position={[-0.14, 1.19, 0.5]}
+            size={[0.04, 0.04, 1]}
+            color={ALLOY}
           />
+          <Plate
+            position={[0.14, 1.19, 0.5]}
+            size={[0.04, 0.04, 1]}
+            color={ALLOY}
+          />
+        </group>
+        <group ref={backpack} position={[0, 0, ROBOT.backpackRadius]}>
+          <Backpack />
+          {weights}
         </group>
       </group>
       <group ref={falling} visible={false}>
-        <Plate position={[0, 0, 0]} size={[0.19, 0.15, 0.19]} color={LOAD} />
+        {fallingMass !== null && (
+          <Weight mass={fallingMass} index={captures.length} />
+        )}
       </group>
       {vectors && (
         <>

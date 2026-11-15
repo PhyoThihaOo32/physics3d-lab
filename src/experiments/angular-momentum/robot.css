@@ -1,13 +1,3 @@
-.rotation-models {
-  display: flex;
-  gap: 7px;
-  margin-bottom: 18px;
-}
-.rotation-models button[aria-pressed='true'] {
-  border-color: #82966f;
-  background: #2a382c;
-  color: #d7ebc6;
-}
 .robot-controls h2 {
   margin: 0 0 20px;
 }
@@ -21,8 +11,8 @@
   font-size: 11px;
   line-height: 1.7;
 }
-.robot-measurements {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+.robot-lab .robot-measurements {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 .robot-measurements .measurement:nth-child(2),
 .robot-measurements .measurement:nth-child(3) {
@@ -36,8 +26,28 @@
   color: #c1e29e;
   font-variant-numeric: tabular-nums;
 }
+.robot-cargo-list {
+  margin-top: 12px;
+  font-size: 12px;
+}
+.robot-cargo-list summary {
+  cursor: pointer;
+}
+.robot-cargo-list ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.robot-cargo-list li {
+  padding: 4px 7px;
+  border: 1px solid #54616d;
+  border-radius: 4px;
+}
 @media (max-width: 700px) {
-  .robot-measurements {
+  .robot-lab .robot-measurements {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .robot-measurements .measurement:nth-child(2) {

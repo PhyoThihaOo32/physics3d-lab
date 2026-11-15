@@ -9,6 +9,7 @@ export const DANCER = {
   upperMass: 2,
   foreMass: 1.5,
   armHalfThickness: 0.035,
+  wristWeightRadius: 0.045,
   duration: 60,
   timeStep: 1 / 480,
   extensionRate: 0.45,
@@ -18,10 +19,12 @@ export const DANCER = {
 export interface DancerParameters {
   initialOmega: number;
   resistance: number;
+  wristMass?: number;
 }
 export const DEFAULT_DANCER: DancerParameters = {
   initialOmega: 2,
   resistance: 0,
+  wristMass: 0,
 };
 export interface DancerSnapshot {
   time: number;
@@ -49,7 +52,7 @@ export function dancerArmPose(extension: number) {
 }
 
 /** Independent finite-rod reference about the vertical spin axis. Height alone adds no Iᵧ. */
-export function dancerInertia(extension: number) {
+export function dancerInertia(extension: number, wristMass = 0) {
   const pose = dancerArmPose(extension);
   const {
     shoulderRadius: d,
@@ -77,6 +80,9 @@ export function dancerInertia(extension: number) {
           b,
           d + a * upperCos + (b * foreCos) / 2,
           pose.forearm,
-        ))
+        ) +
+        wristMass *
+          ((d + a * upperCos + b * foreCos) ** 2 +
+            0.4 * DANCER.wristWeightRadius ** 2))
   );
 }

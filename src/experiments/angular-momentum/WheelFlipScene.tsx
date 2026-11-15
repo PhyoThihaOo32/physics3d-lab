@@ -5,6 +5,7 @@ import {
   measureWheelFlip,
   wheelAxleDirection,
   type WheelFlipTrial,
+  type WheelFlipSetup,
 } from '../../physics/equations/wheelFlip';
 import { VectorArrow3D } from '../../three/vectors/VectorArrow3D';
 import { BicycleWheel } from './BicycleWheel';
@@ -116,15 +117,19 @@ export function WheelFlipScene({
   advance,
   publish,
   spinSpeed,
+  setup,
   vectorsVisible,
 }: {
   getTrial: () => WheelFlipTrial;
   advance: (elapsed: number) => void;
   publish: () => void;
   spinSpeed: number;
+  setup: WheelFlipSetup;
   vectorsVisible: boolean;
 }) {
   const support = useRef<Group>(null);
+  const deckThickness =
+    0.045 + (0.075 * setup.supportInertia) / WHEEL_FLIP.supportInertia;
   const axle = useRef<Group>(null);
   const rotor = useRef<Group>(null);
   const leftSleeve = useRef<Mesh>(null);
@@ -194,8 +199,12 @@ export function WheelFlipScene({
         <meshBasicMaterial color="#8597a1" />
       </mesh>
       <group ref={support}>
-        <mesh position={[0, 0.21, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[1.05, 1.08, 0.12, 72]} />
+        <mesh
+          position={[0, DECK_TOP - deckThickness / 2, 0]}
+          castShadow
+          receiveShadow
+        >
+          <cylinderGeometry args={[1.05, 1.08, deckThickness, 72]} />
           <meshStandardMaterial
             color="#425866"
             metalness={0.23}
@@ -251,7 +260,9 @@ export function WheelFlipScene({
             </mesh>
           ))}
           <group ref={rotor}>
-            <BicycleWheel />
+            <BicycleWheel
+              rimScale={Math.sqrt(setup.rimInertia / WHEEL_FLIP.spinInertia)}
+            />
           </group>
         </group>
       </group>
@@ -259,12 +270,14 @@ export function WheelFlipScene({
         visible={vectorsVisible}
         origin={() => {
           const [x, y, z] = wheelAxleDirection(getTrial());
-          return [x * 0.47, WHEEL_HEIGHT + y * 0.47, z * 0.47];
+          const offset = 0.47 * Math.sign(spinSpeed);
+          return [x * offset, WHEEL_HEIGHT + y * offset, z * offset];
         }}
         vector={() => {
           const [x, y, z] = wheelAxleDirection(getTrial());
-          const momentum = WHEEL_FLIP.spinInertia * spinSpeed;
-          return [x * momentum, y * momentum, z * momentum];
+          const momentum = setup.rimInertia * spinSpeed;
+          const displayed = momentum / (1 + Math.abs(momentum) / 8);
+          return [x * displayed, y * displayed, z * displayed];
         }}
         magnitudeScale={0.145}
         label="Spin L"
@@ -275,12 +288,15 @@ export function WheelFlipScene({
       />
       <VectorArrow3D
         visible={vectorsVisible}
-        origin={[0.72, 0.38, 0.36]}
-        vector={() => [
-          0,
-          measureWheelFlip(getTrial(), spinSpeed).supportMomentum,
-          0,
-        ]}
+        origin={[0.72, spinSpeed < 0 ? 1.22 : 0.38, 0.36]}
+        vector={() => {
+          const { supportMomentum } = measureWheelFlip(
+            getTrial(),
+            spinSpeed,
+            setup,
+          );
+          return [0, supportMomentum / (1 + Math.abs(supportMomentum) / 8), 0];
+        }}
         magnitudeScale={0.145}
         label="Base L"
         unit="kg·m²/s"

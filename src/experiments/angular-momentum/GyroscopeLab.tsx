@@ -58,7 +58,7 @@ function trialStatus(reading: GyroReading | null, running: boolean) {
   return reading.time > 0 ? 'Paused' : 'Ready';
 }
 
-export function GyroscopeLab() {
+export default function GyroscopeLab() {
   const [mode, setMode] = useState<GyroMode>('free');
   const [parameters, setParameters] = useState(DEFAULT_GYRO);
   const [reading, setReading] = useState<GyroReading | null>(null);

@@ -106,6 +106,27 @@ function Articulation({
           }}
         >
           <DancerHand side={i === 1 ? 1 : -1} />
+          {(parameters.wristMass ?? 0) > 0 && (
+            <mesh
+              position={[((i === 1 ? 1 : -1) * DANCER.foreLength) / 2, 0, 0]}
+              rotation={[0, 0, Math.PI / 2]}
+              castShadow
+            >
+              <cylinderGeometry
+                args={[
+                  0.044,
+                  0.044,
+                  0.04 + 0.06 * (parameters.wristMass ?? 0),
+                  24,
+                ]}
+              />
+              <meshStandardMaterial
+                color="#e9b579"
+                metalness={0.36}
+                roughness={0.34}
+              />
+            </mesh>
+          )}
         </group>
       ))}
       <mesh

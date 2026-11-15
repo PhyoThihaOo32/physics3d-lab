@@ -4,16 +4,16 @@ import type { Vector3Tuple } from '../../types/vector';
 
 import { rotorThickness } from '../../physics/equations/gimbalGyroscope';
 
-export function GyroRotor({ radius }: { radius: number }) {
-  const thickness = rotorThickness(radius);
+export function GyroRotor({ radius, mass }: { radius: number; mass: number }) {
+  const thickness = rotorThickness(radius, mass);
   return (
     <group rotation={[0, 0, -Math.PI / 2]}>
       <mesh castShadow receiveShadow>
         <cylinderGeometry args={[radius, radius, thickness, 64, 1]} />
         <meshStandardMaterial
-          color="#536a78"
-          metalness={0.48}
-          roughness={0.38}
+          color="#526b7b"
+          metalness={0.57}
+          roughness={0.32}
         />
       </mesh>
       {[-1, 1].map((side) => (
@@ -40,7 +40,7 @@ export function GyroRotor({ radius }: { radius: number }) {
             <boxGeometry
               args={[radius * 0.045, radius * 0.035, radius * 0.52]}
             />
-            <meshBasicMaterial color="#c1e29e" />
+            <meshBasicMaterial color="#9ce2d7" />
           </mesh>
         </group>
       ))}
@@ -108,6 +108,29 @@ export function GyroRing({
       ))}
     </>
   );
+}
+
+export function GyroBearingLinks({
+  from,
+  to,
+  axis,
+}: {
+  from: number;
+  to: number;
+  axis: 'y' | 'z';
+}) {
+  const middle = (from + to) / 2;
+  return [-1, 1].map((side) => (
+    <mesh
+      key={side}
+      position={axis === 'y' ? [0, middle * side, 0] : [0, 0, middle * side]}
+      rotation={axis === 'y' ? [0, 0, 0] : [Math.PI / 2, 0, 0]}
+      castShadow
+    >
+      <cylinderGeometry args={[0.022, 0.022, from - to + 0.018, 18]} />
+      <meshStandardMaterial color="#bdcdd2" metalness={0.6} roughness={0.31} />
+    </mesh>
+  ));
 }
 
 export function GyroBase({ height }: { height: number }) {

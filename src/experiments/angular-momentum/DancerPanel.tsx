@@ -21,6 +21,7 @@ export function DancerPanel({
     parameters.resistance ? 'resistance' : 'ideal',
   );
   const [error, setError] = useState('');
+  const [wristMass, setWristMass] = useState(parameters.wristMass ?? 0);
   const ready = useDancerStore((s) => s.ready);
   const target = useDancerStore((s) => s.target);
   const setTarget = useDancerStore((s) => s.setTarget);
@@ -30,10 +31,12 @@ export function DancerPanel({
   const next = {
     initialOmega: Number(speed),
     resistance: mode === 'ideal' ? 0 : Number(resistance),
+    wristMass,
   };
   const dirty =
     next.initialOmega !== parameters.initialOmega ||
     next.resistance !== parameters.resistance ||
+    wristMass !== (parameters.wristMass ?? 0) ||
     speed.trim() === '' ||
     (mode === 'resistance' && resistance.trim() === '');
   function apply(e: FormEvent) {
@@ -101,6 +104,21 @@ export function DancerPanel({
             −3 to +3 · negative reverses direction · 0 starts at rest
           </small>
         </div>
+        <label className="dancer-mode" htmlFor="dancer-wrist-mass">
+          <span className="spin-range-label">
+            Weight per wrist <output>{wristMass.toFixed(2)} kg</output>
+          </span>
+          <input
+            id="dancer-wrist-mass"
+            className="spin-range"
+            type="range"
+            min="0"
+            max="0.8"
+            step="0.05"
+            value={wristMass}
+            onChange={(event) => setWristMass(event.target.valueAsNumber)}
+          />
+        </label>
         <label className="dancer-mode" htmlFor="bearing-mode">
           Support model
           <select

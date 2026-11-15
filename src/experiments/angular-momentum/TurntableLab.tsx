@@ -32,6 +32,8 @@ function TurntableScene({
   advance,
   publish,
   inertia,
+  mass,
+  trackRadius,
   walkDirection,
   vectorsVisible,
 }: {
@@ -39,10 +41,13 @@ function TurntableScene({
   advance: (elapsed: number) => void;
   publish: () => void;
   inertia: number;
+  mass: number;
+  trackRadius: number;
   walkDirection: 1 | -1;
   vectorsVisible: boolean;
 }) {
   const disk = useRef<Group>(null);
+  const deckThickness = 0.12 + 0.04 * Math.log2(inertia / 120);
   const walker = useRef<Group>(null);
   const leftLeg = useRef<Group>(null);
   const rightLeg = useRef<Group>(null);
@@ -70,7 +75,7 @@ function TurntableScene({
     previousTime.current = trial.time;
     if (disk.current) disk.current.rotation.y = trial.platformAngle;
     if (walker.current) {
-      const [x, , z] = radialVector(trial.personAngle, TURNTABLE.radius);
+      const [x, , z] = radialVector(trial.personAngle, trackRadius);
       walker.current.position.set(x, DECK_TOP, z);
       walker.current.rotation.y = trial.personAngle + facing.current;
     }
@@ -90,8 +95,12 @@ function TurntableScene({
         <meshStandardMaterial color="#515e65" metalness={0.3} />
       </mesh>
       <group ref={disk}>
-        <mesh position={[0, DECK_TOP - 0.06, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[1.29, 1.29, 0.12, 72]} />
+        <mesh
+          position={[0, DECK_TOP - deckThickness / 2, 0]}
+          castShadow
+          receiveShadow
+        >
+          <cylinderGeometry args={[1.29, 1.29, deckThickness, 72]} />
           <meshStandardMaterial
             color="#40515e"
             metalness={0.24}
@@ -102,7 +111,7 @@ function TurntableScene({
           rotation={[-Math.PI / 2, 0, 0]}
           position={[0, DECK_TOP + 0.003, 0]}
         >
-          <ringGeometry args={[0.993, 1.007, 80]} />
+          <ringGeometry args={[trackRadius - 0.007, trackRadius + 0.007, 80]} />
           <meshBasicMaterial color="#99aaad" />
         </mesh>
         {Array.from({ length: 8 }, (_, index) => (
@@ -122,7 +131,11 @@ function TurntableScene({
         <cylinderGeometry args={[0.006, 0.006, 1, 10]} />
         <meshBasicMaterial color="#a5b3bd" transparent opacity={0.55} />
       </mesh>
-      <group ref={walker} position={[0, DECK_TOP, TURNTABLE.radius]}>
+      <group
+        ref={walker}
+        position={[0, DECK_TOP, trackRadius]}
+        scale={Math.cbrt(mass / TURNTABLE.personMass)}
+      >
         <mesh position={[0, 0.59, 0]} scale={[1.12, 1, 0.72]} castShadow>
           <capsuleGeometry args={[0.125, 0.2, 8, 18]} />
           <meshStandardMaterial color={PERSON_COLOR} />
@@ -179,7 +192,7 @@ function TurntableScene({
       <VectorArrow3D
         visible={vectorsVisible}
         origin={[0, DECK_TOP + 0.023, 0]}
-        vector={() => radialVector(getTrial().personAngle, TURNTABLE.radius)}
+        vector={() => radialVector(getTrial().personAngle, trackRadius)}
         label="r"
         unit="m"
         category="component"
@@ -188,13 +201,12 @@ function TurntableScene({
       <VectorArrow3D
         visible={vectorsVisible}
         origin={() => {
-          const [x, , z] = radialVector(
-            getTrial().personAngle,
-            TURNTABLE.radius,
-          );
+          const [x, , z] = radialVector(getTrial().personAngle, trackRadius);
           return [x, DECK_TOP + 0.08, z];
         }}
-        vector={() => measureTurntable(getTrial(), inertia).velocity}
+        vector={() =>
+          measureTurntable(getTrial(), inertia, mass, trackRadius).velocity
+        }
         magnitudeScale={0.42}
         label="v"
         unit="m/s"
@@ -206,7 +218,8 @@ function TurntableScene({
         origin={[-0.44, 1.22, 0]}
         vector={() => [
           0,
-          measureTurntable(getTrial(), inertia).personMomentum,
+          measureTurntable(getTrial(), inertia, mass, trackRadius)
+            .personMomentum,
           0,
         ]}
         magnitudeScale={MOMENTUM_SCALE}
@@ -221,7 +234,8 @@ function TurntableScene({
         origin={[0.44, 1.22, 0]}
         vector={() => [
           0,
-          measureTurntable(getTrial(), inertia).platformMomentum,
+          measureTurntable(getTrial(), inertia, mass, trackRadius)
+            .platformMomentum,
           0,
         ]}
         magnitudeScale={MOMENTUM_SCALE}
@@ -239,22 +253,34 @@ function direction(value: number) {
   return value > 1e-6 ? '↑ Up' : value < -1e-6 ? '↓ Down' : 'No direction';
 }
 
-export function TurntableLab() {
+export default function TurntableLab() {
   const [walkDirection, setWalkDirection] = useState<1 | -1>(1);
   const [speed, setSpeed] = useState<number>(TURNTABLE.defaultSpeed);
+  const [mass, setMass] = useState<number>(TURNTABLE.personMass);
+  const [trackRadius, setTrackRadius] = useState<number>(TURNTABLE.radius);
   const [inertia, setInertia] = useState<number>(TURNTABLE.defaultInertia);
   const { reading, getTrial, advance, publish, reset } = useRotationTrial(
     createTurntableTrial,
     (trial, elapsed) =>
-      advanceTurntableTrial(trial, elapsed, walkDirection * speed, inertia),
+      advanceTurntableTrial(
+        trial,
+        elapsed,
+        walkDirection * speed,
+        inertia,
+        mass,
+        trackRadius,
+      ),
   );
   const running = useSimulationStore((state) => state.running);
-  const values = measureTurntable(reading, inertia);
+  const setupLocked = running || reading.time > 0;
+  const values = measureTurntable(reading, inertia, mass, trackRadius);
   function resetTrial() {
     reset();
     setWalkDirection(1);
     setSpeed(TURNTABLE.defaultSpeed);
     setInertia(TURNTABLE.defaultInertia);
+    setMass(TURNTABLE.personMass);
+    setTrackRadius(TURNTABLE.radius);
   }
   return (
     <div className="dancer-experiment spin-demo">
@@ -308,13 +334,45 @@ export function TurntableLab() {
           />
           <p className="physics-caption">
             Relative to the platform · now{' '}
-            {f(Math.abs(reading.relativeOmega) * TURNTABLE.radius, 1)} m/s
+            {f(Math.abs(reading.relativeOmega) * trackRadius, 1)} m/s
           </p>
+          <label className="dancer-mode" htmlFor="turntable-mass">
+            <span className="spin-range-label">
+              Walker mass <output>{f(mass, 0)} kg</output>
+            </span>
+            <input
+              id="turntable-mass"
+              type="range"
+              className="spin-range"
+              min="35"
+              max="100"
+              step="1"
+              value={mass}
+              disabled={setupLocked}
+              onChange={(event) => setMass(event.target.valueAsNumber)}
+            />
+          </label>
+          <label className="dancer-mode" htmlFor="turntable-radius">
+            <span className="spin-range-label">
+              Walking radius <output>{f(trackRadius)} m</output>
+            </span>
+            <input
+              id="turntable-radius"
+              type="range"
+              className="spin-range"
+              min="0.5"
+              max="1.08"
+              step="0.01"
+              value={trackRadius}
+              disabled={setupLocked}
+              onChange={(event) => setTrackRadius(event.target.valueAsNumber)}
+            />
+          </label>
           <label className="dancer-mode">
             Platform inertia (kg·m²)
             <select
               value={inertia}
-              disabled={running || reading.time > 0}
+              disabled={setupLocked}
               onChange={(event) => setInertia(Number(event.target.value))}
             >
               <option value="60">60 · Light</option>
@@ -339,6 +397,8 @@ export function TurntableLab() {
               advance={advance}
               publish={publish}
               inertia={inertia}
+              mass={mass}
+              trackRadius={trackRadius}
               walkDirection={walkDirection}
               vectorsVisible={vectorsVisible}
             />
@@ -404,9 +464,10 @@ export function TurntableLab() {
             thumb points along r × mv.
           </p>
           <p>
-            The person is modeled as a 60 kg point mass on a 1 m track. Foot
-            traction transfers angular momentum between the person and the
-            platform. With an ideal bearing, their angular momenta sum to zero.
+            The person is modeled as a {f(mass, 0)} kg point mass on a{' '}
+            {f(trackRadius)} m track. Foot traction transfers angular momentum
+            between the person and the platform. With an ideal bearing, their
+            angular momenta sum to zero.
           </p>
         </div>
       </details>

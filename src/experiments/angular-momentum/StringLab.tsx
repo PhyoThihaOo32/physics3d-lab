@@ -43,12 +43,14 @@ function StringScene({
   publish,
   targetRadius,
   vectorsVisible,
+  puckMass,
 }: {
   getTrial: () => StringTrial;
   advance: (elapsed: number) => void;
   publish: () => void;
   targetRadius: number | null;
   vectorsVisible: boolean;
+  puckMass: number;
 }) {
   const pivot = useRef<Group>(null);
   const puck = useRef<Group>(null);
@@ -115,7 +117,11 @@ function StringScene({
             <meshBasicMaterial color="#ecdfb4" />
           </mesh>
         </group>
-        <group ref={puck} position={[0, 0.005, STRING.initialRadius]}>
+        <group
+          ref={puck}
+          position={[0, 0.005, STRING.initialRadius]}
+          scale={[Math.cbrt(puckMass), 1, Math.cbrt(puckMass)]}
+        >
           <mesh castShadow>
             <cylinderGeometry args={[0.092, 0.101, 0.076, 32]} />
             <meshStandardMaterial
@@ -160,11 +166,30 @@ function StringScene({
         category="velocity"
         labelSize={0.23}
       />
+      <VectorArrow3D
+        visible={vectorsVisible}
+        origin={() => {
+          const [x, , z] = radialVector(getTrial().angle, getTrial().radius);
+          return [x, STRING_HEIGHT + 0.11, z];
+        }}
+        vector={() => {
+          const trial = getTrial();
+          const { tension } = measureString(trial);
+          return radialVector(
+            trial.angle,
+            (-0.55 * tension) / (25 + Math.abs(tension)),
+          );
+        }}
+        label="T"
+        unit="N"
+        category="acceleration"
+        labelSize={0.23}
+      />
     </>
   );
 }
 
-export function StringLab() {
+export default function StringLab() {
   const { reading, getTrial, advance, publish, update, reset } =
     useRotationTrial(createStringTrial, advanceStringTrial);
   const [target, setTarget] = useState(String(STRING.exampleTarget));
@@ -223,12 +248,48 @@ export function StringLab() {
             </div>
             <small id="string-target-hint">
               {canPull
-                ? `Expected vₜ at target ${f(predictStringSpeed(radius))} m/s`
+                ? `Expected vₜ at target ${f(predictStringSpeed(radius, reading.initialSpeed))} m/s`
                 : Math.abs(radius - reading.radius) < 1e-8
                   ? 'At target. Enter a smaller radius to pull again.'
                   : `Enter ${f(STRING.minRadius)} m or more, below the current radius.`}
             </small>
           </div>
+          <label className="dancer-mode">
+            <span className="spin-range-label">
+              Puck mass <output>{f(reading.mass)} kg</output>
+            </span>
+            <input
+              className="spin-range"
+              type="range"
+              min="0.5"
+              max="3"
+              step="0.1"
+              value={reading.mass}
+              disabled={running || reading.time > 0}
+              onChange={(event) => {
+                const mass = event.target.valueAsNumber;
+                update((trial) => createStringTrial(mass, trial.initialSpeed));
+              }}
+            />
+          </label>
+          <label className="dancer-mode">
+            <span className="spin-range-label">
+              Launch speed <output>{f(reading.initialSpeed, 1)} m/s</output>
+            </span>
+            <input
+              className="spin-range"
+              type="range"
+              min="1.0"
+              max="3.5"
+              step="0.1"
+              value={reading.initialSpeed}
+              disabled={running || reading.time > 0}
+              onChange={(event) => {
+                const speed = event.target.valueAsNumber;
+                update((trial) => createStringTrial(trial.mass, speed));
+              }}
+            />
+          </label>
           <SimulationControls onReset={resetTrial} allowSpeed settingsOnly />
         </aside>
         <SpinDemoViewport
@@ -259,6 +320,7 @@ export function StringLab() {
               advance={advance}
               publish={publish}
               vectorsVisible={vectorsVisible}
+              puckMass={reading.mass}
               targetRadius={
                 radius >= STRING.minRadius && radius < STRING.initialRadius
                   ? radius
@@ -296,6 +358,12 @@ export function StringLab() {
           unit="kg·m²/s"
           testId="string-momentum"
         />
+        <Measurement
+          label="String tension T"
+          value={f(values.tension)}
+          unit="N"
+          testId="string-tension"
+        />
       </div>
       <details className="physics-details">
         <summary>Model details</summary>
@@ -303,11 +371,11 @@ export function StringLab() {
           <p>Use Front view to see the string below the table.</p>
           <p>
             Tension points toward the hole, so its torque about the hole is
-            zero. With a 1 kg puck, Lᵧ = mr vₜ = {f(values.momentum)} kg·m²/s.
+            zero. For this puck, Lᵧ = mr vₜ = {f(values.momentum)} kg·m²/s.
           </p>
           <p>
-            vₜ = Lᵧ/(mr). The string does work as it shortens. Kinetic energy is{' '}
-            {f(values.energy)} J and includes radial motion during the pull.
+            T = m(rω² − r̈). The string does work as it shortens. Kinetic energy
+            is {f(values.energy)} J and includes radial motion during the pull.
           </p>
         </div>
       </details>

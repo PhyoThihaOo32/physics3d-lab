@@ -8,10 +8,12 @@ export function CameraControls({
   view,
   onChange,
   spinAxis = false,
+  spinAxisLabel = 'Spin axis',
 }: {
   view: CameraView;
   onChange: (preset: CameraPreset) => void;
   spinAxis?: boolean;
+  spinAxisLabel?: string;
 }) {
   const presets: CameraPreset[] = ['Perspective', 'Top', 'Front', 'Side'];
   if (spinAxis) presets.push('Spin axis');
@@ -23,7 +25,7 @@ export function CameraControls({
           aria-pressed={view.preset === preset}
           onClick={() => onChange(preset)}
         >
-          {preset}
+          {preset === 'Spin axis' ? spinAxisLabel : preset}
         </button>
       ))}
     </div>

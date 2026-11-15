@@ -6,6 +6,7 @@ import {
 import { Measurement } from '../../components/measurements/Measurement';
 import {
   WHEEL_FLIP,
+  DEFAULT_WHEEL_SETUP,
   advanceWheelFlip,
   createWheelFlipTrial,
   measureWheelFlip,
@@ -19,28 +20,32 @@ import { useRotationTrial } from './useRotationTrial';
 
 const CAMERA_CENTER = [0, 1.16, 0] as const;
 
-export function WheelFlipLab() {
+export default function WheelFlipLab() {
   const [spinSpeed, setSpinSpeed] = useState<number>(
     WHEEL_FLIP.defaultSpinSpeed,
   );
+  const [setup, setSetup] = useState(DEFAULT_WHEEL_SETUP);
   const { reading, getTrial, advance, publish, update, reset } =
     useRotationTrial(createWheelFlipTrial, (trial, elapsed) =>
-      advanceWheelFlip(trial, elapsed, spinSpeed),
+      advanceWheelFlip(trial, elapsed, spinSpeed, setup),
     );
   const running = useSimulationStore((state) => state.running);
-  const values = measureWheelFlip(reading, spinSpeed);
+  const values = measureWheelFlip(reading, spinSpeed, setup);
   const flipped = reading.tilt === Math.PI;
   const status = reading.motion
     ? running
       ? 'Flipping'
       : 'Flip paused'
-    : flipped
-      ? 'Wheel spin points down'
-      : 'Wheel spin points up';
+    : spinSpeed === 0
+      ? 'Wheel stopped'
+      : flipped === spinSpeed > 0
+        ? 'Wheel spin points down'
+        : 'Wheel spin points up';
 
   function resetTrial() {
     reset();
     setSpinSpeed(WHEEL_FLIP.defaultSpinSpeed);
+    setSetup(DEFAULT_WHEEL_SETUP);
   }
 
   return (
@@ -67,13 +72,53 @@ export function WheelFlipLab() {
             className="spin-range"
             id="wheel-spin-speed"
             type="range"
-            min="8"
+            min="-28"
             max="28"
             step="1"
             value={spinSpeed}
             disabled={running || reading.time > 0}
             onChange={(event) => setSpinSpeed(Number(event.target.value))}
           />
+          {(
+            [
+              {
+                key: 'rimInertia',
+                label: 'Wheel rim inertia',
+                min: 0.08,
+                max: 0.32,
+                step: 0.01,
+                digits: 2,
+              },
+              {
+                key: 'supportInertia',
+                label: 'Teacher + platform inertia',
+                min: 3,
+                max: 12,
+                step: 0.5,
+                digits: 1,
+              },
+            ] as const
+          ).map(({ key, label, min, max, step, digits }) => (
+            <label className="dancer-mode" key={key} htmlFor={`wheel-${key}`}>
+              <span className="spin-range-label">
+                {label} <output>{f(setup[key], digits)} kg·m²</output>
+              </span>
+              <input
+                id={`wheel-${key}`}
+                type="range"
+                className="spin-range"
+                min={min}
+                max={max}
+                step={step}
+                value={setup[key]}
+                disabled={running || reading.time > 0}
+                onChange={(event) => {
+                  const value = event.target.valueAsNumber;
+                  setSetup((previous) => ({ ...previous, [key]: value }));
+                }}
+              />
+            </label>
+          ))}
           <SimulationControls onReset={resetTrial} allowSpeed settingsOnly />
         </aside>
         <SpinDemoViewport
@@ -102,6 +147,7 @@ export function WheelFlipLab() {
               advance={advance}
               publish={publish}
               spinSpeed={spinSpeed}
+              setup={setup}
               vectorsVisible={vectorsVisible}
             />
           )}
@@ -151,8 +197,11 @@ export function WheelFlipLab() {
         </div>
       </div>
       <p className="physics-caption turntable-rule">
-        The wheel’s spin points down after the flip. The platform turns
-        counterclockwise as seen from above.
+        {values.supportOmega > 1e-6
+          ? 'Platform turning counterclockwise from above.'
+          : values.supportOmega < -1e-6
+            ? 'Platform turning clockwise from above.'
+            : 'Platform at rest.'}
       </p>
       <details className="physics-details">
         <summary>Model details</summary>
@@ -167,7 +216,8 @@ export function WheelFlipLab() {
             The green arrow shows angular momentum from spin about the axle. The
             wheel’s Lᵧ reading also includes motion carried by the turning
             platform. The wheel spins at a fixed speed relative to its axle, and
-            the teacher and platform are modeled with a fixed combined inertia.
+            the teacher and platform have a combined inertia set before the
+            trial. The wheel is modeled as a thin hoop.
           </p>
         </div>
       </details>

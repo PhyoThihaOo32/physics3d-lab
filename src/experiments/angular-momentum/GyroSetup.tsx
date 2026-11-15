@@ -191,7 +191,7 @@ export function GyroLiftControls({
     <div className="gyro-lift-controls">
       <h2>Lifting force</h2>
       {LIFT_FIELDS.map(({ name, label, unit, min, max, step }) => (
-        <label key={name} className="dancer-mode">
+        <label key={name} className="dancer-mode" htmlFor={`gyro-lift-${name}`}>
           <span className="spin-range-label">
             {label}{' '}
             <output>
@@ -199,6 +199,7 @@ export function GyroLiftControls({
             </output>
           </span>
           <input
+            id={`gyro-lift-${name}`}
             className="spin-range"
             type="range"
             min={min}

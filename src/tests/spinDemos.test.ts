@@ -37,7 +37,7 @@ describe('puck pulled inward by a string', () => {
   });
 
   it('keeps the string under tension at the shortest supported radius', () => {
-    let puck = startStringPull(createStringTrial(), STRING.minRadius);
+    let puck = startStringPull(createStringTrial(2, 1), STRING.minRadius);
     for (let step = 0; step < 240; step++) {
       const previousVelocity = puck.radialSpeed;
       puck = advanceStringTrial(puck, 1 / 120);
@@ -45,7 +45,23 @@ describe('puck pulled inward by a string', () => {
       const centripetalAcceleration =
         puck.radius * measureString(puck).omega ** 2;
       expect(centripetalAcceleration - radialAcceleration).toBeGreaterThan(0);
+      expect(measureString(puck).tension).toBeGreaterThan(0);
     }
+  });
+
+  it('uses both selected walker mass and measured track radius', () => {
+    const trial = advanceTurntableTrial(
+      createTurntableTrial(),
+      3,
+      1.5,
+      120,
+      80,
+      0.75,
+    );
+    const result = measureTurntable(trial, 120, 80, 0.75);
+    expect(Math.hypot(...result.radius)).toBeCloseTo(0.75);
+    expect(result.personMomentum).toBeCloseTo((45 * 240) / 165);
+    expect(result.totalMomentum).toBeCloseTo(0, 10);
   });
 });
 
