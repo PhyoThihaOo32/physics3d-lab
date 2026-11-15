@@ -5,6 +5,7 @@ import {
 } from '../../components/controls/CameraControls';
 import { ViewportHint } from '../../components/controls/ViewportHint';
 import { LabCanvas } from '../../three/scene/LabCanvas';
+import type { SpinAxisView } from '../../three/camera/LabCamera';
 import type { Vector3Tuple } from '../../types/vector';
 
 export function SpinDemoViewport({
@@ -15,6 +16,7 @@ export function SpinDemoViewport({
   frameHeight,
   initialView,
   actions,
+  spinAxisView,
   children,
 }: {
   title: string;
@@ -24,6 +26,7 @@ export function SpinDemoViewport({
   frameHeight: number;
   initialView: CameraView['preset'];
   actions: ReactNode;
+  spinAxisView?: SpinAxisView;
   children: (vectorsVisible: boolean) => ReactNode;
 }) {
   const [view, setView] = useState<CameraView>({
@@ -31,6 +34,7 @@ export function SpinDemoViewport({
     revision: 0,
   });
   const [vectorsVisible, setVectorsVisible] = useState(true);
+  const [axisSnapshot, setAxisSnapshot] = useState<SpinAxisView>();
   return (
     <section className="scene-panel" aria-label={title}>
       <div className="scene-toolbar spin-demo-toolbar">
@@ -59,14 +63,21 @@ export function SpinDemoViewport({
           minOrbitDistance={1.8}
           sceneExtent={5}
           label={title}
+          fullOrbit={Boolean(spinAxisView)}
+          spinAxisView={axisSnapshot}
         >
           {children(vectorsVisible)}
         </LabCanvas>
         <CameraControls
           view={view}
-          onChange={(preset) =>
-            setView((previous) => ({ preset, revision: previous.revision + 1 }))
-          }
+          spinAxis={Boolean(spinAxisView)}
+          onChange={(preset) => {
+            if (preset === 'Spin axis') setAxisSnapshot(spinAxisView);
+            setView((previous) => ({
+              preset,
+              revision: previous.revision + 1,
+            }));
+          }}
         />
         <ViewportHint />
       </div>

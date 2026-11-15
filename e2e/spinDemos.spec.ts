@@ -128,37 +128,73 @@ test('flips the bicycle wheel, measures the platform response, and flips it back
   );
 });
 
-test('compares stopped and opposite spinning wheel responses to the same lift', async ({
+test('uses the Rapier gyroscope setup, gimbals, and camera on a phone', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(route, { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: 'Gyroscope', exact: true }).click();
+  const button = (name: string) =>
+    page.getByRole('button', { name, exact: true });
+  await button('Gyroscope').click();
   await expect(page.locator('canvas')).toBeVisible();
-  const lift = page.getByRole('button', { name: 'Try lifting' });
-  const complete = page.getByText('Lift complete', { exact: true });
-  const rise = page.getByTestId('gyro-rise');
-  const swerve = page.getByTestId('gyro-swerve');
-  const impulse = page.getByTestId('gyro-impulse');
-  await lift.click();
-  await expect(complete).toBeVisible({ timeout: 12000 });
-  await expect(swerve).toHaveText('13.8');
-  await expect(impulse).toHaveText('1.00');
-  await lift.click();
-  await expect(complete).toBeVisible({ timeout: 12000 });
-  await expect(swerve).toHaveText('13.8');
-  await page.getByRole('button', { name: 'Stopped', exact: true }).click();
-  await expect(swerve).toHaveText('0.0');
-  await lift.click();
-  await expect(complete).toBeVisible({ timeout: 12000 });
-  await expect(rise).toHaveText('47.7');
-  await expect(impulse).toHaveText('1.00');
-  await page.getByRole('button', { name: 'Reverse spin', exact: true }).click();
-  await lift.click();
-  await expect(complete).toBeVisible({ timeout: 12000 });
-  await expect(swerve).toHaveText('-13.8');
-  await expect(impulse).toHaveText('1.00');
+  await expect(page.getByTestId('gimbal-inertia')).toHaveText('0.090');
+  await expect(page.getByTestId('gimbal-momentum')).toHaveText('3.60');
+  await page.getByRole('slider', { name: 'Frame rotation' }).fill('60');
+  await page.getByRole('button', { name: 'Start rotor' }).click();
+  await expect(page.locator('label[for="gyro-frame"] output')).toHaveText(
+    '60°',
+    { timeout: 15000 },
+  );
+  await page.getByRole('button', { name: 'Pause' }).click();
+  await expect(page.getByTestId('gimbal-axis-drift')).toHaveText('0.00');
+  const pausedTime = await page.getByTestId('time').innerText();
+  await button('Spin axis').click();
+  await expect(button('Spin axis')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('time')).toHaveText(pausedTime);
+  await button('Right-hand rule').click();
+  await button('Reverse spin').click();
+  await expect(page.getByTestId('gimbal-momentum')).toHaveText('-3.60');
+  await page.getByLabel('Rotor mass', { exact: true }).fill('4');
+  await button('Apply setup').click();
+  await expect(page.getByTestId('gimbal-inertia')).toHaveText('0.180');
+  await expect(page.getByTestId('gimbal-momentum')).toHaveText('-7.20');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
     390,
   );
+});
+
+test('runs a matched torque comparison and a zero-gravity trial', async ({
+  page,
+}) => {
+  await page.goto(route, { waitUntil: 'domcontentloaded' });
+  const button = (name: string) =>
+    page.getByRole('button', { name, exact: true });
+  await button('Gyroscope').click();
+  await button('Compare slow and fast').click();
+  await expect(page.locator('canvas')).toHaveCount(2);
+  await expect(page.getByTestId('gimbal-spin')).toHaveText('5.00');
+  await expect(page.getByTestId('gimbal-fast-spin')).toHaveText('50.00');
+  await button('Apply lift').click();
+  await expect(page.getByTestId('gimbal-lift-change')).not.toHaveText('—', {
+    timeout: 15000,
+  });
+  await expect(page.getByTestId('gimbal-fast-lift-change')).not.toHaveText(
+    '—',
+    { timeout: 15000 },
+  );
+  const slow = Number(await page.getByTestId('gimbal-lift-change').innerText());
+  const fast = Number(
+    await page.getByTestId('gimbal-fast-lift-change').innerText(),
+  );
+  expect(fast).toBeLessThan(slow);
+  await expect(page.getByTestId('gimbal-impulse')).toHaveText('1.00');
+  await expect(page.getByTestId('gimbal-fast-impulse')).toHaveText('1.00');
+  await button('Gravity precession').click();
+  await expect(page.getByTestId('gimbal-estimate')).toHaveText('1.44');
+  await button('Zero g').click();
+  await expect(page.getByTestId('gimbal-torque')).toHaveText('0.00');
+  await page.getByRole('button', { name: 'Start rotor' }).click();
+  await expect(page.getByTestId('gimbal-precession')).toHaveText('0.00', {
+    timeout: 15000,
+  });
 });

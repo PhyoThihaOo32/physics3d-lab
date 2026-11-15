@@ -1,0 +1,85 @@
+.gyro-lab .workspace {
+  align-items: start;
+}
+.gyro-mode-row {
+  margin: 0 0 16px;
+}
+.gyro-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.gyro-choices .secondary-button[aria-pressed='true'] {
+  border-color: #82966f;
+  background: #2a382c;
+  color: #d7ebc6;
+}
+.gyro-setup,
+.gyro-form,
+.gyro-lift-controls,
+.gyro-view-grid {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.gyro-setup h2,
+.gyro-view h2 {
+  margin: 0;
+}
+.gyro-lift-controls {
+  border-top: 1px solid #35414c;
+  padding-top: 12px;
+}
+.gyro-lift-controls label {
+  margin: 0;
+}
+.gyro-lift-controls input {
+  margin-top: 2px;
+}
+.gyro-view {
+  min-width: 0;
+}
+.gyro-view h2 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+.gyro-view .gyro-measurements {
+  margin: 12px 0 0;
+  grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
+}
+.gyro-compare {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.gyro-compare .spin-demo-toolbar {
+  min-height: 86px;
+}
+.gyro-applied {
+  margin: 0;
+  grid-column: 1 / -1;
+}
+.gyro-checkboxes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.gyro-checkboxes label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.gyro-checkboxes input {
+  accent-color: #a9cb91;
+}
+.gyro-lab .camera-controls {
+  max-width: calc(100% - 22px);
+  flex-wrap: wrap;
+}
+@media (max-width: 1050px) {
+  .gyro-compare {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .gyro-compare .spin-demo-toolbar {
+    min-height: 48px;
+  }
+}

@@ -1,7 +1,7 @@
 import { Component, type ReactNode, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PCFShadowMap } from 'three';
-import { LabCamera } from '../camera/LabCamera';
+import { LabCamera, type SpinAxisView } from '../camera/LabCamera';
 import type { CameraView } from '../../components/controls/CameraControls';
 
 class SceneBoundary extends Component<
@@ -35,6 +35,7 @@ export function LabCanvas({
   minOrbitDistance = 4,
   sceneExtent,
   fullOrbit,
+  spinAxisView,
   label = 'Interactive 3D view of a cube falling onto a ground plane',
 }: {
   children: ReactNode;
@@ -46,6 +47,7 @@ export function LabCanvas({
   center?: readonly [number, number, number];
   sceneExtent?: number;
   fullOrbit?: boolean;
+  spinAxisView?: SpinAxisView;
   label?: string;
 }) {
   return (
@@ -103,6 +105,7 @@ export function LabCanvas({
           frameWidth={frameWidth}
           center={center}
           fullOrbit={fullOrbit}
+          spinAxisView={spinAxisView}
         />
       </Canvas>
     </SceneBoundary>

@@ -3,6 +3,12 @@ import { useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import type { CameraView } from '../../components/controls/CameraControls';
 import { useKeyboardPan } from './useKeyboardPan';
+import type { Vector3Tuple } from '../../types/vector';
+
+export type SpinAxisView = {
+  center: Vector3Tuple;
+  direction: Vector3Tuple;
+};
 export function LabCamera({
   view,
   frameHeight,
@@ -11,12 +17,14 @@ export function LabCamera({
   minFrameDistance = 12,
   minOrbitDistance = 4,
   fullOrbit = false,
+  spinAxisView,
 }: {
   view: CameraView;
   frameHeight: number;
   minFrameDistance?: number;
   minOrbitDistance?: number;
   fullOrbit?: boolean;
+  spinAxisView?: SpinAxisView;
   frameWidth?: number;
   center?: readonly [number, number, number];
 }) {
@@ -25,9 +33,11 @@ export function LabCamera({
   const camera = useThree((state) => state.camera);
   const aspect = useThree((state) => state.size.width / state.size.height);
   useEffect(() => {
-    const x = center?.[0] ?? 0;
-    const y = center?.[1] ?? frameHeight / 2;
-    const z = center?.[2] ?? 0;
+    const spinAxis = view.preset === 'Spin axis' ? spinAxisView : undefined;
+    const target = spinAxis?.center ?? center;
+    const x = target?.[0] ?? 0;
+    const y = target?.[1] ?? frameHeight / 2;
+    const z = target?.[2] ?? 0;
     const distance =
       Math.max(
         minFrameDistance,
@@ -43,6 +53,13 @@ export function LabCamera({
       Top: [x, y + distance, z + 0.001],
       Front: [x, y, z + distance],
       Side: [x + distance, y, z + 0.001],
+      'Spin axis': spinAxis
+        ? [
+            x + spinAxis.direction[0] * distance,
+            y + spinAxis.direction[1] * distance,
+            z + spinAxis.direction[2] * distance + 0.001,
+          ]
+        : [x + distance, y, z + 0.001],
     };
     camera.position.set(...positions[view.preset]);
     camera.up.set(0, 1, 0);
@@ -58,6 +75,7 @@ export function LabCamera({
     frameWidth,
     center,
     aspect,
+    spinAxisView,
   ]);
   return (
     <OrbitControls

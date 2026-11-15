@@ -206,7 +206,9 @@ On the spinning page, select **Bicycle wheel**. Spin the wheel, then flip it 180
 
 ## Bicycle wheel gyroscope
 
-Select **Gyroscope** on the spinning page and choose **Try lifting** with the wheel spinning, stopped, or spinning in reverse. In every trial the fixed grip supports the wheel's weight and the same one-second torque pulse contributes 1 kg·m²/s of sideways angular momentum. The wheel's full 3D orientation follows the angular velocity obtained from its inertia tensor about the grip. Compare axle tilt and sideways turn at the end of the pulse.
+Select **Gyroscope** on the spinning page. **Free gyroscope** uses two Rapier gimbal bearings and an independent rotor joint. **Applied torque** uses a pivoted rotor and a calibrated force couple for a one-second lift. **Gravity precession** offsets the rotor from a fixed pivot so its weight supplies torque. **Compare slow and fast** runs matched 5 and 50 rad/s trials.
+
+The displayed spin angular momentum uses the disk’s axial inertia. Angular momentum about the pivot also includes transverse rotation and the motion of the rotor’s center of mass. The fast-spin precession estimate is shown separately from the measured motion. Settings apply to a fresh trial. The camera, equation views, and vector layers remain available while paused.
 
 ## Vector Mathematics Lab
 
