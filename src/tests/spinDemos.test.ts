@@ -7,7 +7,7 @@ import {
   createTurntableTrial,
   measureString,
   measureTurntable,
-  startStringPull,
+  setStringLength,
 } from '../physics/equations/spinDemos';
 
 describe('puck pulled inward by a string', () => {
@@ -15,7 +15,7 @@ describe('puck pulled inward by a string', () => {
     const initial = createStringTrial();
     expect(measureString(initial).tangentialSpeed).toBeCloseTo(2.4, 12);
     expect(measureString(initial).omega).toBeCloseTo(3, 12);
-    let puck = startStringPull(initial, 0.48);
+    let puck = setStringLength(initial, STRING.exampleTarget);
     for (let step = 0; step < 240; step++) {
       const previousRadius = puck.radius;
       puck = advanceStringTrial(puck, 1 / 120);
@@ -26,27 +26,52 @@ describe('puck pulled inward by a string', () => {
     }
     puck = advanceStringTrial(puck, 0.01);
     const final = measureString(puck);
-    expect(puck.pull).toBeNull();
+    expect(puck.reel).toBeNull();
     expect(puck.radialSpeed).toBe(0);
     expect(puck.radius).toBeCloseTo(0.48, 12);
     expect(final.tangentialSpeed).toBeCloseTo(4, 12);
     expect(final.omega).toBeCloseTo(25 / 3, 12);
     expect(final.energy).toBeCloseTo(8, 12);
-    expect(startStringPull(puck, 0.6)).toBe(puck);
-    expect(startStringPull(puck, 0)).toBe(puck);
+    expect(setStringLength(puck, STRING.exampleTarget)).toBe(puck);
+    expect(setStringLength(puck, 0)).toBe(puck);
+    expect(setStringLength(puck, 0.9)).toBe(puck);
   });
 
-  it('keeps the string under tension at the shortest supported radius', () => {
-    let puck = startStringPull(createStringTrial(2, 1), STRING.minRadius);
-    for (let step = 0; step < 240; step++) {
-      const previousVelocity = puck.radialSpeed;
-      puck = advanceStringTrial(puck, 1 / 120);
-      const radialAcceleration = (puck.radialSpeed - previousVelocity) * 120;
-      const centripetalAcceleration =
-        puck.radius * measureString(puck).omega ** 2;
-      expect(centripetalAcceleration - radialAcceleration).toBeGreaterThan(0);
-      expect(measureString(puck).tension).toBeGreaterThan(0);
-    }
+  it('retargets mid-pull, preserves radial velocity, and keeps the string taut', () => {
+    let puck = createStringTrial(2, 1);
+    const followFor = (steps: number) => {
+      for (let step = 0; step < steps; step++) {
+        const previousSpeed = puck.radialSpeed;
+        puck = advanceStringTrial(puck, 1 / 120);
+        expect(puck.radius).toBeGreaterThanOrEqual(STRING.minRadius - 1e-12);
+        expect(puck.radius).toBeLessThanOrEqual(STRING.initialRadius + 1e-12);
+        expect(Math.abs(puck.radialSpeed - previousSpeed)).toBeLessThan(
+          STRING.reelAcceleration / 120 + 1e-12,
+        );
+        const { inertia, omega, tension } = measureString(puck);
+        expect(inertia * omega).toBeCloseTo(1.6, 12);
+        expect(tension).toBeGreaterThan(0);
+      }
+    };
+    puck = setStringLength(puck, STRING.minRadius);
+    followFor(55);
+    const before = puck;
+    expect(before.radialSpeed).toBeLessThan(0);
+    puck = setStringLength(puck, 0.72);
+    expect(puck.radius).toBe(before.radius);
+    expect(puck.angle).toBe(before.angle);
+    expect(puck.radialSpeed).toBe(before.radialSpeed);
+    followFor(85);
+    expect(puck.radialSpeed).toBeGreaterThan(0);
+    puck = setStringLength(puck, 0.39);
+    followFor(250);
+    expect(puck.reel).toBeNull();
+    expect(puck.radius).toBe(0.39);
+    expect(puck.radialSpeed).toBe(0);
+    puck = setStringLength(puck, STRING.initialRadius);
+    followFor(250);
+    expect(puck.radius).toBe(STRING.initialRadius);
+    expect(measureString(puck).tangentialSpeed).toBe(1);
   });
 
   it('uses both selected walker mass and measured track radius', () => {

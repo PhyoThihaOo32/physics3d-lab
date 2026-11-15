@@ -38,7 +38,9 @@ export function SpinDemoViewport({
     revision: 0,
   });
   const [vectorsVisible, setVectorsVisible] = useState(true);
-  const [axisSnapshot, setAxisSnapshot] = useState<SpinAxisView>();
+  const [axisSnapshot, setAxisSnapshot] = useState(
+    initialView === 'Spin axis' ? spinAxisView : undefined,
+  );
   return (
     <section className="scene-panel" aria-label={title}>
       <div className="scene-toolbar spin-demo-toolbar">

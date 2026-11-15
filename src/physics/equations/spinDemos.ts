@@ -16,12 +16,17 @@ export const STRING = {
   initialSpeed: 2.4,
   minRadius: 0.32,
   exampleTarget: 0.48,
-  pullDuration: 2,
+  // Below the minimum centripetal acceleration (1 m/s at 0.8 m).
+  reelAcceleration: 0.6,
 } as const;
-interface StringPull {
+interface StringReel {
   startTime: number;
   startRadius: number;
+  startSpeed: number;
   target: number;
+  acceleration: number;
+  accelerateTime: number;
+  brakeTime: number;
 }
 
 export interface StringTrial {
@@ -32,7 +37,7 @@ export interface StringTrial {
   radialAcceleration: number;
   mass: number;
   initialSpeed: number;
-  pull: StringPull | null;
+  reel: StringReel | null;
 }
 
 export function createStringTrial(
@@ -47,36 +52,68 @@ export function createStringTrial(
     radialAcceleration: 0,
     mass,
     initialSpeed,
-    pull: null,
+    reel: null,
   };
 }
 
-export function startStringPull(
+export function setStringLength(
   trial: StringTrial,
   target: number,
 ): StringTrial {
   if (
-    trial.pull ||
     !Number.isFinite(target) ||
     target < STRING.minRadius ||
-    target >= trial.radius
+    target > STRING.initialRadius ||
+    target === (trial.reel?.target ?? trial.radius)
   )
     return trial;
-  const pull = { startTime: trial.time, startRadius: trial.radius, target };
-  return { ...trial, ...pullPosition(pull, trial.time), pull };
+
+  const { radius, radialSpeed } = trial;
+  if (target === radius && radialSpeed === 0)
+    return { ...trial, reel: null, radialAcceleration: 0 };
+  const rate = STRING.reelAcceleration;
+  // Choose the approach direction from the position reached by braking now.
+  // Retargeting keeps the current speed, including when reversing direction.
+  const stoppingRadius =
+    radius + (radialSpeed * Math.abs(radialSpeed)) / (2 * rate);
+  const direction =
+    Math.sign(target - stoppingRadius) || Math.sign(radialSpeed);
+  const approachSpeed = direction * radialSpeed;
+  const peakSpeed = Math.sqrt(
+    Math.max(0, rate * direction * (target - radius) + approachSpeed ** 2 / 2),
+  );
+  const reel = {
+    startTime: trial.time,
+    startRadius: radius,
+    startSpeed: radialSpeed,
+    target,
+    acceleration: direction * rate,
+    accelerateTime: Math.max(0, (peakSpeed - approachSpeed) / rate),
+    brakeTime: peakSpeed / rate,
+  };
+  return { ...trial, reel };
 }
 
-function pullPosition(pull: StringPull, time: number) {
-  if (time >= pull.startTime + STRING.pullDuration)
-    return { radius: pull.target, radialSpeed: 0, radialAcceleration: 0 };
-  const phase = (Math.PI * (time - pull.startTime)) / STRING.pullDuration;
-  const change = pull.target - pull.startRadius;
+function reelPosition(reel: StringReel, time: number) {
+  const elapsed = time - reel.startTime;
+  const duration = reel.accelerateTime + reel.brakeTime;
+  if (elapsed >= duration)
+    return { radius: reel.target, radialSpeed: 0, radialAcceleration: 0 };
+  if (elapsed >= reel.accelerateTime) {
+    const remaining = duration - elapsed;
+    return {
+      radius: reel.target - (reel.acceleration * remaining ** 2) / 2,
+      radialSpeed: reel.acceleration * remaining,
+      radialAcceleration: -reel.acceleration,
+    };
+  }
   return {
-    radius: pull.startRadius + (change * (1 - Math.cos(phase))) / 2,
-    radialSpeed:
-      (change * Math.PI * Math.sin(phase)) / (2 * STRING.pullDuration),
-    radialAcceleration:
-      (change * (Math.PI / STRING.pullDuration) ** 2 * Math.cos(phase)) / 2,
+    radius:
+      reel.startRadius +
+      reel.startSpeed * elapsed +
+      (reel.acceleration * elapsed ** 2) / 2,
+    radialSpeed: reel.startSpeed + reel.acceleration * elapsed,
+    radialAcceleration: reel.acceleration,
   };
 }
 
@@ -90,24 +127,39 @@ export function advanceStringTrial(
 ): StringTrial {
   const time = trial.time + elapsed;
   const omega = (radius: number) => stringOmega(radius, trial.initialSpeed);
-  if (!trial.pull)
+  const { reel } = trial;
+  if (!reel)
     return {
       ...trial,
       time,
       angle: trial.angle + omega(trial.radius) * elapsed,
     };
-  const { pull } = trial;
-  const end = pull.startTime + STRING.pullDuration;
-  const pullUntil = Math.min(time, end);
-  const middle = pullPosition(pull, (trial.time + pullUntil) / 2);
-  const finish = pullPosition(pull, pullUntil);
-  // Integrate dθ/dt = L/(mr²) over the changing-radius segment, then coast.
-  const angle =
-    trial.angle +
-    ((pullUntil - trial.time) / 6) *
-      (omega(trial.radius) + 4 * omega(middle.radius) + omega(finish.radius)) +
-    Math.max(0, time - end) * omega(pull.target);
-  return { ...trial, ...finish, time, angle, pull: time >= end ? null : pull };
+  const end = reel.startTime + reel.accelerateTime + reel.brakeTime;
+  const reelUntil = Math.min(time, end);
+  let angle = trial.angle;
+  // Integrate dθ/dt = L/(mr²), splitting at the change from driving to braking.
+  const switchTime = reel.startTime + reel.accelerateTime;
+  for (let start = trial.time; start < reelUntil;) {
+    const limit =
+      start < switchTime ? Math.min(reelUntil, switchTime) : reelUntil;
+    const finish = Math.min(limit, start + 1 / 60);
+    angle +=
+      ((finish - start) / 6) *
+      (omega(reelPosition(reel, start).radius) +
+        4 * omega(reelPosition(reel, (start + finish) / 2).radius) +
+        omega(reelPosition(reel, finish).radius));
+    start = finish;
+  }
+  const done = time >= end;
+  return {
+    ...trial,
+    ...(done
+      ? { radius: reel.target, radialSpeed: 0, radialAcceleration: 0 }
+      : reelPosition(reel, time)),
+    time,
+    angle: angle + Math.max(0, time - end) * omega(reel.target),
+    reel: done ? null : reel,
+  };
 }
 
 export function measureString(trial: StringTrial) {

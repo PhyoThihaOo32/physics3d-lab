@@ -28,6 +28,21 @@
   margin-top: 12px;
   accent-color: #c1e29e;
 }
+.string-length-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.string-length-heading .number-field {
+  width: 94px;
+}
+.parameter-field.string-length-control {
+  grid-template-columns: minmax(0, 1fr);
+}
+.string-length-control .spin-range {
+  margin-top: 3px;
+}
 .spin-demo-toolbar {
   min-height: 48px;
   height: auto;

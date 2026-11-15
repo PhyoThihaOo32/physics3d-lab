@@ -198,7 +198,7 @@ Open **Rotation → Spinning robot**. Choose a mass and use **Add** or **Remove*
 
 ## Other rotation experiments
 
-- **Mass on a string** lets you set puck mass, launch speed, and target radius. With the default trial, pulling from 0.80 m to 0.48 m increases tangential speed from 2.40 to 4.00 m/s.
+- **Mass on a string** lets you drag the handle or change the length above the table during the trial. Adjust puck mass and launch speed before starting. With the default setup, pulling from 0.80 m to 0.48 m increases tangential speed from 2.40 to 4.00 m/s.
 - **Mass on a spring** models a puck on an ideal central spring. Adjust rest length or stiffness while it orbits to see the coils and radius respond. The blue ring marks the rest length.
 - **Person on a turntable** lets you set walker mass, walking radius, and platform inertia before the trial. Control speed and direction while it runs. The person and platform carry opposite angular momenta.
 - **Spinning bicycle wheel** lets you adjust rim inertia, support inertia, and signed wheel spin. Flip the wheel to transfer vertical angular momentum, then flip it back.

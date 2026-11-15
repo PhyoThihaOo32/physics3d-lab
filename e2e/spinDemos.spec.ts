@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 const route = (id: string) => `/#/experiments/${id}`;
 
-test('pulls the puck to the slide radius and reaches the predicted speed', async ({
+test('retargets a pull live and reaches the predicted speed', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -12,10 +12,12 @@ test('pulls the puck to the slide radius and reaches the predicted speed', async
   ).toBeVisible();
   await expect(page.locator('canvas')).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'Top', exact: true }),
+    page.getByRole('button', { name: 'Pull view', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('string-speed')).toHaveText('2.40');
-  await expect(page.getByText('Expected vₜ at target 4.00 m/s')).toBeVisible();
+  const length = page.getByRole('slider', { name: 'Length above table' });
+  const exact = page.getByRole('spinbutton', { name: 'Exact string length' });
+  await expect(length).toHaveValue('0.8');
   const viewport = page.getByRole('region', {
     name: 'Puck on a frictionless tabletop',
   });
@@ -27,17 +29,31 @@ test('pulls the puck to the slide radius and reaches the predicted speed', async
   await expect(vectors).toHaveAttribute('aria-pressed', 'false');
   await vectors.click();
   await expect(vectors).toHaveAttribute('aria-pressed', 'true');
-  const pull = page.getByRole('button', { name: 'Pull string' });
-  await expect(pull).toBeDisabled();
+  await page.getByLabel('Playback speed').selectOption('0.5');
   await viewport.getByRole('button', { name: 'Start spin' }).click();
-  await pull.click();
+  await length.fill('0.32');
   await expect(page.getByText('Pulling string', { exact: true })).toBeVisible();
+  await expect
+    .poll(async () =>
+      Number(await page.getByTestId('string-radius').textContent()),
+    )
+    .toBeLessThan(0.8);
+  await expect(length).toBeEnabled();
+  await exact.fill('0.48');
+  await expect(length).toHaveValue('0.48');
+  await expect(page.getByText('vₜ at set length 4.00 m/s')).toBeVisible();
   await expect(page.getByTestId('string-speed')).toHaveText('4.00', {
     timeout: 15000,
   });
   await expect(page.getByText('Circling', { exact: true })).toBeVisible();
   await expect(page.getByTestId('string-radius')).toHaveText('0.48');
   await expect(page.getByTestId('string-omega')).toHaveText('8.33');
+  await expect(page.getByTestId('string-momentum')).toHaveText('1.920');
+  await length.fill('0.6');
+  await expect(
+    page.getByText('Feeding string out', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByTestId('string-speed')).toHaveText('3.20');
   await expect(page.getByTestId('string-momentum')).toHaveText('1.920');
   await page.getByRole('button', { name: 'Reset defaults' }).click();
   await expect(page.getByTestId('string-radius')).toHaveText('0.80');

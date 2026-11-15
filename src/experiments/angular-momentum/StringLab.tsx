@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
-import { Shape, Path, type Group } from 'three';
+import { useEffect, useRef, useState } from 'react';
+import type { ThreeEvent } from '@react-three/fiber';
+import { Shape, Path, Vector3, type Group } from 'three';
 import {
   SimulationControls,
   SimulationRunButton,
@@ -12,7 +13,7 @@ import {
   measureString,
   predictStringSpeed,
   radialVector,
-  startStringPull,
+  setStringLength,
   tangentVector,
   type StringTrial,
 } from '../../physics/equations/spinDemos';
@@ -26,6 +27,11 @@ import { useRotationTrial } from './useRotationTrial';
 const TABLE_TOP = 0.9;
 const STRING_HEIGHT = TABLE_TOP + 0.036;
 const CAMERA_CENTER = [0, 0.67, 0] as const;
+const PULL_VIEW = {
+  center: CAMERA_CENTER,
+  direction: [0.32, 0.13, 0.9] as const,
+};
+const INITIAL_HANG = 0.39;
 const HALF_TABLE = 1.12;
 const table = new Shape()
   .moveTo(-HALF_TABLE, -HALF_TABLE)
@@ -44,6 +50,7 @@ function StringScene({
   targetRadius,
   vectorsVisible,
   puckMass,
+  onLengthChange,
 }: {
   getTrial: () => StringTrial;
   advance: (elapsed: number) => void;
@@ -51,18 +58,64 @@ function StringScene({
   targetRadius: number | null;
   vectorsVisible: boolean;
   puckMass: number;
+  onLengthChange: (length: number) => void;
 }) {
   const pivot = useRef<Group>(null);
   const puck = useRef<Group>(null);
   const topString = useRef<Group>(null);
   const hangingString = useRef<Group>(null);
   const grip = useRef<Group>(null);
+  const endDrag = useRef<(() => void) | null>(null);
+  useEffect(() => () => endDrag.current?.(), []);
+
+  function grab(event: ThreeEvent<PointerEvent>) {
+    if (event.button !== 0 || endDrag.current || !grip.current) return;
+    if (Math.abs(event.camera.getWorldDirection(new Vector3()).y) > 0.25)
+      return;
+    const element = event.nativeEvent.target;
+    if (!(element instanceof HTMLElement)) return;
+    const y = grip.current.position.y;
+    const gripOnScreen = new Vector3(0, y, 0).project(event.camera).y;
+    const aboveGrip = new Vector3(0, y + 0.1, 0).project(event.camera).y;
+    const scale = (element.clientHeight * (aboveGrip - gripOnScreen)) / 0.2;
+    if (scale <= 0) return;
+    event.stopPropagation();
+    event.nativeEvent.stopImmediatePropagation();
+    const { pointerId, clientY } = event;
+    const startLength = getTrial().radius;
+    element.style.cursor = 'grabbing';
+
+    // Capture native events so a long drag can continue outside the canvas.
+    const move = (next: PointerEvent) => {
+      if (next.pointerId !== pointerId) return;
+      next.stopPropagation();
+      const length = startLength - (next.clientY - clientY) / scale;
+      onLengthChange(
+        Math.max(
+          STRING.minRadius,
+          Math.min(STRING.initialRadius, Math.round(length * 100) / 100),
+        ),
+      );
+    };
+    const release = (lost?: PointerEvent) => {
+      if (lost && lost.pointerId !== pointerId) return;
+      element.style.cursor = '';
+      element.removeEventListener('pointermove', move);
+      element.removeEventListener('lostpointercapture', release);
+      endDrag.current = null;
+    };
+    element.setPointerCapture(pointerId);
+    element.addEventListener('pointermove', move);
+    element.addEventListener('lostpointercapture', release);
+    endDrag.current = release;
+  }
+
   useRotationFrame(advance, publish, () => {
     const { angle, radius } = getTrial();
     if (pivot.current) pivot.current.rotation.y = angle;
     if (puck.current) puck.current.position.z = radius;
     if (topString.current) topString.current.scale.z = radius;
-    const hangingLength = 0.25 + (STRING.initialRadius - radius);
+    const hangingLength = INITIAL_HANG + (STRING.initialRadius - radius);
     if (hangingString.current) hangingString.current.scale.y = hangingLength;
     if (grip.current) grip.current.position.y = STRING_HEIGHT - hangingLength;
   });
@@ -142,10 +195,27 @@ function StringScene({
           <meshBasicMaterial color="#ecdfb4" />
         </mesh>
       </group>
-      <group ref={grip}>
+      <group
+        ref={grip}
+        onPointerDown={grab}
+        onPointerOver={(event) => {
+          const element = event.nativeEvent.target;
+          if (
+            element instanceof HTMLElement &&
+            !endDrag.current &&
+            Math.abs(event.camera.getWorldDirection(new Vector3()).y) <= 0.25
+          )
+            element.style.cursor = 'grab';
+        }}
+        onPointerOut={(event) => {
+          const element = event.nativeEvent.target;
+          if (!endDrag.current && element instanceof HTMLElement)
+            element.style.cursor = '';
+        }}
+      >
         <mesh castShadow>
-          <cylinderGeometry args={[0.043, 0.048, 0.07, 16]} />
-          <meshStandardMaterial color="#c29652" />
+          <cylinderGeometry args={[0.064, 0.068, 0.096, 20]} />
+          <meshStandardMaterial color="#e3ae66" />
         </mesh>
       </group>
       <VectorArrow3D
@@ -192,36 +262,37 @@ function StringScene({
 export default function StringLab() {
   const { reading, getTrial, advance, publish, update, reset } =
     useRotationTrial(createStringTrial, advanceStringTrial);
-  const [target, setTarget] = useState(String(STRING.exampleTarget));
+  const [draftLength, setDraftLength] = useState<string | null>(null);
   const running = useSimulationStore((state) => state.running);
-  const radius = Number(target);
-  const canPull =
-    Number.isFinite(radius) &&
-    radius >= STRING.minRadius &&
-    radius < reading.radius;
+  const targetLength = reading.reel?.target ?? reading.radius;
+  const reeling = reading.reel !== null;
+  const pulling =
+    reading.radialSpeed < 0 ||
+    (reading.radialSpeed === 0 && targetLength < reading.radius);
   const values = measureString(reading);
   const status = running
-    ? reading.pull
-      ? 'Pulling string'
+    ? reeling
+      ? pulling
+        ? 'Pulling string'
+        : 'Feeding string out'
       : 'Circling'
     : reading.time
-      ? reading.pull
-        ? 'Pull paused'
-        : 'Paused'
+      ? 'Paused'
       : 'Ready to spin';
   function resetTrial() {
     reset();
-    setTarget(String(STRING.exampleTarget));
+    setDraftLength(null);
+  }
+  function changeLength(length: number) {
+    setDraftLength(null);
+    update((trial) => setStringLength(trial, length));
   }
   return (
     <div className="dancer-experiment spin-demo">
       <div className="page-heading">
         <div>
           <h1>Mass on a string</h1>
-          <p>
-            Start the puck, then pull the string to see how radius changes its
-            speed.
-          </p>
+          <p>Start the puck, then drag the handle or set a string length.</p>
         </div>
       </div>
       <div className="workspace">
@@ -230,28 +301,47 @@ export default function StringLab() {
           aria-label="String controls"
         >
           <h2>String</h2>
-          <div className="parameter-field">
-            <label htmlFor="string-target">Target radius</label>
-            <div className="number-field">
-              <input
-                id="string-target"
-                type="number"
-                min={STRING.minRadius}
-                max={STRING.initialRadius}
-                step="0.01"
-                value={target}
-                aria-describedby="string-target-hint"
-                onChange={(event) => setTarget(event.target.value)}
-                disabled={!!reading.pull}
-              />
-              <span>m</span>
+          <div className="parameter-field string-length-control">
+            <div className="string-length-heading">
+              <label htmlFor="string-length">Length above table</label>
+              <div className="number-field">
+                <input
+                  aria-label="Exact string length"
+                  type="number"
+                  inputMode="decimal"
+                  min={STRING.minRadius}
+                  max={STRING.initialRadius}
+                  step="0.01"
+                  value={draftLength ?? f(targetLength)}
+                  onChange={(event) => {
+                    const { value, valueAsNumber } = event.target;
+                    setDraftLength(value);
+                    update((trial) =>
+                      setStringLength(
+                        trial,
+                        Math.round(valueAsNumber * 100) / 100,
+                      ),
+                    );
+                  }}
+                  onBlur={() => setDraftLength(null)}
+                />
+                <span>m</span>
+              </div>
             </div>
-            <small id="string-target-hint">
-              {canPull
-                ? `Expected vₜ at target ${f(predictStringSpeed(radius, reading.initialSpeed))} m/s`
-                : Math.abs(radius - reading.radius) < 1e-8
-                  ? 'At target. Enter a smaller radius to pull again.'
-                  : `Enter ${f(STRING.minRadius)} m or more, below the current radius.`}
+            <input
+              aria-describedby="string-speed-at-length"
+              className="spin-range"
+              id="string-length"
+              type="range"
+              min={STRING.minRadius}
+              max={STRING.initialRadius}
+              step="0.01"
+              value={targetLength}
+              onChange={(event) => changeLength(event.target.valueAsNumber)}
+            />
+            <small id="string-speed-at-length">
+              vₜ at set length{' '}
+              {f(predictStringSpeed(targetLength, reading.initialSpeed))} m/s
             </small>
           </div>
           <label className="dancer-mode" htmlFor="string-puck-mass">
@@ -269,7 +359,12 @@ export default function StringLab() {
               disabled={running || reading.time > 0}
               onChange={(event) => {
                 const mass = event.target.valueAsNumber;
-                update((trial) => createStringTrial(mass, trial.initialSpeed));
+                update((trial) =>
+                  setStringLength(
+                    createStringTrial(mass, trial.initialSpeed),
+                    targetLength,
+                  ),
+                );
               }}
             />
           </label>
@@ -288,7 +383,12 @@ export default function StringLab() {
               disabled={running || reading.time > 0}
               onChange={(event) => {
                 const speed = event.target.valueAsNumber;
-                update((trial) => createStringTrial(trial.mass, speed));
+                update((trial) =>
+                  setStringLength(
+                    createStringTrial(trial.mass, speed),
+                    targetLength,
+                  ),
+                );
               }}
             />
           </label>
@@ -300,21 +400,10 @@ export default function StringLab() {
           center={CAMERA_CENTER}
           frameHeight={1.6}
           frameWidth={2.55}
-          initialView="Top"
-          actions={
-            <>
-              <SimulationRunButton ready startLabel="Start spin" />
-              <button
-                className="secondary-button"
-                disabled={!running || !!reading.pull || !canPull}
-                onClick={() =>
-                  update((previous) => startStringPull(previous, radius))
-                }
-              >
-                Pull string
-              </button>
-            </>
-          }
+          initialView="Spin axis"
+          spinAxisLabel="Pull view"
+          spinAxisView={PULL_VIEW}
+          actions={<SimulationRunButton ready startLabel="Start spin" />}
         >
           {(vectorsVisible) => (
             <StringScene
@@ -324,10 +413,9 @@ export default function StringLab() {
               vectorsVisible={vectorsVisible}
               puckMass={reading.mass}
               targetRadius={
-                radius >= STRING.minRadius && radius < STRING.initialRadius
-                  ? radius
-                  : null
+                targetLength < STRING.initialRadius ? targetLength : null
               }
+              onLengthChange={changeLength}
             />
           )}
         </SpinDemoViewport>
@@ -337,7 +425,7 @@ export default function StringLab() {
         aria-label="String measurements"
       >
         <Measurement
-          label="Radius r"
+          label="String length r"
           value={f(reading.radius)}
           unit="m"
           testId="string-radius"
@@ -370,7 +458,7 @@ export default function StringLab() {
       <details className="physics-details">
         <summary>Model details</summary>
         <div>
-          <p>Use Front view to see the string below the table.</p>
+          <p>The length above the table is the orbit radius.</p>
           <p>
             Tension points toward the hole, so its torque about the hole is
             zero. For this puck, Lᵧ = mr vₜ = {f(values.momentum)} kg·m²/s.
