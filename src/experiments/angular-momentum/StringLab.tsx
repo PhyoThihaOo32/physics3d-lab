@@ -254,11 +254,12 @@ export default function StringLab() {
                   : `Enter ${f(STRING.minRadius)} m or more, below the current radius.`}
             </small>
           </div>
-          <label className="dancer-mode">
+          <label className="dancer-mode" htmlFor="string-puck-mass">
             <span className="spin-range-label">
               Puck mass <output>{f(reading.mass)} kg</output>
             </span>
             <input
+              id="string-puck-mass"
               className="spin-range"
               type="range"
               min="0.5"
@@ -272,11 +273,12 @@ export default function StringLab() {
               }}
             />
           </label>
-          <label className="dancer-mode">
+          <label className="dancer-mode" htmlFor="string-launch-speed">
             <span className="spin-range-label">
               Launch speed <output>{f(reading.initialSpeed, 1)} m/s</output>
             </span>
             <input
+              id="string-launch-speed"
               className="spin-range"
               type="range"
               min="1.0"

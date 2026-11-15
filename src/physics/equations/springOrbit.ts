@@ -31,8 +31,9 @@ const potential = (radius: number, settings: SpringSettings) =>
 export function updateSpring(
   trial: SpringTrial,
   settings: SpringSettings,
+  preparing = trial.time === 0,
 ): SpringTrial {
-  if (trial.time === 0) return createSpringTrial(settings);
+  if (preparing && trial.time === 0) return createSpringTrial(settings);
   const radius = Math.hypot(trial.x, trial.z);
   const adjusted = { ...settings, mass: trial.settings.mass };
   return {

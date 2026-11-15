@@ -41,6 +41,9 @@ test('pulls the puck to the slide radius and reaches the predicted speed', async
   await expect(page.getByTestId('string-momentum')).toHaveText('1.920');
   await page.getByRole('button', { name: 'Reset defaults' }).click();
   await expect(page.getByTestId('string-radius')).toHaveText('0.80');
+  await page.getByRole('slider', { name: 'Puck mass' }).fill('2');
+  await page.getByRole('slider', { name: 'Launch speed' }).fill('1.5');
+  await expect(page.getByTestId('string-momentum')).toHaveText('2.400');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
     390,
   );

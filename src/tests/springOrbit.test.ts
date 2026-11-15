@@ -17,6 +17,20 @@ describe('central spring orbit', () => {
     expect(after.energy).toBeCloseTo(before.energy, 5);
   });
 
+  it('keeps velocity when a live adjustment arrives before the first physics step', () => {
+    const start = createSpringTrial();
+    const adjusted = updateSpring(
+      start,
+      { ...DEFAULT_SPRING, restLength: 0.35 },
+      false,
+    );
+    expect(adjusted.vx).toBe(start.vx);
+    expect(adjusted.work).toBeGreaterThan(0);
+    expect(measureSpring(advanceSpring(adjusted, 0.5)).radius).toBeLessThan(
+      0.9,
+    );
+  });
+
   it('changes the radial motion and energy when the rest length is adjusted', () => {
     const before = advanceSpring(
       createSpringTrial({ ...DEFAULT_SPRING, mass: 2 }),

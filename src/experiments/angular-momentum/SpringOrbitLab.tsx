@@ -205,7 +205,11 @@ export default function SpringOrbitLab() {
                 onChange={(event) => {
                   const value = event.target.valueAsNumber;
                   update((trial) =>
-                    updateSpring(trial, { ...trial.settings, [key]: value }),
+                    updateSpring(
+                      trial,
+                      { ...trial.settings, [key]: value },
+                      !useSimulationStore.getState().running,
+                    ),
                   );
                 }}
               />
