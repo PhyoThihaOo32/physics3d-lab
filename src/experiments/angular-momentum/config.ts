@@ -7,7 +7,7 @@ export const dancerExperiment: PhysicsExperiment<DancerParameters> = {
   id: 'angular-momentum',
   title: 'Spinning ballet dancer',
   description:
-    'Raise the arms. Open them out. Discover how mass distribution changes a spin.',
+    'Raise the dancer’s arms or load the robot’s backpack to see how inertia changes a spin.',
   defaultParameters: DEFAULT_DANCER,
   learningObjectives: [
     'Explain how arm position changes moment of inertia.',

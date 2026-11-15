@@ -17,9 +17,36 @@ import { DancerPanel } from './DancerPanel';
 import { DancerScene } from './DancerScene';
 import { DancerReadouts, DancerRecords } from './DancerReadouts';
 import { dancerExperiment } from './config';
+import { RobotLab } from './RobotLab';
 import './dancer.css';
+import './robot.css';
 const CENTER = [0, 1.05, 0] as const;
 export default function DancerPage() {
+  const [model, setModel] = useState<'dancer' | 'robot'>('dancer');
+  return (
+    <>
+      <div className="rotation-models" role="group" aria-label="Spinning model">
+        <button
+          className="secondary-button"
+          aria-pressed={model === 'dancer'}
+          onClick={() => setModel('dancer')}
+        >
+          Dancer
+        </button>
+        <button
+          className="secondary-button"
+          aria-pressed={model === 'robot'}
+          onClick={() => setModel('robot')}
+        >
+          Robot
+        </button>
+      </div>
+      {model === 'dancer' ? <DancerLab /> : <RobotLab />}
+    </>
+  );
+}
+
+function DancerLab() {
   const [parameters, setParameters] = useState(DEFAULT_DANCER);
   const [run, setRun] = useState(0);
   const [view, setView] = useState<CameraView>({

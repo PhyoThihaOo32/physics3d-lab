@@ -168,7 +168,7 @@ src/
 e2e/                           Browser integration checks
 ```
 
-Empty reserved directories contain `.gitkeep`. Physics transforms remain inside Rapier/R3F. Camera controls and lighting remain independent of pause state. The experiment configuration and page remain separate from the application shell. A typed catalog declares each lab, its experiments, and whether each experiment is available or planned. Experiment code is loaded only when opened; the directory does not initialize Three.js or Rapier. The Angular Momentum Robot is planned. No backend or authentication is included.
+Empty reserved directories contain `.gitkeep`. Physics transforms remain inside Rapier/R3F. Camera controls and lighting remain independent of pause state. The experiment configuration and page remain separate from the application shell. A typed catalog declares each lab, its experiments, and whether each experiment is available or planned. Experiment code is loaded only when opened; the directory does not initialize Three.js or Rapier. No backend or authentication is included.
 
 References: [OpenStax free fall](https://openstax.org/books/university-physics-volume-1/pages/3-5-free-fall), [React Three Fiber installation](https://r3f.docs.pmnd.rs/getting-started/installation), and [React Three Rapier](https://github.com/pmndrs/react-three-rapier).
 
@@ -191,6 +191,10 @@ Read hand radius, total moment of inertia, angular velocity, signed RPM, angular
 Five dynamic bodies and four internal motorized joints produce the motion. The torso is constrained to yaw about a fixed vertical axis. Rapier's angular integration is supplemented by Euler's gyroscopic term for each moving arm; angular velocity is never overwritten to force conservation. Inertia uses each body's rotated tensor and the parallel-axis theorem; measured angular momentum independently sums spin and orbital contributions. A pure geometric equation supplies an independent reference inertia.
 
 This is a 51 kg illustrative segment model, not measured anatomy. Under ideal support, Lᵧ is approximately conserved; with resistance, τᵧ = −bω and Lᵧ decreases in magnitude. Spin energy increases as the arms rise toward the axis because actuators do work. Displayed spin energy excludes arm-raising motion and gravitational potential energy, so its change is not total muscle work. See [the detailed lab procedure](docs/DANCER_LAB.md) and [physics validation](docs/PHYSICS_VALIDATION.md) for equations, assumptions, tolerances and test coverage.
+
+## Spinning robot
+
+Open the spinning dancer page and select **Robot**. Start the spin and drop a load into the backpack. Each load falls vertically, then sticks at a fixed radius of 0.48 m. The ideal bearing supplies no torque about the spin axis, so the model preserves axial angular momentum during capture and computes the new speed from Lᵧ / Iᵧ. The graph marks each catch as a step in angular velocity.
 
 ## Vector Mathematics Lab
 

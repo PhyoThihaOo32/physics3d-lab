@@ -1,3 +1,4 @@
+import { RotationStage } from './RotationStage';
 import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import {
@@ -163,26 +164,7 @@ export function DancerScene({
       >
         <Articulation parameters={parameters} vectors={vectors} />
       </SimulationPhysics>
-      <mesh position={[0, -0.065, 0]} receiveShadow>
-        <cylinderGeometry args={[1.25, 1.3, 0.12, 80]} />
-        <meshStandardMaterial
-          color="#283139"
-          roughness={0.48}
-          metalness={0.35}
-        />
-      </mesh>
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.13, 0]}
-        receiveShadow
-      >
-        <planeGeometry args={[30, 30]} />
-        <meshStandardMaterial color="#15242d" />
-      </mesh>
-      <gridHelper
-        args={[10, 20, '#344b57', '#233640']}
-        position={[0, -0.125, 0]}
-      />
+      <RotationStage />
       <mesh position={[0, 1.075, 0]}>
         <cylinderGeometry args={[0.003, 0.003, 2.15, 8]} />
         <meshBasicMaterial color="#a7b9c4" transparent opacity={0.4} />

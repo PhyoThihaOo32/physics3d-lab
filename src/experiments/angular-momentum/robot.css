@@ -1,0 +1,46 @@
+.rotation-models {
+  display: flex;
+  gap: 7px;
+  margin-bottom: 18px;
+}
+.rotation-models button[aria-pressed='true'] {
+  border-color: #82966f;
+  background: #2a382c;
+  color: #d7ebc6;
+}
+.robot-controls h2 {
+  margin: 0 0 20px;
+}
+.robot-controls > .secondary-button {
+  margin-top: 6px;
+}
+.robot-drop-note {
+  min-height: 1.7em;
+  margin: 8px 0 0;
+  color: #ffc5ac;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.robot-measurements {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.robot-measurements .measurement:nth-child(2),
+.robot-measurements .measurement:nth-child(3) {
+  border-right: 1px solid #3b4751;
+}
+.robot-results .time-chart {
+  max-width: 640px;
+  margin-top: 12px;
+}
+.robot-capture {
+  color: #c1e29e;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 700px) {
+  .robot-measurements {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .robot-measurements .measurement:nth-child(2) {
+    border-right: 0;
+  }
+}
