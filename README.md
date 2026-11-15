@@ -194,7 +194,7 @@ This is a 51 kg illustrative segment model, not measured anatomy. Under ideal su
 
 ## Spinning robot
 
-Open **Rotation → Spinning robot**. Choose a target cargo mass from 0 to 15 kg and add or remove the difference while running. Each 5 kg fills one visible backpack block. The incoming load falls vertically with zero axial angular momentum. The ideal lift removes cargo at the same radius with its tangential speed intact, so outgoing cargo carries away its share of angular momentum and the remaining spin speed stays continuous at release.
+Open **Rotation → Spinning robot**. Choose a mass and use **Add** or **Remove** while running. Each 5 kg fills one visible backpack block. The incoming load falls vertically with zero axial angular momentum. During removal, the robot lifts the outgoing cargo and moves it to the spin axis before release. Rotational inertia decreases as it moves inward. Turn on **Bearing friction** before starting to compare against a dry bearing that uses the static supported weight to estimate its resisting torque.
 
 ## Other rotation experiments
 

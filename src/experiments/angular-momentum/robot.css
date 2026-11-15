@@ -1,8 +1,20 @@
-.robot-controls h2 {
-  margin: 0 0 20px;
+.robot-load-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 14px;
 }
-.robot-controls > .secondary-button {
-  margin-top: 6px;
+.robot-bearing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  min-height: 32px;
+  margin-bottom: 8px;
+}
+.robot-bearing input {
+  margin: 0;
+  accent-color: #c1e29e;
 }
 .robot-lab .robot-measurements {
   grid-template-columns: repeat(4, minmax(0, 1fr));

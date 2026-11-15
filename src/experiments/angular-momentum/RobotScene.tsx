@@ -1,11 +1,10 @@
 import { useRef } from 'react';
-import type { Group } from 'three';
+import type { Group, Mesh } from 'three';
 import { RoundedBox } from '@react-three/drei';
 import {
   ROBOT,
   robotCargoBlocks,
   robotCargoHeight,
-  robotTransferAngle,
   robotTransferPosition,
   type RobotTransfer,
   robotOmega,
@@ -21,6 +20,7 @@ const JOINT = '#3b4b57';
 const TRIM = '#75c9b9';
 const PACK = '#a67b40';
 const LOAD_COLORS = ['#f0ba73', '#7ed0c0', '#a3b5ea'];
+const LIFT_MOUNT = [0.282, 1.13, 0.52] as const;
 
 function Plate({
   position,
@@ -186,6 +186,11 @@ function Backpack() {
         size={[0.25, 0.034, 0.015]}
         color={TRIM}
       />
+      <Plate
+        position={[0.258, LIFT_MOUNT[1], LIFT_MOUNT[2] - ROBOT.backpackRadius]}
+        size={[0.078, 0.16, 0.105]}
+        color={JOINT}
+      />
     </group>
   );
 }
@@ -235,6 +240,10 @@ export function RobotScene({
 }) {
   const pivot = useRef<Group>(null);
   const moving = useRef<Group>(null);
+  const lift = useRef<Group>(null);
+  const mast = useRef<Mesh>(null);
+  const arm = useRef<Mesh>(null);
+  const clamp = useRef<Mesh>(null);
   const cargo = robotCargoBlocks(
     transfer?.kind === 'remove' ? transfer.to : load,
   );
@@ -251,12 +260,28 @@ export function RobotScene({
   useRotationFrame(advance, publish, () => {
     const { angle, transfer, time } = getTrial();
     if (pivot.current) pivot.current.rotation.y = angle;
+    if (moving.current) moving.current.visible = transfer !== null;
+    if (lift.current) lift.current.visible = transfer?.kind === 'remove';
+    if (!transfer) return;
+    const [x, y, z] = robotTransferPosition(transfer, time, angle);
     if (moving.current) {
-      moving.current.visible = transfer !== null;
-      if (transfer) {
-        moving.current.position.set(...robotTransferPosition(transfer, time));
-        moving.current.rotation.y = robotTransferAngle(transfer, time);
-      }
+      moving.current.position.set(x, y, z);
+      moving.current.rotation.y =
+        transfer.kind === 'add' ? transfer.landingAngle : angle;
+    }
+    if (
+      transfer.kind === 'remove' &&
+      mast.current &&
+      arm.current &&
+      clamp.current
+    ) {
+      const [mountX, mountY, mountZ] = LIFT_MOUNT;
+      const radius = Math.hypot(x, z);
+      mast.current.position.set(mountX, (mountY + y) / 2, mountZ);
+      mast.current.scale.y = y - mountY + 0.025;
+      arm.current.position.set(mountX, y, (mountZ + radius) / 2);
+      arm.current.scale.z = mountZ - radius + 0.025;
+      clamp.current.position.set(mountX - 0.058, y, radius);
     }
   });
 
@@ -275,6 +300,20 @@ export function RobotScene({
               height={block.center}
             />
           ))}
+        </group>
+        <group ref={lift} visible={false}>
+          <mesh ref={mast}>
+            <boxGeometry args={[0.028, 1, 0.034]} />
+            <meshStandardMaterial color={ALLOY} />
+          </mesh>
+          <mesh ref={arm}>
+            <boxGeometry args={[0.032, 0.028, 1]} />
+            <meshStandardMaterial color={ALLOY} />
+          </mesh>
+          <mesh ref={clamp}>
+            <boxGeometry args={[0.135, 0.028, 0.042]} />
+            <meshStandardMaterial color={TRIM} />
+          </mesh>
         </group>
       </group>
       <group ref={moving} visible={false}>

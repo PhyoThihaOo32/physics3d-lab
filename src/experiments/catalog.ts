@@ -128,7 +128,7 @@ export const experiments: readonly ExperimentRegistration[] = [
     description:
       'Add or lift out backpack weights and compare how each changes the spin.',
     objectives: [
-      'Explain why released cargo carries angular momentum away.',
+      'Observe how moving cargo inward changes rotational inertia.',
       'Check conservation of axial angular momentum during capture.',
     ],
     measurements: [
