@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import {
   liftVectors,
   type GyroMode,
@@ -56,6 +56,8 @@ export function GyroSetup({
   onGravity: (gravity: number) => void;
   comparing: boolean;
 }) {
+  const [gravityDraft, setGravityDraft] = useState(parameters.gravity);
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -81,9 +83,7 @@ export function GyroSetup({
     <form className="gyro-form" onSubmit={submit}>
       <h2>Rotor setup</h2>
       {ROTOR_FIELDS.filter(
-        ({ name }) =>
-          (name !== 'gravity' || mode === 'gravity') &&
-          (name !== 'spin' || !comparing),
+        ({ name }) => name !== 'gravity' && (name !== 'spin' || !comparing),
       ).map(({ name, label, unit, min, max }) => (
         <div className="parameter-field" key={name}>
           <label htmlFor={`gyro-${name}`}>{label}</label>
@@ -123,23 +123,45 @@ export function GyroSetup({
         </div>
       )}
       {mode === 'gravity' && (
-        <div className="gyro-choices" role="group" aria-label="Gravity presets">
-          {[
-            { label: 'Zero g', gravity: 0 },
-            { label: 'Moon', gravity: 1.62 },
-            { label: 'Earth', gravity: 9.81 },
-          ].map(({ label, gravity }) => (
-            <button
-              type="button"
-              key={label}
-              className="secondary-button"
-              aria-pressed={parameters.gravity === gravity}
-              onClick={() => onGravity(gravity)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <>
+          <label className="dancer-mode" htmlFor="gyro-gravity">
+            <span className="spin-range-label">
+              Gravity <output>{f(gravityDraft)} m/s²</output>
+            </span>
+            <input
+              className="spin-range"
+              id="gyro-gravity"
+              name="gravity"
+              type="range"
+              min="0"
+              max="15"
+              step="0.01"
+              value={gravityDraft}
+              onChange={(event) => setGravityDraft(Number(event.target.value))}
+            />
+          </label>
+          <div
+            className="gyro-choices"
+            role="group"
+            aria-label="Gravity presets"
+          >
+            {[
+              { label: 'Zero g', gravity: 0 },
+              { label: 'Moon', gravity: 1.62 },
+              { label: 'Earth', gravity: 9.81 },
+            ].map(({ label, gravity }) => (
+              <button
+                type="button"
+                key={label}
+                className="secondary-button"
+                aria-pressed={parameters.gravity === gravity}
+                onClick={() => onGravity(gravity)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </>
       )}
       <label className="dancer-mode">
         Bearing friction

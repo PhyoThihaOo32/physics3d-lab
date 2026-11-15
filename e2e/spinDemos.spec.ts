@@ -191,6 +191,9 @@ test('runs a matched torque comparison and a zero-gravity trial', async ({
   await expect(page.getByTestId('gimbal-fast-impulse')).toHaveText('1.00');
   await button('Gravity precession').click();
   await expect(page.getByTestId('gimbal-estimate')).toHaveText('1.44');
+  await page.getByRole('slider', { name: 'Gravity' }).fill('4');
+  await button('Apply setup').click();
+  await expect(page.getByTestId('gimbal-torque')).toHaveText('2.12');
   await button('Zero g').click();
   await expect(page.getByTestId('gimbal-torque')).toHaveText('0.00');
   await page.getByRole('button', { name: 'Start rotor' }).click();

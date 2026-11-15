@@ -119,6 +119,16 @@ export function GyroscopeLab() {
     useSimulationStore.getState().setPlaybackSpeed(1);
   }
 
+  function chooseMode(nextMode: GyroMode) {
+    const next = { ...parameters };
+    if (nextMode === 'free') {
+      next.spin = 60;
+      next.friction = 0;
+    }
+    if (nextMode === 'gravity') next.gravity = DEFAULT_GYRO.gravity;
+    startNewTrial(nextMode, next, false);
+  }
+
   function applyLift() {
     setPulse((previous) => ({ ...lift, id: (previous?.id ?? 0) + 1 }));
     useSimulationStore.getState().setRunning(true);
@@ -172,7 +182,7 @@ export function GyroscopeLab() {
             key={option.id}
             className="secondary-button"
             aria-pressed={!comparing && mode === option.id}
-            onClick={() => startNewTrial(option.id, parameters, false)}
+            onClick={() => chooseMode(option.id)}
           >
             {option.label}
           </button>
