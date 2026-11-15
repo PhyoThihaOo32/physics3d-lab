@@ -47,7 +47,7 @@ const LAB_MODES: {
     id: 'gravity',
     label: 'Gravity precession',
     scene: 'Gravity precession about a pivot',
-    prompt: 'Change the spin or gravity and compare the axle’s turn rate.',
+    prompt: 'Change spin or gravity to see the axle precess, wobble, or fall.',
   },
 ];
 
@@ -76,11 +76,11 @@ export default function GyroscopeLab() {
   const { height, outer, lever } = gimbalDimensions(parameters.radius, mode);
   const center = useMemo(() => [0, height * 0.7, 0] as const, [height]);
   const primaryParameters = useMemo(
-    () => (comparing ? { ...parameters, spin: 5 } : parameters),
+    () => (comparing ? { ...parameters, spin: 5, friction: 0 } : parameters),
     [comparing, parameters],
   );
   const secondaryParameters = useMemo(
-    () => ({ ...parameters, spin: 50 }),
+    () => ({ ...parameters, spin: 50, friction: 0 }),
     [parameters],
   );
   const configuration =
@@ -120,13 +120,8 @@ export default function GyroscopeLab() {
   }
 
   function chooseMode(nextMode: GyroMode) {
-    const next = { ...parameters };
-    if (nextMode === 'free') {
-      next.spin = 60;
-      next.friction = 0;
-    }
-    if (nextMode === 'gravity') next.gravity = DEFAULT_GYRO.gravity;
-    startNewTrial(nextMode, next, false);
+    if (nextMode !== mode || comparing)
+      startNewTrial(nextMode, parameters, false);
   }
 
   function applyLift() {
@@ -190,9 +185,9 @@ export default function GyroscopeLab() {
         <button
           className="secondary-button"
           aria-pressed={comparing}
-          onClick={() =>
-            startNewTrial('torque', { ...parameters, friction: 0 }, true)
-          }
+          onClick={() => {
+            if (!comparing) startNewTrial('torque', parameters, true);
+          }}
         >
           Compare slow and fast
         </button>
@@ -267,7 +262,9 @@ export default function GyroscopeLab() {
                 frameWidth={
                   mode === 'free'
                     ? 2 * outer + 0.47
-                    : parameters.radius * 2 + lever * 2 + 0.74
+                    : parameters.radius * 2 +
+                      lever * 2 +
+                      (comparing ? 1.25 : 0.85)
                 }
                 frameHeight={
                   height + (mode === 'free' ? outer : parameters.radius) + 0.34

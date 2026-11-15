@@ -95,6 +95,40 @@ describe('Rapier gyroscope', () => {
       }
     }
   });
+  it('keeps the specified angular impulse through a strong lift on a light rotor', () => {
+    const world = new RAPIER.World({ x: 0, y: 0, z: 0 });
+    try {
+      world.numSolverIterations = 24;
+      const gyro = new GimbalGyroscope(
+        world,
+        { ...DEFAULT_GYRO, mass: 0.2, radius: 0.05 },
+        'torque',
+      );
+      world.timestep = gyro.timeStep;
+      const pulse = { ...DEFAULT_LIFT, force: 10, lever: 0.75, id: 1 };
+      const steps = Math.round(1 / gyro.timeStep);
+      const advance = () => {
+        for (let i = 0; i < steps; i++) {
+          gyro.beforeStep(0, pulse);
+          world.step();
+          gyro.afterStep();
+        }
+      };
+      advance();
+      const lifted = gyro.measure();
+      expect(lifted.liftImpulse[2]).toBeCloseTo(7.5, 9);
+      expect(lifted.totalMomentum[0]).toBeCloseTo(0.01, 3);
+      expect(lifted.totalMomentum[2]).toBeCloseTo(7.5, 3);
+      advance();
+      const coasting = gyro.measure();
+      expect(coasting.pulseActive).toBe(false);
+      expect(coasting.momentumError).toBeLessThan(0.001);
+      // In free motion of a symmetric body, L projected on the axle stays fixed.
+      expect(Math.abs(coasting.spin - lifted.spin)).toBeLessThan(0.1);
+    } finally {
+      world.free();
+    }
+  });
   it('gets its gravity torque from the pivot and actual rotor position', () => {
     for (const gravity of [0, 9.81]) {
       const world = new RAPIER.World({ x: 0, y: -gravity, z: 0 });
@@ -160,6 +194,32 @@ describe('Rapier gyroscope', () => {
     expect(rates[1]).toBeGreaterThan(0);
     expect(rates[0]).toBeGreaterThan(1.6 * rates[1]);
     expect(rates[2]).toBeCloseTo(-rates[1], 2);
+  });
+
+  it('reports a falling axle and total momentum at zero spin without a precession rate', () => {
+    const world = new RAPIER.World({ x: 0, y: -DEFAULT_GYRO.gravity, z: 0 });
+    try {
+      world.numSolverIterations = 24;
+      const gyro = new GimbalGyroscope(
+        world,
+        { ...DEFAULT_GYRO, spin: 0 },
+        'gravity',
+      );
+      world.timestep = gyro.timeStep;
+      for (let step = 0; step < Math.round(1 / gyro.timeStep); step++) {
+        gyro.beforeStep();
+        world.step();
+        gyro.afterStep();
+      }
+      const reading = gyro.measure();
+      expect(reading.tilt).toBeLessThan(-45);
+      expect(reading.spinMomentum).toBeCloseTo(0, 8);
+      expect(Math.hypot(...reading.totalMomentum)).toBeGreaterThan(1);
+      expect(reading.precession).toBeNull();
+      expect(reading.estimatedPrecession).toBeNull();
+    } finally {
+      world.free();
+    }
   });
 
   it('bearing drag reduces spin and accounts for dissipated spin energy', () => {

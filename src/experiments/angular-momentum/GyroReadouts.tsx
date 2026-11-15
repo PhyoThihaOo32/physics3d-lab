@@ -44,7 +44,7 @@ export function GyroReadouts({
         testId={testId('inertia')}
       />
       <Measurement
-        label="Spin momentum L"
+        label="Axial spin momentum"
         value={f(reading?.spinMomentum ?? null)}
         unit="kg·m²/s"
         testId={testId('momentum')}
@@ -59,6 +59,14 @@ export function GyroReadouts({
       )}
       {mode !== 'free' && (
         <Measurement
+          label="Momentum about pivot"
+          value={f(reading ? vectorMagnitude(reading.totalMomentum) : null)}
+          unit="kg·m²/s"
+          testId={testId('pivot-momentum')}
+        />
+      )}
+      {mode !== 'free' && (
+        <Measurement
           label={mode === 'gravity' ? 'Gravity torque τ' : 'Applied torque τ'}
           value={f(reading ? vectorMagnitude(reading.torque) : null)}
           unit="N·m"
@@ -68,8 +76,8 @@ export function GyroReadouts({
       {mode === 'torque' && (
         <>
           <Measurement
-            label="Angular impulse ΔL"
-            value={f(reading ? vectorMagnitude(reading.impulse) : null)}
+            label="Lift impulse"
+            value={f(reading ? vectorMagnitude(reading.liftImpulse) : null)}
             unit="kg·m²/s"
             testId={testId('impulse')}
           />
@@ -106,6 +114,12 @@ export function GyroReadouts({
             value={f(reading?.estimatedPrecession ?? null)}
             unit="rad/s"
             testId={testId('estimate')}
+          />
+          <Measurement
+            label="Axle tilt"
+            value={f(reading?.tilt ?? null, 1)}
+            unit="°"
+            testId={testId('tilt')}
           />
         </>
       )}
@@ -173,9 +187,9 @@ export function GyroEquations({
         result: `Next pulse |τ| = ${f(liftTorque)} N·m`,
       },
       {
-        symbolic: 'τ = dL/dt · ΔL = ∫τ dt',
-        substitution: `|∫τ dt| = ${f(reading ? vectorMagnitude(reading.impulse) : null)} kg·m²/s`,
-        result: `|ΔL| from torque = ${f(reading ? vectorMagnitude(reading.impulse) : null)} kg·m²/s`,
+        symbolic: 'dL/dt = τnet, ΔL = ∫τnet dt',
+        substitution: `|∫τnet dt| = ${f(reading ? vectorMagnitude(reading.impulse) : null)} kg·m²/s`,
+        result: `Net |ΔL| about pivot = ${f(reading ? vectorMagnitude(reading.impulse) : null)} kg·m²/s`,
       },
     );
   }
@@ -241,9 +255,9 @@ export function GyroEquations({
         )}
         {mode === 'gravity' && (
           <p>
-            Measured precession is the axle’s average turn rate about +y over up
-            to two seconds. The estimate is shown when spin dominates. The axle
-            can also wobble, especially at low spin.
+            The axle starts horizontal. It can wobble as it precesses, or fall
+            when spin is zero. The measured rate averages the turn about +y over
+            up to two seconds. The steady estimate applies when spin dominates.
           </p>
         )}
         {parameters.friction > 0 && (

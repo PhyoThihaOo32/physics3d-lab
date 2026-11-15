@@ -207,7 +207,7 @@ Open **Rotation → Spinning robot**. Choose a mass and use **Add** or **Remove*
 
 Open **Rotation → Gyroscope**. **Free gyroscope** uses two Rapier gimbal bearings and an independent rotor joint. **Applied torque** uses a pivoted rotor and a calibrated force couple for a one-second lift. **Gravity precession** offsets the rotor from a fixed pivot so its weight supplies torque. **Compare slow and fast** runs matched 5 and 50 rad/s trials.
 
-The displayed spin angular momentum uses the disk’s axial inertia. Angular momentum about the pivot also includes transverse rotation and the motion of the rotor’s center of mass. The fast-spin precession estimate is shown separately from the measured motion. Settings apply to a fresh trial. The camera, equation views, and vector layers remain available while paused.
+The axial spin and total angular momentum about the pivot have separate readouts and arrows. The pivoted modes integrate external angular impulse with the disk’s inertia about the joint. Gravity mode starts with a horizontal axle, so the rotor can wobble as it precesses or fall when released from rest. The fast-spin estimate is shown separately from the measured motion. Applied settings carry across modes. The camera, equation views, and vector layers remain available while paused.
 
 ## Vector Mathematics Lab
 

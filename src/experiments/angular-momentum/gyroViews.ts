@@ -1,10 +1,11 @@
 export const VECTOR_OPTIONS = {
-  spin: 'Angular velocity ω',
-  momentum: 'Angular momentum L',
+  spin: 'Axial spin ω',
+  momentum: 'Spin angular momentum',
+  pivotMomentum: 'Angular momentum about pivot',
   torque: 'Torque τ',
   force: 'Force F',
   lever: 'Lever arm r',
-  impulse: 'Momentum change ΔL',
+  impulse: 'Angular impulse diagram',
   precession: 'Precession Ωₚ',
   trail: 'Axis trail',
 } as const;
@@ -13,12 +14,13 @@ export type GyroVector = keyof typeof VECTOR_OPTIONS;
 export type GyroVectorSettings = Record<GyroVector, boolean>;
 
 export const DEFAULT_GYRO_VECTORS: GyroVectorSettings = {
-  spin: true,
+  spin: false,
   momentum: true,
+  pivotMomentum: true,
   torque: true,
   force: true,
-  lever: true,
-  impulse: true,
+  lever: false,
+  impulse: false,
   precession: true,
   trail: false,
 };

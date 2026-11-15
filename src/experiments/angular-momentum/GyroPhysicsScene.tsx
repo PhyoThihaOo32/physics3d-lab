@@ -79,7 +79,7 @@ function RotorSimulation({
     const scale =
       0.85 /
       Math.max(
-        5,
+        1,
         vectorMagnitude(s.initialMomentum),
         vectorMagnitude(s.impulse),
         vectorMagnitude(sum),
@@ -185,7 +185,8 @@ function RotorSimulation({
       ) : (
         <GyroPivotStand
           height={dimensions.height}
-          offset={dimensions.lever + parameters.radius + 0.15}
+          offset={dimensions.lever + parameters.radius + 0.22}
+          overhead={mode === 'gravity' ? parameters.radius + 0.18 : 0}
         />
       )}
       <group ref={rotor}>
@@ -218,7 +219,7 @@ function RotorSimulation({
               )
             : [0, 0, 0];
         }}
-        label="L"
+        label="Lspin"
         unit="kg·m²/s"
         category="component"
         color="#8ac8eb"
@@ -236,11 +237,31 @@ function RotorSimulation({
             ? scaleVector(s.axis, (0.65 * s.spin) / (55 + Math.abs(s.spin)))
             : [0, 0, 0];
         }}
-        label="ω"
+        label="ωspin"
         unit="rad/s"
         category="velocity"
         labelSize={0.2}
       />
+      {mode !== 'free' && (
+        <VectorArrow3D
+          visible={vectorsVisible && vectorSettings.pivotMomentum}
+          origin={[0, dimensions.height, 0]}
+          vector={() => {
+            const momentum =
+              live.current?.totalMomentum ?? ([0, 0, 0] as const);
+            return scaleVector(
+              momentum,
+              0.9 / (2.4 + vectorMagnitude(momentum)),
+            );
+          }}
+          label="Lpivot"
+          unit="kg·m²/s"
+          category="component"
+          color="#cdb5ea"
+          labelSize={0.2}
+          labelOffset={[0, 0.24, 0]}
+        />
+      )}
       {mode === 'torque' && (
         <>
           <VectorArrow3D

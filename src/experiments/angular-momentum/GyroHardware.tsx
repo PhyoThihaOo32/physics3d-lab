@@ -168,18 +168,29 @@ export function GyroPivot({ radius = 0.059 }: { radius?: number }) {
 export function GyroPivotStand({
   height,
   offset,
+  overhead = 0,
 }: {
   height: number;
   offset: number;
+  overhead?: number;
 }) {
+  const beamHeight = height + overhead;
   return (
     <>
       <group position={[-offset, 0, 0]}>
-        <GyroBase height={height} />
+        <GyroBase height={beamHeight} />
       </group>
-      <group position={[-offset / 2, height, 0]}>
+      <group position={[-offset / 2, beamHeight, 0]}>
         <GyroAxle length={offset + 0.065} radius={0.028} />
       </group>
+      {overhead > 0 && (
+        <group
+          position={[0, height + overhead / 2, 0]}
+          rotation={[0, 0, Math.PI / 2]}
+        >
+          <GyroAxle length={overhead} radius={0.022} />
+        </group>
+      )}
       <group position={[0, height, 0]}>
         <GyroPivot />
       </group>

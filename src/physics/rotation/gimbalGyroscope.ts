@@ -45,6 +45,7 @@ export class GimbalGyroscope {
   private pulseInitial: Vector3Tuple = ZERO;
   private readonly pulseAxis = new Vector3(1, 0, 0);
   private readonly impulse = new Vector3();
+  private readonly liftImpulse = new Vector3();
   private readonly total = new Vector3();
   private readonly offset = new Vector3();
   private readonly linearMomentum = new Vector3();
@@ -59,6 +60,10 @@ export class GimbalGyroscope {
   private readonly applied = new Vector3();
   private readonly angularImpulse = new Vector3();
   private readonly bearingTorque = new Vector3();
+  private readonly pivotMomentum = new Vector3();
+  private readonly gravityTorqueAtStart = new Vector3();
+  private readonly rotationStep = new Quaternion();
+  private readonly pivotPose = new Quaternion();
   private heat = 0;
   private readonly azimuth: { step: number; angle: number }[] = [];
   private readonly trail: Vector3Tuple[] = [];
@@ -90,6 +95,8 @@ export class GimbalGyroscope {
     this.pivotLever = lever;
     const { axial, transverse } = rotorMoments(parameters, mode);
     this.inertia = new Vector3(axial, transverse, transverse);
+    // The pivoted modes use the inertia tensor about the fixed joint.
+    // The parallel-axis term already accounts for the offset disk's motion.
     this.rotor = world.createRigidBody(
       RAPIER.RigidBodyDesc.dynamic()
         .setTranslation(0, height, 0)
@@ -111,6 +118,7 @@ export class GimbalGyroscope {
       ).setTranslation(0, height, 0),
     );
     if (mode !== 'free') {
+      this.pivotMomentum.set(axial * spin, 0, 0);
       this.middle = null;
       this.inner = null;
       world.createImpulseJoint(
@@ -245,6 +253,78 @@ export class GimbalGyroscope {
       .applyQuaternion(this.pose);
   }
 
+  private pivotAngularVelocity(axis: Vector3) {
+    const inverseDifference = 1 / this.inertia.x - 1 / this.inertia.y;
+    return this.angularPrediction
+      .copy(this.pivotMomentum)
+      .multiplyScalar(1 / this.inertia.y)
+      .addScaledVector(axis, inverseDifference * this.pivotMomentum.dot(axis));
+  }
+
+  private predictPivotRotor(torque: Vector3) {
+    const { x: axial, y: transverse } = this.inertia;
+    this.bodyAxis.copy(X).applyQuaternion(this.pivotPose);
+    const midpoint = this.angularImpulse
+      .copy(this.pivotMomentum)
+      .addScaledVector(torque, this.timeStep / 2);
+    if (this.mode === 'gravity') {
+      // The weight follows the disk. Evaluate its torque at the midpoint
+      // of the predicted axle sweep instead of holding the starting torque.
+      const halfSweep = (midpoint.length() * this.timeStep) / (2 * transverse);
+      this.nextBodyAxis
+        .copy(this.bodyAxis)
+        .applyAxisAngle(
+          this.predictionAxis.copy(midpoint).normalize(),
+          halfSweep,
+        );
+      torque
+        .sub(this.gravityTorqueAtStart)
+        .add(this.gravityTorqueAt(this.nextBodyAxis, this.nextBodyAxis));
+      midpoint
+        .copy(this.pivotMomentum)
+        .addScaledVector(torque, this.timeStep / 2);
+    }
+    // The exact symmetric-body drift at constant L is a rotation about L
+    // combined with a rotation about the axle. Use the midpoint L for torque.
+    // Give Rapier the equivalent step velocity so it advances the rigid body
+    // and its joint over that rotation.
+    const sweep = (midpoint.length() * this.timeStep) / transverse;
+    const twist =
+      (1 / axial - 1 / transverse) *
+      midpoint.dot(this.bodyAxis) *
+      this.timeStep;
+    const rotation = this.rotationStep
+      .setFromAxisAngle(this.predictionAxis.copy(midpoint).normalize(), sweep)
+      .multiply(this.pose.setFromAxisAngle(this.bodyAxis, twist));
+    this.omega.set(rotation.x, rotation.y, rotation.z);
+    const sine = this.omega.length();
+    this.rotor.setAngvel(
+      this.omega.multiplyScalar(
+        sine > 0
+          ? (2 * Math.atan2(sine, rotation.w)) / (sine * this.timeStep)
+          : 0,
+      ),
+      true,
+    );
+    this.pivotPose.premultiply(rotation).normalize();
+    this.pivotMomentum.addScaledVector(torque, this.timeStep);
+  }
+
+  private gravityTorqueAt(axis: Vector3, target: Vector3) {
+    return target
+      .crossVectors(axis, this.weight)
+      .multiplyScalar(this.pivotLever);
+  }
+
+  private finishPivotStep() {
+    // Reconcile the pivot's pose and velocity with the symmetric-body step.
+    // This removes cumulative quaternion integration drift at high speeds
+    // while the spherical joint continues to constrain translation.
+    this.rotor.setRotation(this.pivotPose, false);
+    const axis = this.bodyAxis.copy(X).applyQuaternion(this.pivotPose);
+    this.rotor.setAngvel(this.pivotAngularVelocity(axis), false);
+  }
+
   private diskCenter() {
     this.rotorLocation.copy(this.rotor.translation());
     if (this.mode !== 'free') {
@@ -342,6 +422,7 @@ export class GimbalGyroscope {
         .copy(X)
         .applyQuaternion(this.pose.copy(this.rotor.rotation()));
       this.impulse.set(0, 0, 0);
+      this.liftImpulse.set(0, 0, 0);
       this.pulseResult = null;
     }
     const pulseActive = this.steps - this.pulseStart < this.pulseSteps;
@@ -352,46 +433,39 @@ export class GimbalGyroscope {
       .add(this.bearingTorque);
     if (this.mode === 'gravity') {
       this.weight.copy(this.world.gravity).multiplyScalar(this.rotor.mass());
+      this.bodyAxis.copy(X).applyQuaternion(this.pivotPose);
       rotorTorque.add(
-        this.offset
-          .copy(this.diskCenter())
-          .sub(this.rotor.translation())
-          .cross(this.weight),
+        this.gravityTorqueAt(this.bodyAxis, this.gravityTorqueAtStart),
       );
     }
-    for (const body of this.bodies) {
-      const external =
-        body.body === this.rotor
-          ? rotorTorque
-          : this.inertial
-              .copy(this.bearingTorque)
-              .multiplyScalar(body.body === this.inner ? -1 : 0);
-      this.addGyroscopicTorque(body, external);
+    if (this.mode === 'free') {
+      const reaction = this.inertial.copy(this.bearingTorque).negate();
+      const zero = this.offset.set(0, 0, 0);
+      for (const body of this.bodies) {
+        const external =
+          body.body === this.rotor
+            ? rotorTorque
+            : body.body === this.inner
+              ? reaction
+              : zero;
+        this.addGyroscopicTorque(body, external);
+      }
+      this.rotor.addTorque(this.bearingTorque, true);
+      this.inner?.addTorque(reaction, true);
+    } else {
+      this.predictPivotRotor(rotorTorque);
     }
-    // An ideal applicator supplies a force couple about the fixed lab axis.
-    // The two forces cancel in translation, leaving r × F on the rotor.
-    this.rotor.addTorque(v(...this.externalTorque), true);
-    this.rotor.addTorque(this.bearingTorque, true);
-    this.inner?.addTorque(
-      this.inertial.copy(this.bearingTorque).negate(),
-      true,
-    );
-    if (this.mode === 'gravity') {
-      this.rotor.resetForces(false);
-      // Apply the rotor's actual weight at the offset disk center. The
-      // spherical bearing supplies the reaction force at the pivot.
-      this.rotor.addForceAtPoint(this.weight, this.diskCenter(), true);
+    if (pulseActive) {
+      const liftTorque = this.offset.set(...this.externalTorque);
+      this.liftImpulse.addScaledVector(liftTorque, this.timeStep);
+      this.impulse.addScaledVector(liftTorque, this.timeStep);
     }
-    if (pulseActive)
-      this.impulse.addScaledVector(
-        this.offset.set(...this.externalTorque),
-        this.timeStep,
-      );
     if (this.pulseId)
       this.impulse.addScaledVector(this.bearingTorque, this.timeStep);
   }
 
   afterStep() {
+    if (this.mode !== 'free') this.finishPivotStep();
     this.steps++;
     if (this.steps - this.pulseStart === this.pulseSteps) {
       const axis = this.axis
@@ -467,7 +541,7 @@ export class GimbalGyroscope {
       gravityForce,
       gravityLever,
       gravity,
-      precession: this.observedPrecession(),
+      precession: Math.abs(spin) > 1e-3 ? this.observedPrecession() : null,
       estimatedPrecession: estimateValid ? estimatedRate : null,
       axisTrail: includeTrail ? this.trail.slice() : [],
       bearingTorque: this.bearingTorque.toArray(),
@@ -477,6 +551,7 @@ export class GimbalGyroscope {
       pulseResult: this.pulseResult,
       initialMomentum: this.pulseInitial,
       totalMomentum: total.toArray(),
+      liftImpulse: this.liftImpulse.toArray(),
       impulse: this.impulse.toArray(),
       momentumError: error,
       rotorCenter,

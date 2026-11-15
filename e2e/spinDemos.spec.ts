@@ -170,6 +170,15 @@ test('uses the Rapier gyroscope setup, gimbals, and camera on a phone', async ({
   await button('Apply setup').click();
   await expect(page.getByTestId('gimbal-inertia')).toHaveText('0.180');
   await expect(page.getByTestId('gimbal-momentum')).toHaveText('-7.20');
+  await page.getByLabel('Bearing friction').selectOption('0.003');
+  await button('Apply setup').click();
+  await button('Gravity precession').click();
+  await button('Zero g').click();
+  await button('Free gyroscope').click();
+  await expect(page.getByLabel('Bearing friction')).toHaveValue('0.003');
+  await expect(page.getByTestId('gimbal-spin')).toHaveText('-40.00');
+  await button('Gravity precession').click();
+  await expect(page.getByRole('slider', { name: 'Gravity' })).toHaveValue('0');
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
     390,
   );
@@ -211,6 +220,18 @@ test('runs a matched torque comparison and a zero-gravity trial', async ({
   await expect(page.getByTestId('gimbal-precession')).toHaveText('0.00', {
     timeout: 15000,
   });
+  await button('No spin').click();
+  await button('Earth').click();
+  await page.getByRole('button', { name: 'Start rotor' }).click();
+  await expect
+    .poll(async () => Number(await page.getByTestId('gimbal-tilt').innerText()))
+    .toBeLessThan(-20);
+  await expect(page.getByTestId('gimbal-precession')).toHaveText('—');
+  await expect
+    .poll(async () =>
+      Number(await page.getByTestId('gimbal-pivot-momentum').innerText()),
+    )
+    .toBeGreaterThan(0.1);
 });
 
 test('moves the spring orbit under a live rest-length adjustment while conserving angular momentum', async ({

@@ -67,7 +67,7 @@ export function GyroSetup({
       spin: comparing ? parameters.spin : Number(data.get('spin')),
       gravity:
         mode === 'gravity' ? Number(data.get('gravity')) : parameters.gravity,
-      friction: Number(data.get('friction')),
+      friction: comparing ? parameters.friction : Number(data.get('friction')),
     };
     if (
       !ROTOR_FIELDS.every(
@@ -163,14 +163,16 @@ export function GyroSetup({
           </div>
         </>
       )}
-      <label className="dancer-mode">
-        Bearing friction
-        <select name="friction" defaultValue={parameters.friction}>
-          <option value={0}>Ideal</option>
-          <option value={0.003}>Low</option>
-          <option value={0.012}>Medium</option>
-        </select>
-      </label>
+      {!comparing && (
+        <label className="dancer-mode">
+          Bearing friction
+          <select name="friction" defaultValue={parameters.friction}>
+            <option value={0}>Ideal</option>
+            <option value={0.003}>Low</option>
+            <option value={0.012}>Medium</option>
+          </select>
+        </label>
+      )}
       <button className="secondary-button" type="submit">
         Apply setup
       </button>
@@ -239,6 +241,7 @@ export function GyroLayerControls({
       'lever',
       'force',
       'torque',
+      'pivotMomentum',
       mode === 'torque' ? 'impulse' : 'precession',
     );
   if (mode === 'gravity') options.push('trail');
