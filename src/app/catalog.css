@@ -233,6 +233,9 @@
   text-decoration: underline;
   text-underline-offset: 5px;
 }
+.lab-card > p + .lab-card-link {
+  margin-top: auto;
+}
 .lab-card-link > span {
   font-size: 20px;
 }

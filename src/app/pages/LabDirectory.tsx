@@ -64,16 +64,18 @@ export function LabDirectory() {
               </div>
               <h2>{lab.title}</h2>
               <p>{lab.description}</p>
-              <ul className="lab-experiment-list">
-                {entries.map((entry) => (
-                  <li key={entry.id}>
-                    <span>{entry.title}</span>
-                    <span>
-                      {entry.status === 'available' ? 'Ready' : 'Planned'}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              {lab.id !== 'rotation' && (
+                <ul className="lab-experiment-list">
+                  {entries.map((entry) => (
+                    <li key={entry.id}>
+                      <span>{entry.title}</span>
+                      <span>
+                        {entry.status === 'available' ? 'Ready' : 'Planned'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
               <a className="lab-card-link" href={labUrl(lab.id)}>
                 {ready
                   ? `Open ${lab.title.toLowerCase()} lab`
