@@ -115,3 +115,38 @@ test('flips the bicycle wheel, measures the platform response, and flips it back
     390,
   );
 });
+
+test('compares stopped and opposite spinning wheel responses to the same lift', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(route, { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: 'Gyroscope', exact: true }).click();
+  await expect(page.locator('canvas')).toBeVisible();
+  const lift = page.getByRole('button', { name: 'Try lifting' });
+  const complete = page.getByText('Lift complete', { exact: true });
+  const rise = page.getByTestId('gyro-rise');
+  const swerve = page.getByTestId('gyro-swerve');
+  const impulse = page.getByTestId('gyro-impulse');
+  await lift.click();
+  await expect(complete).toBeVisible({ timeout: 12000 });
+  await expect(swerve).toHaveText('13.8');
+  await expect(impulse).toHaveText('1.00');
+  await lift.click();
+  await expect(complete).toBeVisible({ timeout: 12000 });
+  await expect(swerve).toHaveText('13.8');
+  await page.getByRole('button', { name: 'Stopped', exact: true }).click();
+  await expect(swerve).toHaveText('0.0');
+  await lift.click();
+  await expect(complete).toBeVisible({ timeout: 12000 });
+  await expect(rise).toHaveText('47.7');
+  await expect(impulse).toHaveText('1.00');
+  await page.getByRole('button', { name: 'Reverse spin', exact: true }).click();
+  await lift.click();
+  await expect(complete).toBeVisible({ timeout: 12000 });
+  await expect(swerve).toHaveText('-13.8');
+  await expect(impulse).toHaveText('1.00');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
+    390,
+  );
+});

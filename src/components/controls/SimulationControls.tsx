@@ -6,12 +6,14 @@ export function SimulationControls({
   startLabel = 'Start trial',
   complete = false,
   allowSpeed = false,
+  onReplay,
 }: {
   ready: boolean;
   onReset: () => void;
   startLabel?: string;
   complete?: boolean;
   allowSpeed?: boolean;
+  onReplay?: () => void;
 }) {
   const { running, elapsed, setRunning, playbackSpeed, setPlaybackSpeed } =
     useSimulationStore();
@@ -19,11 +21,13 @@ export function SimulationControls({
     <div className="simulation-controls" aria-label="Simulation controls">
       <button
         className="replay-button"
-        disabled={!ready || complete}
-        onClick={() => setRunning(!running)}
+        disabled={!ready || (complete && !onReplay)}
+        onClick={complete ? onReplay : () => setRunning(!running)}
       >
         {complete
-          ? 'Trial complete'
+          ? onReplay
+            ? `↻ ${startLabel}`
+            : 'Trial complete'
           : running
             ? 'Ⅱ Pause'
             : elapsed === 0

@@ -14,6 +14,7 @@ export interface VectorArrow3DProps {
   category: 'velocity' | 'component' | 'acceleration';
   color?: string;
   labelSize?: number;
+  labelOffset?: Vector3Tuple;
 }
 const COLORS = {
   velocity: '#c1e29e',
@@ -29,6 +30,7 @@ export function VectorArrow3D({
   category,
   color,
   labelSize = 0.6,
+  labelOffset,
 }: VectorArrow3DProps) {
   const root = useRef<Group>(null);
   const labelAnchor = useRef<Group>(null);
@@ -63,6 +65,12 @@ export function VectorArrow3D({
     labelAnchor.current.position
       .copy(direction)
       .multiplyScalar(length + labelSize * 0.45);
+    if (labelOffset) {
+      const [x, y, z] = labelOffset;
+      labelAnchor.current.position.x += x;
+      labelAnchor.current.position.y += y;
+      labelAnchor.current.position.z += z;
+    }
   });
   return (
     <group ref={root}>

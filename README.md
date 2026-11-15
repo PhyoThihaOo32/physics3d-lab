@@ -204,6 +204,10 @@ Both models are on the spinning dancer page. **Mass on a string** starts with a 
 
 On the spinning page, select **Bicycle wheel**. Spin the wheel, then flip it 180°. The teacher and platform turn in the wheel's original direction to conserve vertical angular momentum. Flip it back and the platform comes to rest. The model holds the spin speed relative to the axle fixed and accounts for the wheel's inertia as the platform carries it around.
 
+## Bicycle wheel gyroscope
+
+Select **Gyroscope** on the spinning page and choose **Try lifting** with the wheel spinning, stopped, or spinning in reverse. In every trial the fixed grip supports the wheel's weight and the same one-second torque pulse contributes 1 kg·m²/s of sideways angular momentum. The wheel's full 3D orientation follows the angular velocity obtained from its inertia tensor about the grip. Compare axle tilt and sideways turn at the end of the pulse.
+
 ## Vector Mathematics Lab
 
 Open **Vectors → Vector Mathematics Lab** and choose **Add**, **Subtract**, **Scale**, **Cross**, or **Dot**. Edit the components to update the result and 3D diagram immediately. Scale uses a number k to multiply each component of A. Dot gives a scalar and the other operations give vectors.
