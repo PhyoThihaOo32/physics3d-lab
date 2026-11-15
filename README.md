@@ -194,7 +194,7 @@ This is a 51 kg illustrative segment model, not measured anatomy. Under ideal su
 
 ## Spinning robot
 
-Open **Rotation → Spinning robot**. Each weight falls vertically, sticks, and remains visible in the stack. Change drop height or slide the backpack along its rail. Axial angular momentum stays constant on the ideal bearing. The graph records both the discrete changes on capture and the gradual change as the backpack moves.
+Open **Rotation → Spinning robot**. Choose a target cargo mass from 0 to 15 kg and add or remove the difference while running. Each 5 kg fills one visible backpack block. The incoming load falls vertically with zero axial angular momentum. The ideal lift removes cargo at the same radius with its tangential speed intact, so outgoing cargo carries away its share of angular momentum and the remaining spin speed stays continuous at release.
 
 ## Other rotation experiments
 

@@ -124,18 +124,18 @@ export const experiments: readonly ExperimentRegistration[] = [
     id: 'spinning-robot',
     labId: 'rotation',
     title: 'Spinning robot',
-    topic: 'Inelastic capture',
+    topic: 'Angular momentum transfer',
     description:
-      'Stack weights in a spinning robot’s backpack, then slide them toward or away from the axis.',
+      'Add or lift out backpack weights and compare how each changes the spin.',
     objectives: [
-      'Compare the effects of adding mass and changing its radius.',
-      'Check conservation of axial angular momentum during a catch.',
+      'Explain why released cargo carries angular momentum away.',
+      'Check conservation of axial angular momentum during capture.',
     ],
     measurements: [
       'Cargo mass',
-      'Load radius',
       'Moment of inertia',
       'Angular velocity',
+      'Angular momentum',
     ],
     status: 'available',
     load: () => import('./angular-momentum/RobotLab'),

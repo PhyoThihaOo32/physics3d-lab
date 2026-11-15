@@ -4,15 +4,8 @@
 .robot-controls > .secondary-button {
   margin-top: 6px;
 }
-.robot-drop-note {
-  min-height: 1.7em;
-  margin: 8px 0 0;
-  color: #ffc5ac;
-  font-size: 11px;
-  line-height: 1.7;
-}
 .robot-lab .robot-measurements {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .robot-measurements .measurement:nth-child(2),
 .robot-measurements .measurement:nth-child(3) {
@@ -27,19 +20,13 @@
   font-variant-numeric: tabular-nums;
 }
 .robot-cargo-list {
-  margin-top: 12px;
-  font-size: 12px;
-}
-.robot-cargo-list summary {
-  cursor: pointer;
-}
-.robot-cargo-list ol {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  margin: 8px 0 0;
+  margin: 8px 0 14px;
   padding: 0;
   list-style: none;
+  font-size: 12px;
 }
 .robot-cargo-list li {
   padding: 4px 7px;

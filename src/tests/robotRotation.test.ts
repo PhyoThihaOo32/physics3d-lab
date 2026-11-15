@@ -4,98 +4,100 @@ import {
   ROBOT_DROP_TIME,
   advanceRobotTrial,
   createRobotTrial,
-  releaseRobotLoad,
-  robotDropHeight,
+  robotCargoBlocks,
   robotCargoHeight,
   robotInertia,
   robotOmega,
-  setRobotRadius,
+  robotTransferPosition,
+  setRobotLoad,
 } from '../physics/equations/robotRotation';
 
-describe('robot backpack capture', () => {
-  it('drops vertically and meets the backpack at the same position and time', () => {
-    const spinning = advanceRobotTrial(createRobotTrial(), 0.625);
-    const released = releaseRobotLoad(spinning, 2);
-    const drop = released.drop!;
-    expect(robotDropHeight(drop, spinning.time)).toBeCloseTo(
-      robotCargoHeight(1) + ROBOT.dropHeight,
-    );
-    expect(robotDropHeight(drop, drop.catchTime)).toBeCloseTo(
-      robotCargoHeight(1),
-    );
+describe('robot backpack loading', () => {
+  it('drops a payload vertically to the correct location and conserves axial angular momentum on capture', () => {
+    const initial = advanceRobotTrial(createRobotTrial(), 0.625);
+    const released = setRobotLoad(initial, 2);
+    const transfer = released.transfer!;
+    const [x, startY, z] = robotTransferPosition(transfer, transfer.start);
+    const landing = robotTransferPosition(transfer, transfer.end);
+    expect(startY).toBeCloseTo(robotCargoHeight(1) + ROBOT.dropHeight);
+    expect(landing).toEqual([x, robotCargoHeight(1), z]);
     const midair = advanceRobotTrial(released, ROBOT_DROP_TIME / 2);
     expect(midair.load).toBe(0);
     expect(robotOmega(midair)).toBe(ROBOT.initialOmega);
-    expect(midair.drop).toEqual(drop);
-    const caught = advanceRobotTrial(midair, drop.catchTime - midair.time);
-    expect(caught.drop).toBeNull();
+    const caught = advanceRobotTrial(midair, transfer.end - midair.time);
+    expect(caught.transfer).toBeNull();
     expect(caught.load).toBe(2);
-    expect(ROBOT.backpackRadius * Math.sin(caught.angle)).toBeCloseTo(
-      drop.x,
-      12,
-    );
-    expect(ROBOT.backpackRadius * Math.cos(caught.angle)).toBeCloseTo(
-      drop.z,
-      12,
-    );
+    expect(ROBOT.backpackRadius * Math.sin(caught.angle)).toBeCloseTo(x, 12);
+    expect(ROBOT.backpackRadius * Math.cos(caught.angle)).toBeCloseTo(z, 12);
+    expect(caught.momentum).toBe(initial.momentum);
+    expect(robotOmega(caught)).toBeCloseTo(1.322751, 5);
+    expect(
+      0.5 * robotInertia(caught.load) * robotOmega(caught) ** 2,
+    ).toBeLessThan(0.5 * robotInertia(initial.load) * robotOmega(initial) ** 2);
   });
 
-  it('conserves axial momentum and loses rotational energy on inelastic capture', () => {
-    const initial = createRobotTrial();
-    const released = releaseRobotLoad(initial, 2);
-    const caught = advanceRobotTrial(released, ROBOT_DROP_TIME + 0.3);
-    const initialI = robotInertia(initial.load);
-    const finalI = robotInertia(caught.load);
-    const finalOmega = robotOmega(caught);
-    expect(finalI - initialI).toBeCloseTo(2 * ROBOT.backpackRadius ** 2, 12);
-    expect(finalOmega).toBeCloseTo(1.322751, 5);
-    expect(finalOmega * finalI).toBeCloseTo(ROBOT.initialOmega * initialI, 12);
-    expect(0.5 * finalI * finalOmega ** 2).toBeLessThan(
-      0.5 * initialI * ROBOT.initialOmega ** 2,
-    );
-    expect(caught.angle).toBeCloseTo(
-      ROBOT.initialOmega * ROBOT_DROP_TIME + finalOmega * 0.3,
-      12,
-    );
+  it('fills and trims the same visible 5 kg blocks regardless of the order of changes', () => {
+    const blocks = (load: number, base = 0) =>
+      robotCargoBlocks(load, base).map(({ index, mass }) => [index, mass]);
+    expect(blocks(0)).toEqual([]);
+    expect(blocks(4.5)).toEqual([[0, 4.5]]);
+    expect(blocks(5)).toEqual([[0, 5]]);
+    expect(blocks(5.5)).toEqual([
+      [0, 5],
+      [1, 0.5],
+    ]);
+    expect(blocks(10)).toEqual([
+      [0, 5],
+      [1, 5],
+    ]);
+    expect(blocks(12.5)).toEqual([
+      [0, 5],
+      [1, 5],
+      [2, 2.5],
+    ]);
+    expect(blocks(12.5, 4.5)).toEqual([
+      [0, 0.5],
+      [1, 5],
+      [2, 2.5],
+    ]);
+    expect(robotCargoBlocks(7.5)[1]?.center).toBe(robotCargoHeight(6.25));
   });
 
-  it('accumulates captures at the same radius and rejects invalid loads', () => {
-    let trial = createRobotTrial();
-    for (const invalid of [0, -1, 6, NaN, Infinity])
-      expect(releaseRobotLoad(trial, invalid)).toBe(trial);
-    for (let index = 0; index < 3; index++) {
-      const released = releaseRobotLoad(trial, 5);
-      expect(releaseRobotLoad(released, 1)).toBe(released);
-      const next = advanceRobotTrial(released, ROBOT_DROP_TIME + 0.01);
-      expect(robotOmega(next)).toBeLessThan(robotOmega(trial));
-      expect(next.momentum).toBe(trial.momentum);
-      trial = next;
-    }
-    expect(trial.load).toBe(15);
-    expect(trial.captures).toHaveLength(3);
-    expect(releaseRobotLoad(trial, ROBOT.minLoad)).toBe(trial);
-  });
-  it('brings successive weights to the top of the stack and carries them out on the rail', () => {
-    const first = advanceRobotTrial(
-      releaseRobotLoad(createRobotTrial(-2), 2),
+  it('removes cargo with its signed angular momentum and preserves local spin at release', () => {
+    const loaded = advanceRobotTrial(
+      setRobotLoad(createRobotTrial(-2), 12.5),
       1,
     );
-    const secondDrop = releaseRobotLoad(first, 4, 0.5);
-    expect(secondDrop.drop?.catchHeight).toBeCloseTo(robotCargoHeight(4));
-    expect(secondDrop.drop?.catchTime).toBeCloseTo(
-      1 + Math.sqrt(1 / ROBOT.gravity),
+    const spin = robotOmega(loaded);
+    const lifting = setRobotLoad(loaded, 7.5);
+    const midlift = advanceRobotTrial(lifting, ROBOT.liftTime / 2);
+    expect(midlift.load).toBe(12.5);
+    const [x, y, z] = robotTransferPosition(midlift.transfer!, midlift.time);
+    expect(y).toBeGreaterThan(robotCargoHeight(10));
+    expect(x).toBeCloseTo(ROBOT.backpackRadius * Math.sin(midlift.angle), 12);
+    expect(z).toBeCloseTo(ROBOT.backpackRadius * Math.cos(midlift.angle), 12);
+    const lighter = advanceRobotTrial(midlift, ROBOT.liftTime);
+    expect(lighter.transfer).toBeNull();
+    expect(lighter.load).toBe(7.5);
+    expect(lighter.lastChange?.kind).toBe('remove');
+    expect(robotOmega(lighter)).toBeCloseTo(spin, 12);
+    expect(lighter.momentum + 5 * ROBOT.backpackRadius ** 2 * spin).toBeCloseTo(
+      loaded.momentum,
+      12,
     );
-    expect(setRobotRadius(secondDrop, 0.8)).toBe(secondDrop);
-    const loaded = advanceRobotTrial(secondDrop, 0.5);
-    const sliding = setRobotRadius(loaded, 0.8);
-    expect(releaseRobotLoad(sliding, 1)).toBe(sliding);
-    const far = advanceRobotTrial(sliding, 1);
-    expect(far.radius).toBe(0.8);
-    expect(far.momentum).toBe(-1.8);
-    expect(robotOmega(far)).toBeCloseTo(-1.8 / (0.9 + 6 * 0.8 ** 2));
-    expect(Math.abs(robotOmega(far))).toBeLessThan(
-      Math.abs(robotOmega(loaded)),
-    );
-    expect(far.captures.map(({ mass }) => mass)).toEqual([2, 4]);
+    const empty = advanceRobotTrial(setRobotLoad(lighter, 0), 1);
+    expect(empty.load).toBe(0);
+    expect(robotOmega(empty)).toBeCloseTo(spin, 12);
+  });
+
+  it('accepts any target within capacity and rejects overlapping or invalid transfers', () => {
+    const start = createRobotTrial();
+    for (const target of [-1, 16, NaN, Infinity, 0])
+      expect(setRobotLoad(start, target)).toBe(start);
+    const adding = setRobotLoad(start, 15);
+    expect(setRobotLoad(adding, 5)).toBe(adding);
+    const full = advanceRobotTrial(adding, 1);
+    expect(full.load).toBe(15);
+    expect(setRobotLoad(full, 15)).toBe(full);
   });
 });

@@ -1,63 +1,57 @@
-/** Rigid robot on an ideal vertical bearing, with point loads in its backpack. */
+import type { Vector3Tuple } from '../../types/vector';
+
+/** Rigid robot on an ideal vertical bearing, with point loads at one radius. */
 export const ROBOT = {
   emptyInertia: 0.9,
   backpackRadius: 0.48,
-  minRadius: 0.39,
-  maxRadius: 0.95,
-  slideSpeed: 0.45,
   initialOmega: 2,
-  minLoad: 0.5,
-  maxLoad: 5,
+  blockMass: 5,
   capacity: 15,
   cargoFloor: 1.145,
   cargoThickness: 0.028,
   dropHeight: 0.8,
   gravity: 9.81,
+  liftTime: 0.55,
 } as const;
 
 export const ROBOT_DROP_TIME = Math.sqrt(
   (2 * ROBOT.dropHeight) / ROBOT.gravity,
 );
 
-export interface RobotDrop {
-  mass: number;
-  releaseTime: number;
-  catchTime: number;
-  x: number;
-  z: number;
-  height: number;
-  catchHeight: number;
+export interface RobotTransfer {
+  kind: 'add' | 'remove';
+  from: number;
+  to: number;
+  start: number;
+  end: number;
+  angle: number;
+  omega: number;
 }
 
-export interface RobotCapture {
+interface RobotLoadChange {
+  kind: RobotTransfer['kind'];
   mass: number;
   time: number;
   before: number;
   after: number;
-  height: number;
 }
 
 export interface RobotTrial {
   time: number;
   angle: number;
   initialOmega: number;
-  radius: number;
-  targetRadius: number;
   load: number;
   momentum: number;
-  drop: RobotDrop | null;
-  captures: readonly RobotCapture[];
+  transfer: RobotTransfer | null;
+  lastChange: RobotLoadChange | null;
 }
 
-export function robotInertia(
-  load: number,
-  radius: number = ROBOT.backpackRadius,
-) {
-  return ROBOT.emptyInertia + load * radius ** 2;
+export function robotInertia(load: number) {
+  return ROBOT.emptyInertia + load * ROBOT.backpackRadius ** 2;
 }
 
 export function robotOmega(trial: RobotTrial) {
-  return trial.momentum / robotInertia(trial.load, trial.radius);
+  return trial.momentum / robotInertia(trial.load);
 }
 
 export function createRobotTrial(
@@ -67,27 +61,10 @@ export function createRobotTrial(
     time: 0,
     angle: 0,
     initialOmega,
-    radius: ROBOT.backpackRadius,
-    targetRadius: ROBOT.backpackRadius,
     load: 0,
     momentum: ROBOT.emptyInertia * initialOmega,
-    drop: null,
-    captures: [],
-  };
-}
-
-export function setRobotRadius(trial: RobotTrial, radius: number): RobotTrial {
-  if (
-    trial.drop ||
-    !Number.isFinite(radius) ||
-    radius < ROBOT.minRadius ||
-    radius > ROBOT.maxRadius
-  )
-    return trial;
-  return {
-    ...trial,
-    targetRadius: radius,
-    radius: trial.time === 0 ? radius : trial.radius,
+    transfer: null,
+    lastChange: null,
   };
 }
 
@@ -95,46 +72,90 @@ export function robotCargoHeight(load: number) {
   return ROBOT.cargoFloor + load * ROBOT.cargoThickness;
 }
 
-export function releaseRobotLoad(
-  trial: RobotTrial,
-  mass: number,
-  height: number = ROBOT.dropHeight,
-): RobotTrial {
-  if (
-    trial.drop ||
-    trial.radius !== trial.targetRadius ||
-    !Number.isFinite(mass) ||
-    mass < ROBOT.minLoad ||
-    mass > ROBOT.maxLoad ||
-    mass > ROBOT.capacity - trial.load + 1e-9 ||
-    !Number.isFinite(height) ||
-    height < 0.3 ||
-    height > 1.25
-  )
-    return trial;
+/** Split the mass interval into the same 5 kg bands for cargo and transfers. */
+export function robotCargoBlocks(load: number, base = 0) {
+  const blocks = [];
+  for (
+    let index = Math.floor(base / ROBOT.blockMass);
+    index * ROBOT.blockMass < load;
+    index++
+  ) {
+    const bottom = Math.max(base, index * ROBOT.blockMass);
+    const top = Math.min(load, (index + 1) * ROBOT.blockMass);
+    blocks.push({
+      index,
+      mass: top - bottom,
+      center: robotCargoHeight((bottom + top) / 2),
+    });
+  }
+  return blocks;
+}
 
-  // Release at the position the moving opening will reach at the end of the
-  // fall. The payload has no horizontal velocity before it sticks to the robot.
-  const duration = Math.sqrt((2 * height) / ROBOT.gravity);
-  const catchAngle = trial.angle + robotOmega(trial) * duration;
+export function setRobotLoad(trial: RobotTrial, target: number): RobotTrial {
+  if (
+    trial.transfer ||
+    !Number.isFinite(target) ||
+    target < 0 ||
+    target > ROBOT.capacity ||
+    target === trial.load
+  ) {
+    return trial;
+  }
+
+  const before = robotOmega(trial);
+  const start = trial.time;
+  if (target > trial.load) {
+    // The payload falls vertically at the position the pack will reach.
+    return {
+      ...trial,
+      transfer: {
+        kind: 'add',
+        from: trial.load,
+        to: target,
+        start,
+        end: start + ROBOT_DROP_TIME,
+        angle: trial.angle + before * ROBOT_DROP_TIME,
+        omega: 0,
+      },
+    };
+  }
+
   return {
     ...trial,
-    drop: {
-      mass,
-      releaseTime: trial.time,
-      catchTime: trial.time + duration,
-      x: trial.radius * Math.sin(catchAngle),
-      z: trial.radius * Math.cos(catchAngle),
-      height,
-      catchHeight: robotCargoHeight(trial.load + mass / 2),
+    transfer: {
+      kind: 'remove',
+      from: trial.load,
+      to: target,
+      start,
+      end: start + ROBOT.liftTime,
+      angle: trial.angle,
+      omega: before,
     },
   };
 }
 
-export function robotDropHeight(drop: RobotDrop, time: number) {
-  const fallen =
-    0.5 * ROBOT.gravity * Math.max(0, time - drop.releaseTime) ** 2;
-  return drop.catchHeight + Math.max(0, drop.height - fallen);
+export function robotTransferAngle(transfer: RobotTransfer, time: number) {
+  return transfer.angle + transfer.omega * (time - transfer.start);
+}
+
+export function robotTransferPosition(
+  transfer: RobotTransfer,
+  time: number,
+): Vector3Tuple {
+  const duration = transfer.kind === 'add' ? ROBOT_DROP_TIME : ROBOT.liftTime;
+  const progress =
+    time >= transfer.end ? 1 : Math.max(0, (time - transfer.start) / duration);
+  const angle = transfer.angle + transfer.omega * duration * progress;
+  const center = robotCargoHeight((transfer.from + transfer.to) / 2);
+  const verticalOffset =
+    transfer.kind === 'add'
+      ? ROBOT.dropHeight * (1 - progress ** 2)
+      : ROBOT.dropHeight * progress ** 2 * (3 - 2 * progress);
+  return [
+    ROBOT.backpackRadius * Math.sin(angle),
+    center + verticalOffset,
+    ROBOT.backpackRadius * Math.cos(angle),
+  ];
 }
 
 export function advanceRobotTrial(
@@ -143,48 +164,44 @@ export function advanceRobotTrial(
 ): RobotTrial {
   const time = trial.time + elapsed;
   const before = robotOmega(trial);
-  const { drop } = trial;
-  if (trial.radius !== trial.targetRadius) {
-    const distance = trial.targetRadius - trial.radius;
-    const slideTime = Math.min(elapsed, Math.abs(distance) / ROBOT.slideSpeed);
-    const radius =
-      slideTime < Math.abs(distance) / ROBOT.slideSpeed
-        ? trial.radius + Math.sign(distance) * slideTime * ROBOT.slideSpeed
-        : trial.targetRadius;
-    const speed = trial.momentum / robotInertia(trial.load, radius);
-    const middle =
-      trial.momentum / robotInertia(trial.load, (trial.radius + radius) / 2);
-    // Integrate signed ω=L/I through the slide while the central rail moves the cargo.
-    const angle =
-      trial.angle +
-      (slideTime * (before + 4 * middle + speed)) / 6 +
-      (elapsed - slideTime) * speed;
-    return { ...trial, radius, time, angle };
-  }
-  if (!drop || time < drop.catchTime) {
+  const { transfer } = trial;
+  if (!transfer || time < transfer.end) {
     return { ...trial, time, angle: trial.angle + before * elapsed };
   }
+  if (transfer.kind === 'remove') {
+    // The lift stays at the same radius. Release carries (m r²)ω away
+    // with the outgoing mass, leaving the robot's spin speed unchanged.
+    return {
+      ...trial,
+      time,
+      angle: trial.angle + before * elapsed,
+      load: transfer.to,
+      momentum: robotInertia(transfer.to) * before,
+      transfer: null,
+      lastChange: {
+        kind: 'remove',
+        mass: transfer.from - transfer.to,
+        time: transfer.end,
+        before,
+        after: before,
+      },
+    };
+  }
 
-  // Inelastic capture. The incoming load contributes zero L about the bearing
-  // axis, and the ideal bearing exerts no torque about that axis.
-  const load = trial.load + drop.mass;
-  const after = trial.momentum / robotInertia(load, trial.radius);
-  const angleAtCatch = trial.angle + before * (drop.catchTime - trial.time);
+  // Inelastic capture, with zero axial angular momentum in the incoming load.
+  const after = trial.momentum / robotInertia(transfer.to);
   return {
     ...trial,
     time,
-    angle: angleAtCatch + after * (time - drop.catchTime),
-    load,
-    drop: null,
-    captures: [
-      ...trial.captures,
-      {
-        mass: drop.mass,
-        time: drop.catchTime,
-        before,
-        after,
-        height: drop.catchHeight,
-      },
-    ],
+    angle: transfer.angle + after * (time - transfer.end),
+    load: transfer.to,
+    transfer: null,
+    lastChange: {
+      kind: 'add',
+      mass: transfer.to - transfer.from,
+      time: transfer.end,
+      before,
+      after,
+    },
   };
 }

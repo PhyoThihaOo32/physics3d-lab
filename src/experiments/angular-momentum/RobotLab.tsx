@@ -9,10 +9,10 @@ import {
   ROBOT,
   advanceRobotTrial,
   createRobotTrial,
-  releaseRobotLoad,
+  robotCargoBlocks,
   robotInertia,
   robotOmega,
-  setRobotRadius,
+  setRobotLoad,
 } from '../../physics/equations/robotRotation';
 import { formatNumber as f } from '../../physics/units/format';
 import { useSimulationStore } from '../../store/simulationStore';
@@ -29,8 +29,7 @@ export default function RobotLab() {
   const trial = useRef(createRobotTrial());
   const [reading, setReading] = useState(createRobotTrial);
   const [points, setPoints] = useState(initialTrace);
-  const [mass, setMass] = useState('2');
-  const [dropHeight, setDropHeight] = useState<number>(ROBOT.dropHeight);
+  const [targetLoad, setTargetLoad] = useState(0);
   const running = useSimulationStore((state) => state.running);
   const getTrial = useCallback(() => trial.current, []);
   const publish = useCallback(() => {
@@ -42,21 +41,19 @@ export default function RobotLab() {
       const previous = trial.current;
       const next = advanceRobotTrial(previous, elapsed);
       trial.current = next;
-      const caught =
-        next.captures.length !== previous.captures.length
-          ? next.captures.at(-1)
-          : null;
+      const change =
+        next.lastChange !== previous.lastChange ? next.lastChange : null;
       if (
-        caught ||
+        change ||
         Math.floor(next.time * 10) !== Math.floor(previous.time * 10)
       ) {
         const sample = { time: next.time, value: robotOmega(next) };
         setPoints((trace) => [
           ...trace.slice(-1800),
-          ...(caught
+          ...(change
             ? [
-                { time: caught.time, value: caught.before },
-                { time: caught.time, value: caught.after },
+                { time: change.time, value: change.before },
+                { time: change.time, value: change.after },
               ]
             : []),
           sample,
@@ -68,52 +65,42 @@ export default function RobotLab() {
   );
   useEffect(() => () => useSimulationStore.getState().reset(), []);
 
-  const selectedMass = Number(mass);
-  const remaining = ROBOT.capacity - reading.load;
-  const valid =
-    Number.isFinite(selectedMass) &&
-    selectedMass >= ROBOT.minLoad &&
-    selectedMass <= ROBOT.maxLoad;
-  const enoughRoom = selectedMass <= remaining + 1e-9;
-  const sliding = reading.radius !== reading.targetRadius;
-  const latest = reading.captures.at(-1);
+  const change = targetLoad - reading.load;
+  const cargo = robotCargoBlocks(reading.load);
+  const latest = reading.lastChange;
   const omega = robotOmega(reading);
-  const inertia = robotInertia(reading.load, reading.radius);
-  const status = running
-    ? reading.drop
-      ? 'Load falling'
-      : sliding
-        ? 'Moving backpack'
-        : 'Spinning'
-    : reading.time
-      ? reading.drop
-        ? 'Drop paused'
-        : 'Paused'
-      : 'Ready to spin';
+  const inertia = robotInertia(reading.load);
+  const status = reading.transfer
+    ? running
+      ? reading.transfer.kind === 'add'
+        ? 'Load falling'
+        : 'Lifting load'
+      : 'Transfer paused'
+    : running
+      ? omega
+        ? 'Spinning'
+        : 'At rest'
+      : reading.time
+        ? 'Paused'
+        : 'Ready to spin';
 
   function reset() {
     trial.current = createRobotTrial();
     useSimulationStore.getState().reset();
     publish();
-    setMass('2');
-    setDropHeight(ROBOT.dropHeight);
+    setTargetLoad(0);
     setPoints(initialTrace());
-  }
-  function changeRadius(radius: number) {
-    trial.current = setRobotRadius(trial.current, radius);
-    publish();
   }
   function changeInitialSpin(spin: number) {
     if (trial.current.time !== 0 || useSimulationStore.getState().running)
       return;
-    const { radius, targetRadius } = trial.current;
-    trial.current = { ...createRobotTrial(spin), radius, targetRadius };
+    trial.current = createRobotTrial(spin);
     setPoints(initialTrace(spin));
     publish();
   }
-  function dropLoad() {
+  function applyLoad() {
     if (!useSimulationStore.getState().running) return;
-    trial.current = releaseRobotLoad(trial.current, selectedMass, dropHeight);
+    trial.current = setRobotLoad(trial.current, targetLoad);
     publish();
   }
 
@@ -123,8 +110,8 @@ export default function RobotLab() {
         <div>
           <h1>Spinning robot</h1>
           <p>
-            Drop weights one at a time, then slide the loaded backpack to change
-            the spin.
+            Add or remove cargo and watch how the spin responds. Each block
+            holds up to 5 kg.
           </p>
         </div>
       </div>
@@ -134,60 +121,31 @@ export default function RobotLab() {
           aria-label="Robot controls"
         >
           <h2>Backpack</h2>
-          <div className="parameter-field">
-            <label htmlFor="robot-load-input">Load to drop</label>
-            <div className="number-field">
-              <input
-                id="robot-load-input"
-                type="number"
-                min={ROBOT.minLoad}
-                max={ROBOT.maxLoad}
-                step="any"
-                value={mass}
-                onChange={(event) => setMass(event.target.value)}
-                disabled={Boolean(reading.drop)}
-                aria-describedby="robot-load-limit"
-                aria-invalid={!valid}
-              />
-              <span>kg</span>
-            </div>
-            <small id="robot-load-limit">
-              {ROBOT.minLoad}–{ROBOT.maxLoad} kg per drop · {ROBOT.capacity} kg
-              capacity
-            </small>
-          </div>
-          <label className="dancer-mode" htmlFor="robot-radius-slider">
+          <label className="dancer-mode" htmlFor="robot-target-load">
             <span className="spin-range-label">
-              Backpack radius <output>{f(reading.targetRadius)} m</output>
+              Target load <output>{f(targetLoad, 1)} kg</output>
             </span>
             <input
-              id="robot-radius-slider"
+              id="robot-target-load"
               className="spin-range"
               type="range"
-              min={ROBOT.minRadius}
-              max={ROBOT.maxRadius}
-              step="0.01"
-              value={reading.targetRadius}
-              disabled={Boolean(reading.drop)}
-              onChange={(event) => changeRadius(event.target.valueAsNumber)}
+              min="0"
+              max={ROBOT.capacity}
+              step="0.5"
+              value={targetLoad}
+              disabled={reading.transfer !== null}
+              onChange={(event) => setTargetLoad(event.target.valueAsNumber)}
             />
           </label>
-          <label className="dancer-mode" htmlFor="robot-drop-height">
-            <span className="spin-range-label">
-              Drop height <output>{f(dropHeight)} m</output>
-            </span>
-            <input
-              id="robot-drop-height"
-              className="spin-range"
-              type="range"
-              min="0.30"
-              max="1.25"
-              step="0.01"
-              value={dropHeight}
-              disabled={Boolean(reading.drop)}
-              onChange={(event) => setDropHeight(event.target.valueAsNumber)}
-            />
-          </label>
+          {cargo.length > 0 && (
+            <ol className="robot-cargo-list" aria-label="Mass per block">
+              {cargo.map((block) => (
+                <li key={block.index} data-testid="robot-cargo-weight">
+                  {f(block.mass, 1)} kg
+                </li>
+              ))}
+            </ol>
+          )}
           <label className="dancer-mode" htmlFor="robot-initial-spin">
             <span className="spin-range-label">
               Initial spin <output>{f(reading.initialOmega, 1)} rad/s</output>
@@ -206,30 +164,6 @@ export default function RobotLab() {
               }
             />
           </label>
-          {reading.captures.length > 0 && (
-            <details className="robot-cargo-list">
-              <summary>
-                Cargo · {reading.captures.length}{' '}
-                {reading.captures.length === 1 ? 'weight' : 'weights'}
-              </summary>
-              <ol aria-label="Weights in the backpack">
-                {reading.captures.map((capture, index) => (
-                  <li key={index} data-testid="robot-cargo-weight">
-                    {f(capture.mass)} kg
-                  </li>
-                ))}
-              </ol>
-            </details>
-          )}
-          <p className="robot-drop-note" aria-live="polite">
-            {!valid
-              ? `Enter a load from ${ROBOT.minLoad} to ${ROBOT.maxLoad} kg.`
-              : !enoughRoom
-                ? `${f(remaining)} kg of space left.`
-                : sliding
-                  ? 'The backpack slides during the run.'
-                  : ''}
-          </p>
           <SimulationControls settingsOnly allowSpeed onReset={reset} />
         </aside>
         <SpinDemoViewport
@@ -242,9 +176,9 @@ export default function RobotLab() {
           spinAxisLabel="Backpack"
           spinAxisView={{
             center: [
-              Math.sin(reading.angle) * reading.radius,
+              Math.sin(reading.angle) * ROBOT.backpackRadius,
               1.32,
-              Math.cos(reading.angle) * reading.radius,
+              Math.cos(reading.angle) * ROBOT.backpackRadius,
             ],
             direction: [
               Math.sin(reading.angle) * 0.8,
@@ -257,16 +191,14 @@ export default function RobotLab() {
               <SimulationRunButton ready startLabel="Start spin" />
               <button
                 className="secondary-button"
-                onClick={dropLoad}
-                disabled={
-                  !running ||
-                  Boolean(reading.drop) ||
-                  sliding ||
-                  !valid ||
-                  !enoughRoom
-                }
+                onClick={applyLoad}
+                disabled={!running || reading.transfer !== null || change === 0}
               >
-                Drop load
+                {change > 0
+                  ? `Add ${f(change, 1)} kg`
+                  : change < 0
+                    ? `Remove ${f(-change, 1)} kg`
+                    : 'Set load'}
               </button>
             </>
           }
@@ -277,8 +209,8 @@ export default function RobotLab() {
               advance={advance}
               publish={publish}
               vectors={vectors}
-              captures={reading.captures}
-              fallingMass={reading.drop?.mass ?? null}
+              load={reading.load}
+              transfer={reading.transfer}
             />
           )}
         </SpinDemoViewport>
@@ -292,12 +224,6 @@ export default function RobotLab() {
           value={f(reading.load)}
           unit="kg"
           testId="robot-load"
-        />
-        <Measurement
-          label="Load radius r"
-          value={f(reading.radius)}
-          unit="m"
-          testId="robot-radius"
         />
         <Measurement
           label="Moment of inertia Iᵧ"
@@ -325,8 +251,8 @@ export default function RobotLab() {
         <h2 id="robot-results-title">Spin over time</h2>
         {latest && (
           <p className="robot-capture" data-testid="robot-capture">
-            {f(latest.mass)} kg caught · ωᵧ {f(latest.before, 3)} →{' '}
-            {f(latest.after, 3)} rad/s
+            {f(latest.mass, 1)} kg {latest.kind === 'add' ? 'added' : 'removed'}{' '}
+            · ωᵧ {f(latest.before, 3)} → {f(latest.after, 3)} rad/s
           </p>
         )}
         <TimeSeriesChart
@@ -343,22 +269,22 @@ export default function RobotLab() {
             Pause and choose Backpack to inspect the stack at its current angle.
           </p>
           <p>
-            Each weight falls vertically and sticks on contact. It arrives with
-            zero angular momentum about the spin axis. The bearing and radial
-            rail exert zero torque about that axis.
+            Incoming cargo falls vertically with zero angular momentum about the
+            spin axis. At the catch, inertia increases and the spin slows if the
+            robot was already spinning.
+          </p>
+          <p>
+            A vertical lift lets outgoing cargo keep its tangential speed at
+            release. It takes its share of angular momentum, leaving the robot
+            spinning at the same rate.
           </p>
           <p>
             Iᵧ = I₀ + mr² = {f(ROBOT.emptyInertia)} + {f(reading.load)} ×{' '}
-            {f(reading.radius)}² = {f(inertia, 3)} kg·m²
+            {f(ROBOT.backpackRadius)}² = {f(inertia, 3)} kg·m²
           </p>
           <p>
             ωᵧ = Lᵧ / Iᵧ = {f(reading.momentum, 3)} / {f(inertia, 3)} ={' '}
             {f(omega, 3)} rad/s
-          </p>
-          <p>
-            The model places each weight’s mass at the center of a lightweight
-            carrier. The catch dissipates spin energy. Moving the loaded carrier
-            can change spin energy as the rail does work.
           </p>
         </div>
       </details>

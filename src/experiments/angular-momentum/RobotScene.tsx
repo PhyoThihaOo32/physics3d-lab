@@ -3,8 +3,11 @@ import type { Group } from 'three';
 import { RoundedBox } from '@react-three/drei';
 import {
   ROBOT,
-  robotDropHeight,
-  type RobotCapture,
+  robotCargoBlocks,
+  robotCargoHeight,
+  robotTransferAngle,
+  robotTransferPosition,
+  type RobotTransfer,
   robotOmega,
   type RobotTrial,
 } from '../../physics/equations/robotRotation';
@@ -17,8 +20,7 @@ const ALLOY = '#a1b2be';
 const JOINT = '#3b4b57';
 const TRIM = '#75c9b9';
 const PACK = '#a67b40';
-const LOAD_COLORS = ['#f0ba73', '#7ed0c0', '#e6a59c', '#a3b5ea', '#d6dba0'];
-const RAIL_START = 0.19;
+const LOAD_COLORS = ['#f0ba73', '#7ed0c0', '#a3b5ea'];
 
 function Plate({
   position,
@@ -221,42 +223,41 @@ export function RobotScene({
   advance,
   publish,
   vectors,
-  captures,
-  fallingMass,
+  load,
+  transfer,
 }: {
   getTrial: () => RobotTrial;
   advance: (elapsed: number) => void;
   publish: () => void;
   vectors: boolean;
-  captures: readonly RobotCapture[];
-  fallingMass: number | null;
+  load: number;
+  transfer: RobotTransfer | null;
 }) {
   const pivot = useRef<Group>(null);
-  const falling = useRef<Group>(null);
-  const backpack = useRef<Group>(null);
-  const rail = useRef<Group>(null);
-  const weights = captures.map((capture, index) => (
-    <Weight
-      key={capture.time}
-      index={index}
-      mass={capture.mass}
-      height={capture.height}
-    />
-  ));
+  const moving = useRef<Group>(null);
+  const cargo = robotCargoBlocks(
+    transfer?.kind === 'remove' ? transfer.to : load,
+  );
+  const traveling = transfer
+    ? robotCargoBlocks(
+        Math.max(transfer.from, transfer.to),
+        Math.min(transfer.from, transfer.to),
+      )
+    : [];
+  const transferCenter = transfer
+    ? robotCargoHeight((transfer.from + transfer.to) / 2)
+    : 0;
+
   useRotationFrame(advance, publish, () => {
-    const { angle, drop, radius, time } = getTrial();
+    const { angle, transfer, time } = getTrial();
     if (pivot.current) pivot.current.rotation.y = angle;
-    if (falling.current) {
-      falling.current.visible = !!drop;
-      if (drop)
-        falling.current.position.set(
-          drop.x,
-          robotDropHeight(drop, time),
-          drop.z,
-        );
+    if (moving.current) {
+      moving.current.visible = transfer !== null;
+      if (transfer) {
+        moving.current.position.set(...robotTransferPosition(transfer, time));
+        moving.current.rotation.y = robotTransferAngle(transfer, time);
+      }
     }
-    if (backpack.current) backpack.current.position.z = radius;
-    if (rail.current) rail.current.scale.z = radius - RAIL_START;
   });
 
   return (
@@ -264,27 +265,27 @@ export function RobotScene({
       <RotationStage />
       <group ref={pivot}>
         <RobotBody />
-        <group ref={rail} position={[0, 0, RAIL_START]}>
-          <Plate
-            position={[-0.14, 1.19, 0.5]}
-            size={[0.04, 0.04, 1]}
-            color={ALLOY}
-          />
-          <Plate
-            position={[0.14, 1.19, 0.5]}
-            size={[0.04, 0.04, 1]}
-            color={ALLOY}
-          />
-        </group>
-        <group ref={backpack} position={[0, 0, ROBOT.backpackRadius]}>
+        <group position={[0, 0, ROBOT.backpackRadius]}>
           <Backpack />
-          {weights}
+          {cargo.map((block) => (
+            <Weight
+              key={block.index}
+              index={block.index}
+              mass={block.mass}
+              height={block.center}
+            />
+          ))}
         </group>
       </group>
-      <group ref={falling} visible={false}>
-        {fallingMass !== null && (
-          <Weight mass={fallingMass} index={captures.length} />
-        )}
+      <group ref={moving} visible={false}>
+        {traveling.map((block) => (
+          <Weight
+            key={block.index}
+            index={block.index}
+            mass={block.mass}
+            height={block.center - transferCenter}
+          />
+        ))}
       </group>
       {vectors && (
         <>
