@@ -29,9 +29,33 @@
   margin-top: 12px;
   accent-color: #c1e29e;
 }
-.wheel-flip-action {
-  width: 100%;
-  margin-top: 14px;
+.spin-demo-toolbar {
+  min-height: 48px;
+  height: auto;
+  padding: 8px 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.spin-demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.spin-demo-actions button {
+  min-height: 33px;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+.spin-demo-actions .spin-vectors-toggle[aria-pressed='true'] {
+  border-color: #82966f;
+  color: #d7ebc6;
+}
+.spin-demo-controls .simulation-settings {
+  grid-template-columns: minmax(0, 1fr);
+}
+.spin-demo-controls .simulation-settings .clock {
+  padding-block: 4px;
 }
 .turntable-readouts {
   display: grid;

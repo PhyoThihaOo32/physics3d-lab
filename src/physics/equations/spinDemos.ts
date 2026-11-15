@@ -108,10 +108,14 @@ export function advanceStringTrial(
 export function measureString(trial: StringTrial) {
   const inertia = STRING.mass * trial.radius ** 2;
   const omega = stringOmega(trial.radius);
-  const tangentialSpeed = trial.radius * omega;
+  const tangentialSpeed = predictStringSpeed(trial.radius);
   const energy =
     0.5 * STRING.mass * (tangentialSpeed ** 2 + trial.radialSpeed ** 2);
   return { inertia, omega, tangentialSpeed, momentum: STRING_MOMENTUM, energy };
+}
+
+export function predictStringSpeed(radius: number) {
+  return STRING_MOMENTUM / (STRING.mass * radius);
 }
 
 export const TURNTABLE = {

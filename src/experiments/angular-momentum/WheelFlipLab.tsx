@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { SimulationControls } from '../../components/controls/SimulationControls';
+import {
+  SimulationControls,
+  SimulationRunButton,
+} from '../../components/controls/SimulationControls';
 import { Measurement } from '../../components/measurements/Measurement';
 import {
   WHEEL_FLIP,
@@ -71,19 +74,7 @@ export function WheelFlipLab() {
             disabled={running || reading.time > 0}
             onChange={(event) => setSpinSpeed(Number(event.target.value))}
           />
-          <SimulationControls
-            ready
-            onReset={resetTrial}
-            startLabel="Start wheel"
-            allowSpeed
-          />
-          <button
-            className="secondary-button wheel-flip-action"
-            disabled={!running || reading.motion !== null}
-            onClick={() => update(startWheelFlip)}
-          >
-            {flipped ? 'Flip back' : 'Flip wheel'}
-          </button>
+          <SimulationControls onReset={resetTrial} allowSpeed settingsOnly />
         </aside>
         <SpinDemoViewport
           title="Teacher flipping a spinning wheel on a turntable"
@@ -92,13 +83,28 @@ export function WheelFlipLab() {
           frameWidth={2.45}
           frameHeight={2.95}
           initialView="Perspective"
+          actions={
+            <>
+              <SimulationRunButton ready startLabel="Start wheel" />
+              <button
+                className="secondary-button"
+                disabled={!running || reading.motion !== null}
+                onClick={() => update(startWheelFlip)}
+              >
+                {flipped ? 'Flip back' : 'Flip wheel'}
+              </button>
+            </>
+          }
         >
-          <WheelFlipScene
-            getTrial={getTrial}
-            advance={advance}
-            publish={publish}
-            spinSpeed={spinSpeed}
-          />
+          {(vectorsVisible) => (
+            <WheelFlipScene
+              getTrial={getTrial}
+              advance={advance}
+              publish={publish}
+              spinSpeed={spinSpeed}
+              vectorsVisible={vectorsVisible}
+            />
+          )}
         </SpinDemoViewport>
       </div>
       <div

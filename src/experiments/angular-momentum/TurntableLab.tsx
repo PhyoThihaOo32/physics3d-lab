@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react';
 import type { Group } from 'three';
-import { SimulationControls } from '../../components/controls/SimulationControls';
+import {
+  SimulationControls,
+  SimulationRunButton,
+} from '../../components/controls/SimulationControls';
 import { Measurement } from '../../components/measurements/Measurement';
 import {
   TURNTABLE,
@@ -29,11 +32,15 @@ function TurntableScene({
   advance,
   publish,
   inertia,
+  walkDirection,
+  vectorsVisible,
 }: {
   getTrial: () => TurntableTrial;
   advance: (elapsed: number) => void;
   publish: () => void;
   inertia: number;
+  walkDirection: 1 | -1;
+  vectorsVisible: boolean;
 }) {
   const disk = useRef<Group>(null);
   const walker = useRef<Group>(null);
@@ -41,14 +48,31 @@ function TurntableScene({
   const rightLeg = useRef<Group>(null);
   const leftArm = useRef<Group>(null);
   const rightArm = useRef<Group>(null);
+  const facing = useRef(Math.PI / 2);
+  const previousTime = useRef(0);
   useRotationFrame(advance, publish, () => {
     const trial = getTrial();
+    const direction =
+      Math.abs(trial.relativeOmega) > 1e-6
+        ? Math.sign(trial.relativeOmega)
+        : walkDirection;
+    const targetFacing = (direction * Math.PI) / 2;
+    const elapsed = trial.time - previousTime.current;
+    if (trial.time === 0) {
+      facing.current = targetFacing;
+    } else {
+      const maxTurn = Math.max(0, elapsed) * 6;
+      facing.current += Math.max(
+        -maxTurn,
+        Math.min(maxTurn, targetFacing - facing.current),
+      );
+    }
+    previousTime.current = trial.time;
     if (disk.current) disk.current.rotation.y = trial.platformAngle;
     if (walker.current) {
       const [x, , z] = radialVector(trial.personAngle, TURNTABLE.radius);
       walker.current.position.set(x, DECK_TOP, z);
-      walker.current.rotation.y =
-        trial.personAngle + ((trial.relativeOmega < 0 ? -1 : 1) * Math.PI) / 2;
+      walker.current.rotation.y = trial.personAngle + facing.current;
     }
     const stride =
       Math.sin((trial.personAngle - trial.platformAngle) * 12) *
@@ -99,17 +123,27 @@ function TurntableScene({
         <meshBasicMaterial color="#a5b3bd" transparent opacity={0.55} />
       </mesh>
       <group ref={walker} position={[0, DECK_TOP, TURNTABLE.radius]}>
-        <mesh position={[0, 0.56, 0]} castShadow>
-          <capsuleGeometry args={[0.125, 0.2, 6, 14]} />
+        <mesh position={[0, 0.59, 0]} scale={[1.12, 1, 0.72]} castShadow>
+          <capsuleGeometry args={[0.125, 0.2, 8, 18]} />
           <meshStandardMaterial color={PERSON_COLOR} />
+        </mesh>
+        <mesh position={[0, 0.795, 0.012]}>
+          <cylinderGeometry args={[0.044, 0.051, 0.1, 16]} />
+          <meshStandardMaterial color="#c29d83" />
         </mesh>
         <mesh position={[0, 0.895, 0.017]} castShadow>
           <sphereGeometry args={[0.116, 18, 12]} />
           <meshStandardMaterial color="#c29d83" />
         </mesh>
         <mesh position={[0, 0.946, -0.015]}>
-          <sphereGeometry args={[0.103, 16, 10]} />
+          <sphereGeometry
+            args={[0.105, 18, 14, 0, 2 * Math.PI, 0, Math.PI * 0.64]}
+          />
           <meshStandardMaterial color="#393234" />
+        </mesh>
+        <mesh position={[0, 0.9, 0.126]} scale={[0.77, 1, 1]}>
+          <sphereGeometry args={[0.023, 12, 10]} />
+          <meshStandardMaterial color="#c29d83" />
         </mesh>
         {[-1, 1].map((side) => (
           <group key={side}>
@@ -134,11 +168,16 @@ function TurntableScene({
                 <capsuleGeometry args={[0.037, 0.19, 4, 10]} />
                 <meshStandardMaterial color="#c29d83" />
               </mesh>
+              <mesh position={[0, -0.036, 0]} castShadow>
+                <capsuleGeometry args={[0.047, 0.055, 5, 12]} />
+                <meshStandardMaterial color={PERSON_COLOR} />
+              </mesh>
             </group>
           </group>
         ))}
       </group>
       <VectorArrow3D
+        visible={vectorsVisible}
         origin={[0, DECK_TOP + 0.023, 0]}
         vector={() => radialVector(getTrial().personAngle, TURNTABLE.radius)}
         label="r"
@@ -147,6 +186,7 @@ function TurntableScene({
         labelSize={0.24}
       />
       <VectorArrow3D
+        visible={vectorsVisible}
         origin={() => {
           const [x, , z] = radialVector(
             getTrial().personAngle,
@@ -162,6 +202,7 @@ function TurntableScene({
         labelSize={0.24}
       />
       <VectorArrow3D
+        visible={vectorsVisible}
         origin={[-0.44, 1.22, 0]}
         vector={() => [
           0,
@@ -176,6 +217,7 @@ function TurntableScene({
         labelSize={0.4}
       />
       <VectorArrow3D
+        visible={vectorsVisible}
         origin={[0.44, 1.22, 0]}
         vector={() => [
           0,
@@ -264,7 +306,10 @@ export function TurntableLab() {
             value={speed}
             onChange={(event) => setSpeed(Number(event.target.value))}
           />
-          <p className="physics-caption">Speed relative to the platform</p>
+          <p className="physics-caption">
+            Relative to the platform · now{' '}
+            {f(Math.abs(reading.relativeOmega) * TURNTABLE.radius, 1)} m/s
+          </p>
           <label className="dancer-mode">
             Platform inertia (kg·m²)
             <select
@@ -277,12 +322,7 @@ export function TurntableLab() {
               <option value="240">240 · Heavy</option>
             </select>
           </label>
-          <SimulationControls
-            ready
-            onReset={resetTrial}
-            startLabel="Start walking"
-            allowSpeed
-          />
+          <SimulationControls onReset={resetTrial} allowSpeed settingsOnly />
         </aside>
         <SpinDemoViewport
           title="Counter-rotating person and platform"
@@ -291,13 +331,18 @@ export function TurntableLab() {
           frameHeight={2.65}
           frameWidth={2.85}
           initialView="Perspective"
+          actions={<SimulationRunButton ready startLabel="Start walking" />}
         >
-          <TurntableScene
-            getTrial={getTrial}
-            advance={advance}
-            publish={publish}
-            inertia={inertia}
-          />
+          {(vectorsVisible) => (
+            <TurntableScene
+              getTrial={getTrial}
+              advance={advance}
+              publish={publish}
+              inertia={inertia}
+              walkDirection={walkDirection}
+              vectorsVisible={vectorsVisible}
+            />
+          )}
         </SpinDemoViewport>
       </div>
       <div

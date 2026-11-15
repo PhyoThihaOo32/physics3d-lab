@@ -116,11 +116,13 @@ export function WheelFlipScene({
   advance,
   publish,
   spinSpeed,
+  vectorsVisible,
 }: {
   getTrial: () => WheelFlipTrial;
   advance: (elapsed: number) => void;
   publish: () => void;
   spinSpeed: number;
+  vectorsVisible: boolean;
 }) {
   const support = useRef<Group>(null);
   const axle = useRef<Group>(null);
@@ -187,6 +189,10 @@ export function WheelFlipScene({
         <cylinderGeometry args={[0.34, 0.45, 0.15, 48]} />
         <meshStandardMaterial color="#526272" metalness={0.34} />
       </mesh>
+      <mesh position={[0, 0.004, 1.135]}>
+        <boxGeometry args={[0.035, 0.008, 0.113]} />
+        <meshBasicMaterial color="#8597a1" />
+      </mesh>
       <group ref={support}>
         <mesh position={[0, 0.21, 0]} castShadow receiveShadow>
           <cylinderGeometry args={[1.05, 1.08, 0.12, 72]} />
@@ -207,6 +213,14 @@ export function WheelFlipScene({
           <boxGeometry args={[0.034, 0.009, 0.56]} />
           <meshBasicMaterial color={SUPPORT_COLOR} />
         </mesh>
+        {[1, 2, 3].map((index) => (
+          <group key={index} rotation={[0, (index * Math.PI) / 2, 0]}>
+            <mesh position={[0, DECK_TOP + 0.004, 0.91]}>
+              <boxGeometry args={[0.02, 0.008, 0.082]} />
+              <meshBasicMaterial color="#9ba9ad" />
+            </mesh>
+          </group>
+        ))}
         <TeacherBody />
         {[-1, 1].map((side) => (
           <group key={side}>
@@ -242,6 +256,7 @@ export function WheelFlipScene({
         </group>
       </group>
       <VectorArrow3D
+        visible={vectorsVisible}
         origin={() => {
           const [x, y, z] = wheelAxleDirection(getTrial());
           return [x * 0.47, WHEEL_HEIGHT + y * 0.47, z * 0.47];
@@ -259,6 +274,7 @@ export function WheelFlipScene({
         labelSize={0.36}
       />
       <VectorArrow3D
+        visible={vectorsVisible}
         origin={[0.72, 0.38, 0.36]}
         vector={() => [
           0,

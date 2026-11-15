@@ -18,9 +18,21 @@ test('pulls the puck to the slide radius and reaches the predicted speed', async
     page.getByRole('button', { name: 'Top', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('string-speed')).toHaveText('2.40');
+  await expect(page.getByText('Expected vₜ at target 4.00 m/s')).toBeVisible();
+  const viewport = page.getByRole('region', {
+    name: 'Puck on a frictionless tabletop',
+  });
+  const vectors = viewport.getByRole('button', {
+    name: 'Vectors',
+    exact: true,
+  });
+  await vectors.click();
+  await expect(vectors).toHaveAttribute('aria-pressed', 'false');
+  await vectors.click();
+  await expect(vectors).toHaveAttribute('aria-pressed', 'true');
   const pull = page.getByRole('button', { name: 'Pull string' });
   await expect(pull).toBeDisabled();
-  await page.getByRole('button', { name: 'Start spin' }).click();
+  await viewport.getByRole('button', { name: 'Start spin' }).click();
   await pull.click();
   await expect(page.getByText('Pulling string', { exact: true })).toBeVisible();
   await expect(page.getByTestId('string-speed')).toHaveText('4.00', {

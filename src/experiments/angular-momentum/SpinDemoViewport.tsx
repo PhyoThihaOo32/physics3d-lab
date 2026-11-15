@@ -14,6 +14,7 @@ export function SpinDemoViewport({
   frameWidth,
   frameHeight,
   initialView,
+  actions,
   children,
 }: {
   title: string;
@@ -22,18 +23,30 @@ export function SpinDemoViewport({
   frameWidth: number;
   frameHeight: number;
   initialView: CameraView['preset'];
-  children: ReactNode;
+  actions: ReactNode;
+  children: (vectorsVisible: boolean) => ReactNode;
 }) {
   const [view, setView] = useState<CameraView>({
     preset: initialView,
     revision: 0,
   });
+  const [vectorsVisible, setVectorsVisible] = useState(true);
   return (
     <section className="scene-panel" aria-label={title}>
-      <div className="scene-toolbar">
+      <div className="scene-toolbar spin-demo-toolbar">
         <div className="dancer-status" role="status">
           <span className="status-dot" />
           {status}
+        </div>
+        <div className="spin-demo-actions">
+          {actions}
+          <button
+            className="secondary-button spin-vectors-toggle"
+            aria-pressed={vectorsVisible}
+            onClick={() => setVectorsVisible((visible) => !visible)}
+          >
+            Vectors
+          </button>
         </div>
       </div>
       <div className="viewport spin-demo-viewport">
@@ -47,7 +60,7 @@ export function SpinDemoViewport({
           sceneExtent={5}
           label={title}
         >
-          {children}
+          {children(vectorsVisible)}
         </LabCanvas>
         <CameraControls
           view={view}

@@ -73,7 +73,7 @@ export function VectorArrow3D({
     }
   });
   return (
-    <group ref={root}>
+    <group ref={root} visible={visible}>
       <primitive object={arrow} />
       <group ref={labelAnchor}>
         <SceneLabel text={label} position={[0, 0, 0]} size={labelSize} />

@@ -1,12 +1,16 @@
 import { useRef, useState } from 'react';
 import { Shape, Path, type Group } from 'three';
-import { SimulationControls } from '../../components/controls/SimulationControls';
+import {
+  SimulationControls,
+  SimulationRunButton,
+} from '../../components/controls/SimulationControls';
 import { Measurement } from '../../components/measurements/Measurement';
 import {
   STRING,
   advanceStringTrial,
   createStringTrial,
   measureString,
+  predictStringSpeed,
   radialVector,
   startStringPull,
   tangentVector,
@@ -38,11 +42,13 @@ function StringScene({
   advance,
   publish,
   targetRadius,
+  vectorsVisible,
 }: {
   getTrial: () => StringTrial;
   advance: (elapsed: number) => void;
   publish: () => void;
   targetRadius: number | null;
+  vectorsVisible: boolean;
 }) {
   const pivot = useRef<Group>(null);
   const puck = useRef<Group>(null);
@@ -95,7 +101,11 @@ function StringScene({
           position={[0, TABLE_TOP + 0.003, 0]}
         >
           <ringGeometry args={[radius - 0.005, radius + 0.005, 80]} />
-          <meshBasicMaterial color="#81939b" transparent opacity={0.65} />
+          <meshBasicMaterial
+            color={radius === targetRadius ? '#f1b57b' : '#81939b'}
+            transparent
+            opacity={radius === targetRadius ? 0.9 : 0.65}
+          />
         </mesh>
       ))}
       <group ref={pivot} position={[0, STRING_HEIGHT, 0]}>
@@ -133,6 +143,7 @@ function StringScene({
         </mesh>
       </group>
       <VectorArrow3D
+        visible={vectorsVisible}
         origin={() => {
           const [x, , z] = radialVector(getTrial().angle, getTrial().radius);
           return [x, STRING_HEIGHT + 0.06, z];
@@ -169,7 +180,9 @@ export function StringLab() {
       ? 'Pulling string'
       : 'Circling'
     : reading.time
-      ? 'Paused'
+      ? reading.pull
+        ? 'Pull paused'
+        : 'Paused'
       : 'Ready to spin';
   function resetTrial() {
     reset();
@@ -202,28 +215,21 @@ export function StringLab() {
                 max={STRING.initialRadius}
                 step="0.01"
                 value={target}
+                aria-describedby="string-target-hint"
                 onChange={(event) => setTarget(event.target.value)}
                 disabled={!!reading.pull}
               />
               <span>m</span>
             </div>
-            <small>{f(STRING.minRadius)} m minimum</small>
+            <small id="string-target-hint">
+              {canPull
+                ? `Expected vₜ at target ${f(predictStringSpeed(radius))} m/s`
+                : Math.abs(radius - reading.radius) < 1e-8
+                  ? 'At target. Enter a smaller radius to pull again.'
+                  : `Enter ${f(STRING.minRadius)} m or more, below the current radius.`}
+            </small>
           </div>
-          <button
-            className="secondary-button"
-            disabled={!running || !!reading.pull || !canPull}
-            onClick={() =>
-              update((previous) => startStringPull(previous, radius))
-            }
-          >
-            Pull string
-          </button>
-          <SimulationControls
-            ready
-            onReset={resetTrial}
-            startLabel="Start spin"
-            allowSpeed
-          />
+          <SimulationControls onReset={resetTrial} allowSpeed settingsOnly />
         </aside>
         <SpinDemoViewport
           title="Puck on a frictionless tabletop"
@@ -232,17 +238,34 @@ export function StringLab() {
           frameHeight={1.6}
           frameWidth={2.55}
           initialView="Top"
+          actions={
+            <>
+              <SimulationRunButton ready startLabel="Start spin" />
+              <button
+                className="secondary-button"
+                disabled={!running || !!reading.pull || !canPull}
+                onClick={() =>
+                  update((previous) => startStringPull(previous, radius))
+                }
+              >
+                Pull string
+              </button>
+            </>
+          }
         >
-          <StringScene
-            getTrial={getTrial}
-            advance={advance}
-            publish={publish}
-            targetRadius={
-              radius >= STRING.minRadius && radius < STRING.initialRadius
-                ? radius
-                : null
-            }
-          />
+          {(vectorsVisible) => (
+            <StringScene
+              getTrial={getTrial}
+              advance={advance}
+              publish={publish}
+              vectorsVisible={vectorsVisible}
+              targetRadius={
+                radius >= STRING.minRadius && radius < STRING.initialRadius
+                  ? radius
+                  : null
+              }
+            />
+          )}
         </SpinDemoViewport>
       </div>
       <div

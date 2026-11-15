@@ -20,10 +20,12 @@ export function GyroscopeScene({
   getTrial,
   advance,
   publish,
+  vectorsVisible,
 }: {
   getTrial: () => GyroscopeTrial;
   advance: (elapsed: number) => void;
   publish: () => void;
+  vectorsVisible: boolean;
 }) {
   const axle = useRef<Group>(null);
   const guide = useRef<Group>(null);
@@ -98,6 +100,7 @@ export function GyroscopeScene({
         </group>
       </group>
       <VectorArrow3D
+        visible={vectorsVisible}
         origin={DIAGRAM_ORIGIN}
         vector={() => vectors.current.initialMomentum}
         label="L₀"
@@ -109,6 +112,7 @@ export function GyroscopeScene({
         magnitudeScale={MOMENTUM_SCALE}
       />
       <VectorArrow3D
+        visible={vectorsVisible}
         origin={() => {
           const [x, y, z] = vectors.current.initialMomentum;
           return [
@@ -127,6 +131,7 @@ export function GyroscopeScene({
         magnitudeScale={MOMENTUM_SCALE}
       />
       <VectorArrow3D
+        visible={vectorsVisible}
         origin={DIAGRAM_ORIGIN}
         vector={() =>
           getTrial().spinSpeed !== 0 && vectors.current.impulse > 0.12
@@ -142,6 +147,7 @@ export function GyroscopeScene({
         magnitudeScale={MOMENTUM_SCALE}
       />
       <VectorArrow3D
+        visible={vectorsVisible}
         origin={PIVOT}
         vector={() => vectors.current.torque}
         label="τ"

@@ -1,39 +1,62 @@
 import { useSimulationStore } from '../../store/simulationStore';
 import { formatNumber } from '../../physics/units/format';
-export function SimulationControls({
-  ready,
-  onReset,
-  startLabel = 'Start trial',
-  complete = false,
-  allowSpeed = false,
-  onReplay,
-}: {
+interface RunButtonProps {
   ready: boolean;
-  onReset: () => void;
   startLabel?: string;
   complete?: boolean;
-  allowSpeed?: boolean;
   onReplay?: () => void;
-}) {
-  const { running, elapsed, setRunning, playbackSpeed, setPlaybackSpeed } =
-    useSimulationStore();
+}
+
+export function SimulationRunButton({
+  ready,
+  startLabel = 'Start trial',
+  complete = false,
+  onReplay,
+}: RunButtonProps) {
+  const running = useSimulationStore((state) => state.running);
+  const atStart = useSimulationStore((state) => state.elapsed === 0);
+  const setRunning = useSimulationStore((state) => state.setRunning);
   return (
-    <div className="simulation-controls" aria-label="Simulation controls">
-      <button
-        className="replay-button"
-        disabled={!ready || (complete && !onReplay)}
-        onClick={complete ? onReplay : () => setRunning(!running)}
-      >
-        {complete
-          ? onReplay
-            ? `↻ ${startLabel}`
-            : 'Trial complete'
-          : running
-            ? 'Ⅱ Pause'
-            : elapsed === 0
-              ? `▶ ${startLabel}`
-              : '▶ Resume'}
-      </button>
+    <button
+      className="replay-button"
+      disabled={!ready || (complete && !onReplay)}
+      onClick={complete ? onReplay : () => setRunning(!running)}
+    >
+      {complete
+        ? onReplay
+          ? `↻ ${startLabel}`
+          : 'Trial complete'
+        : running
+          ? 'Ⅱ Pause'
+          : atStart
+            ? `▶ ${startLabel}`
+            : '▶ Resume'}
+    </button>
+  );
+}
+
+export function SimulationControls(
+  props: {
+    onReset: () => void;
+    allowSpeed?: boolean;
+  } & ({ settingsOnly: true } | (RunButtonProps & { settingsOnly?: false })),
+) {
+  const { onReset, allowSpeed = false, settingsOnly } = props;
+  const elapsed = useSimulationStore((state) => state.elapsed);
+  const playbackSpeed = useSimulationStore((state) => state.playbackSpeed);
+  const setPlaybackSpeed = useSimulationStore(
+    (state) => state.setPlaybackSpeed,
+  );
+  return (
+    <div
+      className={
+        settingsOnly
+          ? 'simulation-controls simulation-settings'
+          : 'simulation-controls'
+      }
+      aria-label="Simulation controls"
+    >
+      {!props.settingsOnly && <SimulationRunButton {...props} />}
       <button className="secondary-button" onClick={onReset}>
         ↻ Reset defaults
       </button>

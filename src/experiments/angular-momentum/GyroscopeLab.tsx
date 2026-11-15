@@ -1,4 +1,7 @@
-import { SimulationControls } from '../../components/controls/SimulationControls';
+import {
+  SimulationControls,
+  SimulationRunButton,
+} from '../../components/controls/SimulationControls';
 import { Measurement } from '../../components/measurements/Measurement';
 import {
   GYROSCOPE,
@@ -18,6 +21,15 @@ const SPIN_OPTIONS = [
   { name: 'Stopped', speed: 0 },
   { name: 'Reverse spin', speed: -GYROSCOPE.spinSpeed },
 ];
+
+function angleDirection(
+  angle: number,
+  positive: string,
+  negative: string,
+  neutral: string,
+) {
+  return Math.abs(angle) < 0.05 ? neutral : angle > 0 ? positive : negative;
+}
 
 export function GyroscopeLab() {
   const { reading, getTrial, advance, publish, update, reset } =
@@ -85,14 +97,7 @@ export function GyroscopeLab() {
           <p className="physics-caption">
             {f(reading.spinSpeed, 0)} rad/s · Same lifting torque in each trial
           </p>
-          <SimulationControls
-            ready
-            allowSpeed
-            startLabel="Try lifting"
-            complete={complete}
-            onReset={reset}
-            onReplay={replay}
-          />
+          <SimulationControls allowSpeed onReset={reset} settingsOnly />
         </aside>
         <SpinDemoViewport
           title="Bicycle wheel responding to a lifting torque"
@@ -101,12 +106,23 @@ export function GyroscopeLab() {
           frameWidth={2.55}
           frameHeight={2.55}
           initialView="Perspective"
+          actions={
+            <SimulationRunButton
+              ready
+              startLabel="Try lifting"
+              complete={complete}
+              onReplay={replay}
+            />
+          }
         >
-          <GyroscopeScene
-            getTrial={getTrial}
-            advance={step}
-            publish={publish}
-          />
+          {(vectorsVisible) => (
+            <GyroscopeScene
+              getTrial={getTrial}
+              advance={step}
+              publish={publish}
+              vectorsVisible={vectorsVisible}
+            />
+          )}
         </SpinDemoViewport>
       </div>
       <div className="turntable-readouts" aria-label="Gyroscope measurements">
@@ -117,7 +133,7 @@ export function GyroscopeLab() {
             unit="°"
             testId="gyro-rise"
           />
-          <p>Positive is up</p>
+          <p>{angleDirection(values.rise, '↑ Up', '↓ Down', 'Level')}</p>
         </div>
         <div>
           <Measurement
@@ -126,7 +142,14 @@ export function GyroscopeLab() {
             unit="°"
             testId="gyro-swerve"
           />
-          <p>Positive is right from the grip</p>
+          <p>
+            {angleDirection(
+              values.swerve,
+              '→ Right from the grip',
+              '← Left from the grip',
+              'Straight ahead',
+            )}
+          </p>
         </div>
         <div className="turntable-secondary">
           <Measurement
@@ -135,7 +158,9 @@ export function GyroscopeLab() {
             unit="kg·m²/s"
             testId="gyro-impulse"
           />
-          <p>Along the applied torque</p>
+          <p>
+            Torque τ <output>{f(Math.hypot(...values.torque))}</output> N·m
+          </p>
         </div>
       </div>
       <details className="physics-details">
