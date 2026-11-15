@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useRef } from 'react';
 import type { Group } from 'three';
 import {
   ROBOT,
@@ -7,10 +6,10 @@ import {
   robotOmega,
   type RobotTrial,
 } from '../../physics/equations/robotRotation';
-import { useSimulationStore } from '../../store/simulationStore';
 import type { Vector3Tuple } from '../../types/vector';
 import { VectorArrow3D } from '../../three/vectors/VectorArrow3D';
 import { RotationStage } from './RotationStage';
+import { useRotationFrame } from './useRotationFrame';
 
 const ALLOY = '#a1b2be';
 const JOINT = '#3b4b57';
@@ -156,26 +155,7 @@ export function RobotScene({
   const pivot = useRef<Group>(null);
   const falling = useRef<Group>(null);
   const cargo = useRef<Group>(null);
-  const skipDelta = useRef(true);
-  const invalidate = useThree((state) => state.invalidate);
-  useEffect(
-    () =>
-      useSimulationStore.subscribe((state, previous) => {
-        if (state.running === previous.running) return;
-        skipDelta.current = true;
-        if (!state.running) publish();
-        invalidate();
-      }),
-    [invalidate, publish],
-  );
-
-  useFrame((_, delta) => {
-    const { running, playbackSpeed } = useSimulationStore.getState();
-    if (running) {
-      if (skipDelta.current) skipDelta.current = false;
-      else advance(Math.min(delta, 0.1) * playbackSpeed);
-      invalidate();
-    }
+  useRotationFrame(advance, publish, () => {
     const { angle, drop, load, time } = getTrial();
     if (pivot.current) pivot.current.rotation.y = angle;
     if (falling.current) {
@@ -191,7 +171,7 @@ export function RobotScene({
       cargo.current.visible = load > 0;
       cargo.current.scale.y = load / ROBOT.capacity;
     }
-  }, -1);
+  });
 
   return (
     <>

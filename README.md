@@ -196,6 +196,10 @@ This is a 51 kg illustrative segment model, not measured anatomy. Under ideal su
 
 Open the spinning dancer page and select **Robot**. Start the spin and drop a load into the backpack. Each load falls vertically, then sticks at a fixed radius of 0.48 m. The ideal bearing supplies no torque about the spin axis, so the model preserves axial angular momentum during capture and computes the new speed from Lᵧ / Iᵧ. The graph marks each catch as a step in angular velocity.
 
+## Mass on a string and person on a turntable
+
+Both models are on the spinning dancer page. **Mass on a string** starts with a 1 kg puck orbiting at 0.80 m and 2.4 m/s. Pull to 0.48 m to reach 4.0 m/s tangential speed. The model prescribes a smooth pull and advances the angle from conserved axial angular momentum. **Person on a turntable** models a 60 kg point mass walking along a 1 m track. Set the walking direction and speed relative to the turntable. The person and platform rotate in opposite directions, with equal and opposite axial angular momentum on the ideal bearing.
+
 ## Vector Mathematics Lab
 
 Open **Vectors → Vector Mathematics Lab** and choose **Add**, **Subtract**, **Scale**, **Cross**, or **Dot**. Edit the components to update the result and 3D diagram immediately. Scale uses a number k to multiply each component of A. Dot gives a scalar and the other operations give vectors.

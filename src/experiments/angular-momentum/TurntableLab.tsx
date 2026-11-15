@@ -1,0 +1,369 @@
+import { useRef, useState } from 'react';
+import type { Group } from 'three';
+import { SimulationControls } from '../../components/controls/SimulationControls';
+import { Measurement } from '../../components/measurements/Measurement';
+import {
+  TURNTABLE,
+  advanceTurntableTrial,
+  createTurntableTrial,
+  measureTurntable,
+  radialVector,
+  type TurntableTrial,
+} from '../../physics/equations/spinDemos';
+import { formatNumber as f } from '../../physics/units/format';
+import { useSimulationStore } from '../../store/simulationStore';
+import { VectorArrow3D } from '../../three/vectors/VectorArrow3D';
+import { RotationStage } from './RotationStage';
+import { SpinDemoViewport } from './SpinDemoViewport';
+import { useRotationFrame } from './useRotationFrame';
+import { useRotationTrial } from './useRotationTrial';
+
+const DECK_TOP = 0.31;
+const CAMERA_CENTER = [0, 0.67, 0] as const;
+const PERSON_COLOR = '#83d5c1';
+const PLATFORM_COLOR = '#f1b57b';
+const MOMENTUM_SCALE = 0.0065;
+
+function TurntableScene({
+  getTrial,
+  advance,
+  publish,
+  inertia,
+}: {
+  getTrial: () => TurntableTrial;
+  advance: (elapsed: number) => void;
+  publish: () => void;
+  inertia: number;
+}) {
+  const disk = useRef<Group>(null);
+  const walker = useRef<Group>(null);
+  const leftLeg = useRef<Group>(null);
+  const rightLeg = useRef<Group>(null);
+  const leftArm = useRef<Group>(null);
+  const rightArm = useRef<Group>(null);
+  useRotationFrame(advance, publish, () => {
+    const trial = getTrial();
+    if (disk.current) disk.current.rotation.y = trial.platformAngle;
+    if (walker.current) {
+      const [x, , z] = radialVector(trial.personAngle, TURNTABLE.radius);
+      walker.current.position.set(x, DECK_TOP, z);
+      walker.current.rotation.y =
+        trial.personAngle + ((trial.relativeOmega < 0 ? -1 : 1) * Math.PI) / 2;
+    }
+    const stride =
+      Math.sin((trial.personAngle - trial.platformAngle) * 12) *
+      Math.min(0.38, Math.abs(trial.relativeOmega) * 0.18);
+    if (leftLeg.current) leftLeg.current.rotation.x = stride;
+    if (rightLeg.current) rightLeg.current.rotation.x = -stride;
+    if (leftArm.current) leftArm.current.rotation.x = -stride * 0.7;
+    if (rightArm.current) rightArm.current.rotation.x = stride * 0.7;
+  });
+  return (
+    <>
+      <RotationStage />
+      <mesh position={[0, 0.105, 0]} castShadow>
+        <cylinderGeometry args={[0.33, 0.42, 0.22, 48]} />
+        <meshStandardMaterial color="#515e65" metalness={0.3} />
+      </mesh>
+      <group ref={disk}>
+        <mesh position={[0, DECK_TOP - 0.06, 0]} castShadow receiveShadow>
+          <cylinderGeometry args={[1.29, 1.29, 0.12, 72]} />
+          <meshStandardMaterial
+            color="#40515e"
+            metalness={0.24}
+            roughness={0.5}
+          />
+        </mesh>
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, DECK_TOP + 0.003, 0]}
+        >
+          <ringGeometry args={[0.993, 1.007, 80]} />
+          <meshBasicMaterial color="#99aaad" />
+        </mesh>
+        {Array.from({ length: 8 }, (_, index) => (
+          <group key={index} rotation={[0, (index * Math.PI) / 4, 0]}>
+            <mesh position={[0, DECK_TOP + 0.005, index === 0 ? 0.69 : 1.16]}>
+              <boxGeometry
+                args={index === 0 ? [0.042, 0.009, 1.15] : [0.025, 0.009, 0.18]}
+              />
+              <meshBasicMaterial
+                color={index === 0 ? PLATFORM_COLOR : '#8899a1'}
+              />
+            </mesh>
+          </group>
+        ))}
+      </group>
+      <mesh position={[0, 0.8, 0]}>
+        <cylinderGeometry args={[0.006, 0.006, 1, 10]} />
+        <meshBasicMaterial color="#a5b3bd" transparent opacity={0.55} />
+      </mesh>
+      <group ref={walker} position={[0, DECK_TOP, TURNTABLE.radius]}>
+        <mesh position={[0, 0.56, 0]} castShadow>
+          <capsuleGeometry args={[0.125, 0.2, 6, 14]} />
+          <meshStandardMaterial color={PERSON_COLOR} />
+        </mesh>
+        <mesh position={[0, 0.895, 0.017]} castShadow>
+          <sphereGeometry args={[0.116, 18, 12]} />
+          <meshStandardMaterial color="#c29d83" />
+        </mesh>
+        <mesh position={[0, 0.946, -0.015]}>
+          <sphereGeometry args={[0.103, 16, 10]} />
+          <meshStandardMaterial color="#393234" />
+        </mesh>
+        {[-1, 1].map((side) => (
+          <group key={side}>
+            <group
+              ref={side === -1 ? leftLeg : rightLeg}
+              position={[side * 0.069, 0.43, 0]}
+            >
+              <mesh position={[0, -0.193, 0]} castShadow>
+                <capsuleGeometry args={[0.053, 0.295, 4, 10]} />
+                <meshStandardMaterial color="#435465" />
+              </mesh>
+              <mesh position={[0, -0.4, 0.039]}>
+                <boxGeometry args={[0.11, 0.057, 0.19]} />
+                <meshStandardMaterial color="#dee4e8" />
+              </mesh>
+            </group>
+            <group
+              ref={side === -1 ? leftArm : rightArm}
+              position={[side * 0.149, 0.666, 0]}
+            >
+              <mesh position={[0, -0.114, 0]} castShadow>
+                <capsuleGeometry args={[0.037, 0.19, 4, 10]} />
+                <meshStandardMaterial color="#c29d83" />
+              </mesh>
+            </group>
+          </group>
+        ))}
+      </group>
+      <VectorArrow3D
+        origin={[0, DECK_TOP + 0.023, 0]}
+        vector={() => radialVector(getTrial().personAngle, TURNTABLE.radius)}
+        label="r"
+        unit="m"
+        category="component"
+        labelSize={0.24}
+      />
+      <VectorArrow3D
+        origin={() => {
+          const [x, , z] = radialVector(
+            getTrial().personAngle,
+            TURNTABLE.radius,
+          );
+          return [x, DECK_TOP + 0.08, z];
+        }}
+        vector={() => measureTurntable(getTrial(), inertia).velocity}
+        magnitudeScale={0.42}
+        label="v"
+        unit="m/s"
+        category="velocity"
+        labelSize={0.24}
+      />
+      <VectorArrow3D
+        origin={[-0.44, 1.22, 0]}
+        vector={() => [
+          0,
+          measureTurntable(getTrial(), inertia).personMomentum,
+          0,
+        ]}
+        magnitudeScale={MOMENTUM_SCALE}
+        label="L person"
+        unit="kg·m²/s"
+        category="component"
+        color={PERSON_COLOR}
+        labelSize={0.4}
+      />
+      <VectorArrow3D
+        origin={[0.44, 1.22, 0]}
+        vector={() => [
+          0,
+          measureTurntable(getTrial(), inertia).platformMomentum,
+          0,
+        ]}
+        magnitudeScale={MOMENTUM_SCALE}
+        label="L disk"
+        unit="kg·m²/s"
+        category="component"
+        color={PLATFORM_COLOR}
+        labelSize={0.4}
+      />
+    </>
+  );
+}
+
+function direction(value: number) {
+  return value > 1e-6 ? '↑ Up' : value < -1e-6 ? '↓ Down' : 'No direction';
+}
+
+export function TurntableLab() {
+  const [walkDirection, setWalkDirection] = useState<1 | -1>(1);
+  const [speed, setSpeed] = useState<number>(TURNTABLE.defaultSpeed);
+  const [inertia, setInertia] = useState<number>(TURNTABLE.defaultInertia);
+  const { reading, getTrial, advance, publish, reset } = useRotationTrial(
+    createTurntableTrial,
+    (trial, elapsed) =>
+      advanceTurntableTrial(trial, elapsed, walkDirection * speed, inertia),
+  );
+  const running = useSimulationStore((state) => state.running);
+  const values = measureTurntable(reading, inertia);
+  function resetTrial() {
+    reset();
+    setWalkDirection(1);
+    setSpeed(TURNTABLE.defaultSpeed);
+    setInertia(TURNTABLE.defaultInertia);
+  }
+  return (
+    <div className="dancer-experiment spin-demo">
+      <div className="page-heading">
+        <div>
+          <h1>Person on a turntable</h1>
+          <p>
+            Walk around the rim. Reverse direction and watch both angular
+            momentum arrows flip.
+          </p>
+        </div>
+      </div>
+      <div className="workspace">
+        <aside
+          className="setup-panel spin-demo-controls"
+          aria-label="Turntable controls"
+        >
+          <h2>Walking controls</h2>
+          <div
+            className="walk-direction"
+            role="group"
+            aria-label="Walking direction"
+          >
+            <button
+              className="secondary-button"
+              aria-pressed={walkDirection === 1}
+              onClick={() => setWalkDirection(1)}
+            >
+              Counterclockwise
+            </button>
+            <button
+              className="secondary-button"
+              aria-pressed={walkDirection === -1}
+              onClick={() => setWalkDirection(-1)}
+            >
+              Clockwise
+            </button>
+          </div>
+          <label className="walk-speed" htmlFor="walk-speed">
+            Walking speed <output>{f(speed, 1)} m/s</output>
+          </label>
+          <input
+            id="walk-speed"
+            type="range"
+            min="0"
+            max="2.4"
+            step="0.1"
+            value={speed}
+            onChange={(event) => setSpeed(Number(event.target.value))}
+          />
+          <p className="physics-caption">Speed relative to the platform</p>
+          <label className="dancer-mode">
+            Platform inertia (kg·m²)
+            <select
+              value={inertia}
+              disabled={running || reading.time > 0}
+              onChange={(event) => setInertia(Number(event.target.value))}
+            >
+              <option value="60">60 · Light</option>
+              <option value="120">120 · Medium</option>
+              <option value="240">240 · Heavy</option>
+            </select>
+          </label>
+          <SimulationControls
+            ready
+            onReset={resetTrial}
+            startLabel="Start walking"
+            allowSpeed
+          />
+        </aside>
+        <SpinDemoViewport
+          title="Counter-rotating person and platform"
+          status={running ? 'Running' : reading.time ? 'Paused' : 'At rest'}
+          center={CAMERA_CENTER}
+          frameHeight={2.65}
+          frameWidth={2.85}
+          initialView="Perspective"
+        >
+          <TurntableScene
+            getTrial={getTrial}
+            advance={advance}
+            publish={publish}
+            inertia={inertia}
+          />
+        </SpinDemoViewport>
+      </div>
+      <div
+        className="turntable-readouts"
+        aria-label="Turntable angular momentum"
+      >
+        <div className="turntable-person">
+          <Measurement
+            label="Person Lᵧ"
+            value={f(values.personMomentum)}
+            unit="kg·m²/s"
+            testId="person-momentum"
+          />
+          <p data-testid="person-direction">
+            {direction(values.personMomentum)}
+          </p>
+          <p>
+            ωᵧ{' '}
+            <output data-testid="person-omega">{f(values.personOmega)}</output>{' '}
+            rad/s
+          </p>
+        </div>
+        <div className="turntable-platform">
+          <Measurement
+            label="Platform Lᵧ"
+            value={f(values.platformMomentum)}
+            unit="kg·m²/s"
+            testId="platform-momentum"
+          />
+          <p data-testid="platform-direction">
+            {direction(values.platformMomentum)}
+          </p>
+          <p>
+            ωᵧ{' '}
+            <output data-testid="platform-omega">
+              {f(values.platformOmega)}
+            </output>{' '}
+            rad/s
+          </p>
+        </div>
+        <div>
+          <Measurement
+            label="Total Lᵧ"
+            value={f(values.totalMomentum)}
+            unit="kg·m²/s"
+            testId="turntable-total"
+          />
+          <p>Person + platform</p>
+        </div>
+      </div>
+      <p className="physics-caption turntable-rule">
+        Right-hand rule: Viewed from above, counterclockwise points up (+y).
+      </p>
+      <details className="physics-details">
+        <summary>Model details</summary>
+        <div>
+          <p>
+            Curl right-hand fingers from r toward the lab-frame velocity v. The
+            thumb points along r × mv.
+          </p>
+          <p>
+            The person is modeled as a 60 kg point mass on a 1 m track. Foot
+            traction transfers angular momentum between the person and the
+            platform. With an ideal bearing, their angular momenta sum to zero.
+          </p>
+        </div>
+      </details>
+    </div>
+  );
+}

@@ -20,28 +20,35 @@ import { dancerExperiment } from './config';
 import { RobotLab } from './RobotLab';
 import './dancer.css';
 import './robot.css';
+import { StringLab } from './StringLab';
+import { TurntableLab } from './TurntableLab';
+import './spin-demos.css';
 const CENTER = [0, 1.05, 0] as const;
+const MODELS = [
+  { name: 'Dancer', Lab: DancerLab },
+  { name: 'Robot', Lab: RobotLab },
+  { name: 'Mass on a string', Lab: StringLab },
+  { name: 'Person on a turntable', Lab: TurntableLab },
+] as const;
+
 export default function DancerPage() {
-  const [model, setModel] = useState<'dancer' | 'robot'>('dancer');
+  const [selected, setSelected] = useState(0);
+  const { Lab } = MODELS[selected];
   return (
     <>
       <div className="rotation-models" role="group" aria-label="Spinning model">
-        <button
-          className="secondary-button"
-          aria-pressed={model === 'dancer'}
-          onClick={() => setModel('dancer')}
-        >
-          Dancer
-        </button>
-        <button
-          className="secondary-button"
-          aria-pressed={model === 'robot'}
-          onClick={() => setModel('robot')}
-        >
-          Robot
-        </button>
+        {MODELS.map(({ name }, index) => (
+          <button
+            key={name}
+            className="secondary-button"
+            aria-pressed={selected === index}
+            onClick={() => setSelected(index)}
+          >
+            {name}
+          </button>
+        ))}
       </div>
-      {model === 'dancer' ? <DancerLab /> : <RobotLab />}
+      <Lab />
     </>
   );
 }

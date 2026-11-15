@@ -1,0 +1,74 @@
+.rotation-models,
+.walk-direction {
+  flex-wrap: wrap;
+}
+.walk-direction {
+  display: flex;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+.walk-direction button[aria-pressed='true'] {
+  border-color: #82966f;
+  background: #2a382c;
+  color: #d7ebc6;
+}
+.spin-demo-controls h2 {
+  margin: 0 0 20px;
+}
+.spin-demo-viewport .camera-controls {
+  top: 15px;
+}
+.walk-speed {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 12px;
+}
+#walk-speed {
+  margin-top: 12px;
+  accent-color: #c1e29e;
+}
+.turntable-readouts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 24px;
+  border: 1px solid #35414c;
+  border-radius: 8px;
+  background: #19232c;
+}
+.turntable-readouts > div {
+  min-width: 0;
+  padding: 14px;
+}
+.turntable-readouts .measurement {
+  border: 0;
+  padding: 0;
+}
+.turntable-readouts p {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #b6c7d1;
+}
+.turntable-readouts .turntable-person .measurement output,
+.turntable-readouts .turntable-person > p:first-of-type {
+  color: #83d5c1;
+}
+.turntable-readouts .turntable-platform .measurement output,
+.turntable-readouts .turntable-platform > p:first-of-type {
+  color: #f1b57b;
+}
+.turntable-rule {
+  margin-top: 10px;
+}
+@media (max-width: 700px) {
+  .spin-demo-viewport {
+    min-height: 365px;
+  }
+  .turntable-readouts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .turntable-readouts > div:last-child {
+    grid-column: 1 / -1;
+    border-top: 1px solid #35414c;
+  }
+}
