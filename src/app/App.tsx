@@ -11,12 +11,14 @@ export function App() {
   const route = useRoute();
   let page;
   let title = 'Physics3D Lab · Labs';
+  let labId: string | undefined;
   switch (route.kind) {
     case 'directory':
       page = <LabDirectory />;
       break;
     case 'lab': {
       const lab = getLab(route.id);
+      labId = lab?.id;
       title = lab
         ? `${lab.title} lab · Physics3D Lab`
         : 'Page not found · Physics3D Lab';
@@ -25,6 +27,7 @@ export function App() {
     }
     case 'experiment': {
       const experiment = getExperiment(route.id);
+      labId = experiment?.labId;
       title = experiment
         ? `${experiment.title} · Physics3D Lab`
         : 'Page not found · Physics3D Lab';
@@ -42,5 +45,13 @@ export function App() {
   useEffect(() => {
     document.title = title;
   }, [title]);
-  return <AppShell directory={route.kind === 'directory'}>{page}</AppShell>;
+  return (
+    <AppShell
+      directory={route.kind === 'directory'}
+      labId={labId}
+      pageTitle={title}
+    >
+      {page}
+    </AppShell>
+  );
 }

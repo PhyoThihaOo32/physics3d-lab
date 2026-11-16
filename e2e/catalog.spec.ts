@@ -10,7 +10,7 @@ test('navigates from directory to a lab and experiment, then starts a fresh tria
   });
   await page.goto('/');
   await expect(
-    page.getByRole('heading', { name: 'Choose a lab. Start exploring.' }),
+    page.getByRole('heading', { name: 'Explore physics in 3D.' }),
   ).toBeVisible();
   await expect(page.locator('canvas')).toHaveCount(0);
   await page.getByRole('link', { name: 'Open motion lab' }).click();

@@ -12,7 +12,7 @@ export function LabPage({ lab }: { lab: LabDefinition }) {
           { label: `${lab.title} lab` },
         ]}
       />
-      <div className="page-heading">
+      <div className="page-heading lab-heading">
         <div>
           <div className="eyebrow">
             <span className="tiny-square" />
@@ -29,26 +29,23 @@ export function LabPage({ lab }: { lab: LabDefinition }) {
         <h2>Experiments</h2>
         <span>
           {entries.filter((entry) => entry.status === 'available').length}{' '}
-          available ·{' '}
-          {entries.filter((entry) => entry.status === 'planned').length} planned
+          available
+          {entries.some((entry) => entry.status === 'planned') &&
+            ` · ${entries.filter((entry) => entry.status === 'planned').length} planned`}
         </span>
       </div>
       <div className="experiment-grid">
-        {entries.map((experiment, index) => (
+        {entries.map((experiment) => (
           <article className="experiment-card" key={experiment.id}>
             <div className="lab-card-top">
-              <span className="panel-kicker">
-                {String(index + 1).padStart(2, '0')} /{' '}
-                {experiment.topic.toUpperCase()}
-              </span>
-              <span className={`availability ${experiment.status}`}>
-                {experiment.status === 'available' ? 'Available' : 'Planned'}
-              </span>
+              <span className="panel-kicker">{experiment.topic}</span>
+              {experiment.status === 'planned' && (
+                <span className="availability planned">Planned</span>
+              )}
             </div>
             <h2>{experiment.title}</h2>
             <p>{experiment.description}</p>
-            <div className="section-label">WHAT YOU WILL MEASURE</div>
-            <ul className="measurement-tags">
+            <ul className="measurement-tags" aria-label="Measurements">
               {experiment.measurements.map((measurement) => (
                 <li key={measurement}>{measurement}</li>
               ))}

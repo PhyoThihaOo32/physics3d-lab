@@ -26,7 +26,7 @@
 .spin-range {
   width: 100%;
   margin-top: 12px;
-  accent-color: #c1e29e;
+  accent-color: var(--accent);
 }
 .string-length-heading {
   display: flex;
@@ -62,8 +62,8 @@
   white-space: nowrap;
 }
 .spin-demo-actions .spin-vectors-toggle[aria-pressed='true'] {
-  border-color: #82966f;
-  color: #d7ebc6;
+  border-color: var(--accent-border);
+  color: var(--accent);
 }
 .spin-demo-controls .simulation-settings {
   grid-template-columns: minmax(0, 1fr);
@@ -75,9 +75,9 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 24px;
-  border: 1px solid #35414c;
-  border-radius: 8px;
-  background: #19232c;
+  border: 1px solid var(--border);
+  border-radius: var(--panel-radius);
+  background: var(--surface);
 }
 .turntable-readouts > div {
   min-width: 0;
